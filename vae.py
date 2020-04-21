@@ -17,6 +17,7 @@ class VaeModel(nn.Module):
         batch_size = x.size[0]
         h_enc, c_enc = self.encoder.init_hidden(batch_size)
         hidden = self.encoder(x, h_enc, c_enc)
+
         # Reparameterization
         mu = self.hidden_to_mu(hidden)
         sigma = self.hidden_to_sigma(hidden)
@@ -46,7 +47,8 @@ class HierarchicalEncoder(nn.Module):
         self.num_layers = num_layers
 
         # Define the LSTM layer
-        self.RNN = nn.LSTM(self.input_dim, self.hidden_size, batch_first=True, num_layers=num_layers, bidirectional=True, dropout=0.6)
+        self.RNN = nn.LSTM(input_dim, hidden_size, batch_first=True, num_layers=num_layers,
+                           bidirectional=True, dropout=0.6)
 
     def init_hidden(self, batch_size=1):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -64,24 +66,28 @@ class HierarchicalEncoder(nn.Module):
 
 
 class HierarchicalDecoder(nn.Module):
-    def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers, num_subsequences, seq_length):
+    def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
+                 num_subsequences, seq_length):
         super(HierarchicalDecoder, self).__init__()
-        self.tanh = nn.Tanh()
-        self.sigmoid = nn.Sigmoid()
-        self.fc_init_cond = nn.Linear(latent_size, cond_hidden_size*num_layers)
-        self.conductor_RNN = nn.LSTM(latent_size//num_subsequences, cond_hidden_size, batch_first=True, num_layers=2, bidirectional=False, dropout=0.6)
-        self.conductor_output = nn.Linear(cond_hidden_size, cond_outdim)
-        self.fc_init_dec = nn.Linear(cond_outdim, dec_hidden_size*num_layers)
-        self.decoder_RNN = nn.LSTM(cond_outdim + input_size, dec_hidden_size, batch_first=True, num_layers=2, bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(dec_hidden_size, input_size)
-
         self.num_subsequences = num_subsequences
         self.input_size = input_size
         self.cond_hidden_size = cond_hidden_size
         self.dec_hidden_size = dec_hidden_size
         self.num_layers = num_layers
         self.seq_length = seq_length
-        self.teacher_forcing_ratio = 0.5
+        self.teacher_forcing_ratio = 0  # TFR must be 0: worsen the training except for non piano-roll representation
+
+        # Define init for architecture: first conductor then decoder
+        self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+        self.fc_init_cond = nn.Linear(latent_size, cond_hidden_size * num_layers)
+        self.conductor_RNN = nn.LSTM(latent_size // num_subsequences, cond_hidden_size, batch_first=True, num_layers=2,
+                                     bidirectional=False, dropout=0.6)
+        self.conductor_output = nn.Linear(cond_hidden_size, cond_outdim)
+        self.fc_init_dec = nn.Linear(cond_outdim, dec_hidden_size * num_layers)
+        self.decoder_RNN = nn.LSTM(cond_outdim + input_size, dec_hidden_size, batch_first=True, num_layers=2,
+                                   bidirectional=False, dropout=0.6)
+        self.decoder_output = nn.Linear(dec_hidden_size, input_size)
 
     def forward(self, latent, target, teacher_forcing):
         batch_size = latent.shape[0]
@@ -111,20 +117,12 @@ class HierarchicalDecoder(nn.Module):
             # Concat the previous token and the current subseq embedding as input
             dec_input = torch.cat((token, subseq_embedding.unsqueeze(1).expand(-1, subseq_size, -1)), -1)
             # Pass through the decoder
-            token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0s_dec, c0_dec))
+            token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
             token = self.decoder_output(token)
             # Fill the out tensor with the token
-            token = out[:, subseq*subseq_size:((subseq + 1) * subseq_size), :]
+            out[:, subseq * subseq_size:((subseq + 1) * subseq_size), :] = token
             # If teacher forcing replace the output token by the real one sometimes
             if teacher_forcing:
                 if random.random() <= self.teacher_forcing_ratio:
-                    token = target[:, subseq*subseq_size: ((subseq + 1) * subseq_size), :]
+                    token = target[:, subseq * subseq_size: ((subseq + 1) * subseq_size), :]
         return out
-
-
-
-
-
-
-
-
