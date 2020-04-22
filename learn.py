@@ -28,7 +28,7 @@ class Learn:
         self.kl_div_mean_test = 0
         self.recon_loss_mean_test = 0
 
-    def train(self, x):
+    def train(self):
         self.model.train()
         for i, x in tqdm(enumerate(self.train_loader), total=len(self.train_test)//self.batch_size):
             if torch.cuda.is_available():
