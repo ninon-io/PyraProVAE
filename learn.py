@@ -51,6 +51,8 @@ class Learn:
             loss.backward()
             # Optimizes weights
             self.optimizer.step()
+            if self.n_epochs > 10 and self.beta < 1:
+                self.beta += 0.0025
             self.n_epochs += 1
 
     def test(self):
