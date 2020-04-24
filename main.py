@@ -16,7 +16,7 @@ parser.add_argument('--batch_size', type=int, default=16, metavar='N',
                     help='input batch size for training (default: 16)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
-parser.add_argument('--input_dim', type=int, default=128,
+parser.add_argument('--input_dim', type=int, default=100,
                     help='correspond to the out_channels of the conv (defaults: 123)')
 parser.add_argument('--epochs', type=int, default=14, metavar='N',
                     help='number of epochs to train (default: 14)')
