@@ -6,6 +6,7 @@ from learn import Learn
 import dataloader
 import vae
 
+data_dir = 'midi_short_dataset'
 midi_path = "fast-1/ninon/datasets/maestro_folder/train"
 test_path = "fast-1/ninon/datasets/maestro_folder/test"
 
@@ -40,15 +41,17 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
     # Load Dataset
-    data_set = dataloader.PianoRollRep(midi_path)
-    test_set = dataloader.PianoRollRep(test_path)
-    # Initialize Dataloader
-    data_loader = torch.utils.data.Dataloader(data_set, batch_size=args.batch_size, num_workers=4, pin_memory=True,
-                                              shuffle=True, drop_last=True)
-    test_loader = torch.utils.data.Dataloader(test_set, batch_size=args.batch_size, num_workers=4, pin_memory=True,
-                                              shuffle=True, drop_last=True)
-
-    learn = Learn(train_loader=data_loader, test_loader=test_loader, train_set=data_set, test_set=test_set,
+    # train_set = dataloader.PianoRollRep(midi_path)
+    # test_set = dataloader.PianoRollRep(test_path)
+    #
+    # # Initialize Dataloader
+    # data_loader = torch.utils.data.Dataloader(train_set, batch_size=args.batch_size, num_workers=4, pin_memory=True,
+    #                                           shuffle=True, drop_last=True)
+    # test_loader = torch.utils.data.Dataloader(test_set, batch_size=args.batch_size, num_workers=4, pin_memory=True,
+    #                                           shuffle=True, drop_last=True)
+    train_loader, test_loader = dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
+                                                           batch_size=args.batch_size, export=False)
+    learn = Learn(train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set,
                   batch_size=args.batch_size, seed=args.seed, lr=args.lr)
 
     # Set time
