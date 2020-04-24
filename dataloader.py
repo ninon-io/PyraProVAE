@@ -5,6 +5,8 @@ import numpy as np
 import math
 import pretty_midi
 from statistics import mean
+from torch.utils.data.sampler import SubsetRandomSampler
+from torch.utils.data import Dataset
 
 data_dir = 'midi_short_dataset'
 
@@ -62,6 +64,27 @@ class PianoRollRep(Dataset):
                     sliced_piano_roll = np.pad(sliced_piano_roll, ((0, 0), (0, self.frame_bar - sliced_piano_roll.shape[1])), 'edge')
                 sliced_piano_roll = torch.from_numpy(sliced_piano_roll)
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
+
+
+def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
+    data_set = PianoRollRep(bar_dir, frame_bar, export)
+    data_set_size = len(data_set)
+    # compute indices for train/test split
+    indices = list(range(data_set_size))
+    split = int(np.floor(test_split * data_set_size))
+    if shuffle_data_set:
+        np.random.seed(life_seed)
+        np.random.shuffle(indices)
+    train_indices, test_indices = indices[split:], indices[:split]
+    # create corresponding subsets
+    train_sampler = SubsetRandomSampler(train_indices)
+    test_sampler = SubsetRandomSampler(test_indices)
+    train_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=train_sampler,
+                                               num_workers=4, pin_memory=True, shuffle=True, drop_last=True)
+    test_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=test_sampler,
+                                              num_workers=4, pin_memory=True, shuffle=True, drop_last=True)
+
+    return train_loader, test_loader
 
 
 
