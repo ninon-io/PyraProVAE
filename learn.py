@@ -4,13 +4,29 @@ from torch.nn import functional as F
 from tqdm import tqdm
 
 from vae import VaeModel
+from vae import HierarchicalDecoder, HierarchicalEncoder
 
 
 class Learn:
     def __init__(self, train_loader, test_loader, train_set, test_set, batch_size=512, seed=1, lr=0.01):
         torch.manual_seed(seed)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model = VaeModel().to(device=self.device)
+        self.input_dim = 128
+        self.enc_hidden_size = 2048
+        self.latent_size = 512
+        self.cond_hidden_size = 1024
+        self.cond_output_dim = 512
+        self.dec_hidden_size = 1024
+        self.num_layers = 2
+        self.num_subsequences = 8
+        self.seq_length = 128
+        self.encoder = HierarchicalEncoder(input_dim=self.input_dim, enc_hidden_size=self.enc_hidden_size,
+                                           latent_size=self.latent_size)
+        self.decoder = HierarchicalDecoder(input_size=self.input_dim, latent_size=self.latent_size,
+                                           cond_hidden_size=self.cond_hidden_size, cond_outdim=self.cond_output_dim,
+                                           dec_hidden_size=self.dec_hidden_size, num_layers=self.num_layers,
+                                           num_subsequences=self.num_subsequences, seq_length=self.seq_length)
+        self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).to(device=self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.batch_size = batch_size
         self.n_epochs = 1
@@ -30,7 +46,7 @@ class Learn:
 
     def train(self):
         self.model.train()
-        for i, x in tqdm(enumerate(self.train_loader), total=len(self.train_test)//self.batch_size):
+        for i, x in tqdm(enumerate(self.train_loader), total=len(self.train_set)//self.batch_size):
             if torch.cuda.is_available():
                 x = x.cuda()
             h_enc, c_enc = self.model[0].init_hidden(self.batch_size)
