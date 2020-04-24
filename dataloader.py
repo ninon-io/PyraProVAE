@@ -80,11 +80,11 @@ def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
     train_sampler = SubsetRandomSampler(train_indices)
     test_sampler = SubsetRandomSampler(test_indices)
     train_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=train_sampler,
-                                               num_workers=4, pin_memory=True, shuffle=True, drop_last=True)
+                                               num_workers=4, pin_memory=True, shuffle=False, drop_last=True)
     test_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=test_sampler,
-                                              num_workers=4, pin_memory=True, shuffle=True, drop_last=True)
+                                              num_workers=4, pin_memory=True, shuffle=False, drop_last=True)
 
-    return train_loader, test_loader
+    return train_loader, test_loader, train_sampler, test_sampler
 
 
 
