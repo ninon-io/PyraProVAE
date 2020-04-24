@@ -40,14 +40,14 @@ class VaeModel(nn.Module):
 
 
 class HierarchicalEncoder(nn.Module):
-    def __init__(self, input_dim, hidden_size, latent_size, batch_size, num_layers=2):
+    def __init__(self, input_dim, enc_hidden_size, latent_size, num_layers=2):
         super(HierarchicalEncoder, self).__init__()
-        self.hidden_size = hidden_size
+        self.enc_hidden_size = enc_hidden_size
         self.latent_size = latent_size
         self.num_layers = num_layers
 
         # Define the LSTM layer
-        self.RNN = nn.LSTM(input_dim, hidden_size, batch_first=True, num_layers=num_layers,
+        self.RNN = nn.LSTM(input_dim, enc_hidden_size, batch_first=True, num_layers=num_layers,
                            bidirectional=True, dropout=0.6)
 
     def init_hidden(self, batch_size=1):
