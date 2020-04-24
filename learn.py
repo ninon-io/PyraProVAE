@@ -2,6 +2,7 @@ import torch
 from torch import optim
 from torch.nn import functional as F
 from tqdm import tqdm
+import numpy as np
 
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
@@ -11,7 +12,7 @@ class Learn:
     def __init__(self, train_loader, test_loader, train_set, test_set, batch_size=512, seed=1, lr=0.01):
         torch.manual_seed(seed)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.input_dim = 128
+        self.input_dim = 100
         self.enc_hidden_size = 2048
         self.latent_size = 512
         self.cond_hidden_size = 1024
@@ -26,7 +27,7 @@ class Learn:
                                            cond_hidden_size=self.cond_hidden_size, cond_outdim=self.cond_output_dim,
                                            dec_hidden_size=self.dec_hidden_size, num_layers=self.num_layers,
                                            num_subsequences=self.num_subsequences, seq_length=self.seq_length)
-        self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).to(device=self.device)
+        self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).double().to(device=self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.batch_size = batch_size
         self.n_epochs = 1
@@ -46,15 +47,14 @@ class Learn:
 
     def train(self):
         self.model.train()
-        for i, x in tqdm(enumerate(self.train_loader), total=len(self.train_set)//self.batch_size):
-            if torch.cuda.is_available():
-                x = x.cuda()
-            h_enc, c_enc = self.model[0].init_hidden(self.batch_size)
-            mu, log_var = self.model[0](x, h_enc, c_enc)
+        for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
+            x = x.to(self.device)
+            h_enc, c_enc = self.encoder.init_hidden(batch_size=self.batch_size)  # TODO: NOT FUCKING WORKING
+            mu, log_var = self.encoder(x.double(), h_enc, c_enc)
             with torch.no_grad():
                 latent = mu + log_var * torch.randn_like(mu)
-            h_dec, c_dec = self.model[1].init_hidden(self.batch_size)
-            x_recon = self.model[1](latent, x, h_dec, c_dec, teacher_forcing=True)
+            h_dec, c_dec = self.decoder.init_hidden(self.batch_size)   # TODO: STILL NOT WORKING =(
+            x_recon = self.decoder(latent, x, h_dec, c_dec, teacher_forcing=True)
             kl_div = - 1/2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
             self.recon_loss_mean += recon_loss
@@ -77,14 +77,15 @@ class Learn:
             for i, V in tqdm(enumerate(self.test_loader), total=len(self.test_set)//self.batch_size):
                 if V.max() != 0:
                     x = V / V.max()
-                if torch.cuda.is_available():
-                    x = x.cuda()
+                x = x.to(self.device)
                 # Training test pass
-                h_enc, c_enc = self.model[0].init_hidden(self.batch_size)
-                mu, log_var = self.model[0](x, h_enc, c_enc)
-                latent = mu + log_var * torch.randn_like(mu)
-                h_dec, c_dec = self.model[1].init_hidden(self.batch_size)
-                x_recon = self.model[1](latent, x, h_dec, c_dec, teacher_forcing=True)
+                # h_enc, c_enc = self.encoder.init_hidden(batch_size=self.batch_size)  # seems to work...?
+                # mu, log_var = self.encoder(x.double(), h_enc, c_enc)
+                # latent = mu + log_var * torch.randn_like(mu)
+                # h_dec, c_dec = self.decoder.init_hidden(self.batch_size)  # same problem here...?
+                # x_recon = self.model[1](latent, x, h_dec, c_dec, teacher_forcing=True)
+                mu, sigma, latent, x_recon = self.model(x)
+                log_var = np.log(sigma**2)
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
                 self.recon_loss_mean_test += recon_loss
