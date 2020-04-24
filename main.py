@@ -7,8 +7,8 @@ import dataloader
 import vae
 
 data_dir = 'midi_short_dataset'
-midi_path = "fast-1/ninon/datasets/maestro_folder/train"
-test_path = "fast-1/ninon/datasets/maestro_folder/test"
+# midi_path = "fast-1/ninon/datasets/maestro_folder/train"
+# test_path = "fast-1/ninon/datasets/maestro_folder/test"
 
 # get the arguments, if not on command line, the arguments are default
 parser = argparse.ArgumentParser(description='Music VAE')
@@ -40,6 +40,10 @@ use_cuda = not args.no_cuda and torch.cuda.is_available()
 kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
+    train_loader, test_loader, train_set, test_set = dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
+                                                                                batch_size=args.batch_size, export=False)
+    learn = Learn(train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set,
+                  batch_size=args.batch_size, seed=args.seed, lr=args.lr)
     # Load Dataset
     # train_set = dataloader.PianoRollRep(midi_path)
     # test_set = dataloader.PianoRollRep(test_path)
@@ -49,10 +53,6 @@ if __name__ == "__main__":
     #                                           shuffle=True, drop_last=True)
     # test_loader = torch.utils.data.Dataloader(test_set, batch_size=args.batch_size, num_workers=4, pin_memory=True,
     #                                           shuffle=True, drop_last=True)
-    train_loader, test_loader = dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
-                                                           batch_size=args.batch_size, export=False)
-    learn = Learn(train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set,
-                  batch_size=args.batch_size, seed=args.seed, lr=args.lr)
 
     # Set time
     time0 = time()
