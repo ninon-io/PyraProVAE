@@ -49,12 +49,15 @@ class Learn:
         self.model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
             x = x.to(self.device)
-            h_enc, c_enc = self.encoder.init_hidden(batch_size=self.batch_size)  # TODO: NOT FUCKING WORKING
-            mu, log_var = self.encoder(x.double(), h_enc, c_enc)
+            # h_enc, c_enc = self.encoder.init_hidden(batch_size=self.batch_size)  # TODO: NOT FUCKING WORKING
+            # mu, log_var = self.encoder(x.double(), h_enc, c_enc)
+            # with torch.no_grad():
+            #     latent = mu + log_var * torch.randn_like(mu)
+            # h_dec, c_dec = self.decoder.init_hidden(self.batch_size)   # TODO: STILL NOT WORKING =(
+            # x_recon = self.decoder(latent, x, h_dec, c_dec, teacher_forcing=True)
+            mu, sigma, latent, x_recon = self.model(x)
             with torch.no_grad():
-                latent = mu + log_var * torch.randn_like(mu)
-            h_dec, c_dec = self.decoder.init_hidden(self.batch_size)   # TODO: STILL NOT WORKING =(
-            x_recon = self.decoder(latent, x, h_dec, c_dec, teacher_forcing=True)
+                log_var = np.log(sigma ** 2)
             kl_div = - 1/2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
             self.recon_loss_mean += recon_loss
