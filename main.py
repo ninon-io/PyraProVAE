@@ -1,11 +1,13 @@
 from time import time
 import argparse
 import torch.nn.utils
+from guppy import hpy
 
 from learn import Learn
 import dataloader
 import vae
 
+h = hpy()
 data_dir = 'midi_short_dataset'
 # midi_path = "fast-1/ninon/datasets/maestro_folder/train"
 # test_path = "fast-1/ninon/datasets/maestro_folder/test"
@@ -37,7 +39,7 @@ parser.add_argument('--save-model', action='store_true', default=True,
 args = parser.parse_args()
 
 use_cuda = not args.no_cuda and torch.cuda.is_available()
-kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
     train_loader, test_loader, train_set, test_set = dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
@@ -55,12 +57,16 @@ if __name__ == "__main__":
     #                                           shuffle=True, drop_last=True)
 
     # Set time
+    print(h.heap())
     time0 = time()
     # Initial training of the model
     learn.test()  # First test on randomly initialized data
+    print(h.heap())
     for epoch in range(args.epochs):
+        print(h.heap())
         print('epoch:' + str(epoch))
         learn.train()
+        print(h.heap())
         learn.test()
     # learn.plot()
 

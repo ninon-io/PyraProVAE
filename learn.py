@@ -3,9 +3,12 @@ from torch import optim
 from torch.nn import functional as F
 from tqdm import tqdm
 import numpy as np
+from guppy import hpy
 
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
+
+h = hpy()
 
 
 class Learn:
@@ -56,6 +59,7 @@ class Learn:
             # h_dec, c_dec = self.decoder.init_hidden(self.batch_size)   # TODO: STILL NOT WORKING =(
             # x_recon = self.decoder(latent, x, h_dec, c_dec, teacher_forcing=True)
             mu, sigma, latent, x_recon = self.model(x)
+            print(h.heap())
             with torch.no_grad():
                 log_var = np.log(sigma ** 2)
             kl_div = - 1/2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
@@ -65,11 +69,13 @@ class Learn:
             # Training pass
             loss = recon_loss + self.beta * kl_div
             self.loss_mean += loss
+            print(h.heap())
             self.optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
             # Optimizes weights
             self.optimizer.step()
+            print(h.heap())
             if self.n_epochs > 10 and self.beta < 1:
                 self.beta += 0.0025
             self.n_epochs += 1
