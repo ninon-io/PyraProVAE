@@ -9,27 +9,27 @@ from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
 
 h = hpy()
+input_dim = 100
+enc_hidden_size = 2048
+latent_size = 512
+cond_hidden_size = 1024
+cond_output_dim = 512
+dec_hidden_size = 1024
+num_layers = 2
+num_subsequences = 8
+seq_length = 128
 
 
 class Learn:
     def __init__(self, train_loader, test_loader, train_set, test_set, batch_size=512, seed=1, lr=0.01):
         torch.manual_seed(seed)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.input_dim = 100
-        self.enc_hidden_size = 2048
-        self.latent_size = 512
-        self.cond_hidden_size = 1024
-        self.cond_output_dim = 512
-        self.dec_hidden_size = 1024
-        self.num_layers = 2
-        self.num_subsequences = 8
-        self.seq_length = 128
-        self.encoder = HierarchicalEncoder(input_dim=self.input_dim, enc_hidden_size=self.enc_hidden_size,
-                                           latent_size=self.latent_size)
-        self.decoder = HierarchicalDecoder(input_size=self.input_dim, latent_size=self.latent_size,
-                                           cond_hidden_size=self.cond_hidden_size, cond_outdim=self.cond_output_dim,
-                                           dec_hidden_size=self.dec_hidden_size, num_layers=self.num_layers,
-                                           num_subsequences=self.num_subsequences, seq_length=self.seq_length)
+        self.encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,
+                                           latent_size=latent_size)
+        self.decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,
+                                           cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
+                                           dec_hidden_size=dec_hidden_size, num_layers=num_layers,
+                                           num_subsequences=num_subsequences, seq_length=seq_length)
         self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).double().to(device=self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.batch_size = batch_size
@@ -52,12 +52,6 @@ class Learn:
         self.model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
             x = x.to(self.device)
-            # h_enc, c_enc = self.encoder.init_hidden(batch_size=self.batch_size)  # TODO: NOT FUCKING WORKING
-            # mu, log_var = self.encoder(x.double(), h_enc, c_enc)
-            # with torch.no_grad():
-            #     latent = mu + log_var * torch.randn_like(mu)
-            # h_dec, c_dec = self.decoder.init_hidden(self.batch_size)   # TODO: STILL NOT WORKING =(
-            # x_recon = self.decoder(latent, x, h_dec, c_dec, teacher_forcing=True)
             mu, sigma, latent, x_recon = self.model(x)
             print(h.heap())
             with torch.no_grad():
@@ -87,12 +81,6 @@ class Learn:
                 if V.max() != 0:
                     x = V / V.max()
                 x = x.to(self.device)
-                # Training test pass
-                # h_enc, c_enc = self.encoder.init_hidden(batch_size=self.batch_size)  # seems to work...?
-                # mu, log_var = self.encoder(x.double(), h_enc, c_enc)
-                # latent = mu + log_var * torch.randn_like(mu)
-                # h_dec, c_dec = self.decoder.init_hidden(self.batch_size)  # same problem here...?
-                # x_recon = self.model[1](latent, x, h_dec, c_dec, teacher_forcing=True)
                 mu, sigma, latent, x_recon = self.model(x)
                 log_var = np.log(sigma**2)
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
