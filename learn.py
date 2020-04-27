@@ -8,7 +8,10 @@ from guppy import hpy
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
 
+# Track the memory usage
 h = hpy()
+
+# Dimensions of the architecture
 input_dim = 100
 enc_hidden_size = 2048
 latent_size = 512
@@ -90,22 +93,5 @@ class Learn:
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_test += loss
                 self.epoch_test += 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
