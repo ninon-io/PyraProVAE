@@ -9,12 +9,12 @@ class VaeModel(nn.Module):
         self.tf = teacher_forcing
         self.encoder = encoder
         self.decoder = decoder
-        self.hidden_to_mu = nn.Linear(2 * encoder.hidden_size, encoder.latent_size)
-        self.hidden_to_sigma = nn.Linear(2 * encoder.hidden_size, encoder.latent_size)
+        self.hidden_to_mu = nn.Linear(2 * encoder.enc_hidden_size, encoder.latent_size)
+        self.hidden_to_sigma = nn.Linear(2 * encoder.enc_hidden_size, encoder.latent_size)
 
     def forward(self, x):
         # Encoder pass
-        batch_size = x.size[0]
+        batch_size = x.size(0)
         h_enc, c_enc = self.encoder.init_hidden(batch_size)
         hidden = self.encoder(x, h_enc, c_enc)
 
@@ -53,12 +53,12 @@ class HierarchicalEncoder(nn.Module):
     def init_hidden(self, batch_size=1):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
-        return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
-                torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
+        return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.double, device=device),
+                torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.double, device=device))
 
     def forward(self, x, h0, c0):
         batch_size = x.shape[0]
-        _, (h, _) = self.LSTM(x, (h0, c0))
+        _, (h, _) = self.RNN(x, (h0, c0))
         h = h.view(self.num_layers, 2, batch_size, -1)
         h = h[-1]
         h = torch.cat([h[0], h[1]], dim=1)
@@ -103,16 +103,17 @@ class HierarchicalDecoder(nn.Module):
         subseq_embeddings = self.conductor_output(subseq_embeddings)
 
         # Get the initial state of decoder
-        h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size, -1).contiguous()
+        h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
+                                                                      self.num_subsequences, -1).contiguous()
 
         # Init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
-        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=device)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.double, device=device)
+        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.double, device=device)
 
         # autoregressively output token
         for subseq in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, subseq, :]
-            h0_dec = h0s_dec[:, subseq, :].contiguous()
+            h0_dec = h0s_dec[:, :, subseq, :].contiguous()
             c0_dec = h0s_dec[:, :, subseq, :].contiguous()
             # Concat the previous token and the current subseq embedding as input
             dec_input = torch.cat((token, subseq_embedding.unsqueeze(1).expand(-1, subseq_size, -1)), -1)
