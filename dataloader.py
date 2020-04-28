@@ -23,8 +23,8 @@ class PianoRollRep(Dataset):
         # path directory with midi files
         self.root_dir = root_dir
         # files names .mid
-        self.midi_files = [files_names for files_names in os.listdir(root_dir)
-                           if (files_names.endswith('.midi') or files_names.endswith('.mid'))]
+        self.midi_files = np.array([files_names for files_names in os.listdir(root_dir)
+                                    if (files_names.endswith('.midi') or files_names.endswith('.mid'))])
         # number of frame per bar
         self.frame_bar = frame_bar
         # path to the sliced piano-roll
@@ -36,11 +36,12 @@ class PianoRollRep(Dataset):
             if export:
                 self.bar_export()
         # files names .pt
-        self.bar_files = [files_names for files_names in os.listdir(self.bar_dir) if files_names.endswith('.pt')]
+        self.bar_files = np.array([files_names for files_names in os.listdir(self.bar_dir)
+                                   if files_names.endswith('.pt')])
         # number of tracks in dataset
-        self.nb_track = len(self.midi_files)
+        self.nb_track = np.size(self.midi_files)
         # number of bars
-        self.nb_bars = len(self.bar_files)
+        self.nb_bars = np.size(self.bar_files)
 
     def __len__(self):
         return self.nb_bars
@@ -58,11 +59,12 @@ class PianoRollRep(Dataset):
             piano_roll = midi_data.get_piano_roll(fs=fs)
             for i in range(len(downbeats) - 1):
                 # compute the piano-roll for one bar and save it
-                sliced_piano_roll = piano_roll[:, math.ceil(downbeats[i]*fs) + 1:math.ceil(downbeats[i+1]*fs) + 1]
+                sliced_piano_roll = piano_roll[:, math.ceil(downbeats[i] * fs) + 1:math.ceil(downbeats[i + 1] * fs) + 1]
                 if sliced_piano_roll.shape[1] > self.frame_bar:
                     sliced_piano_roll = sliced_piano_roll[:, 0:self.frame_bar]
                 elif sliced_piano_roll.shape[1] < self.frame_bar:
-                    sliced_piano_roll = np.pad(sliced_piano_roll, ((0, 0), (0, self.frame_bar - sliced_piano_roll.shape[1])), 'edge')
+                    sliced_piano_roll = np.pad(sliced_piano_roll,
+                                               ((0, 0), (0, self.frame_bar - sliced_piano_roll.shape[1])), 'edge')
                 sliced_piano_roll = torch.from_numpy(sliced_piano_roll)
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
@@ -72,7 +74,7 @@ def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
     data_set_size = len(data_set)
     # compute indices for train/test split
     indices = list(range(data_set_size))
-    split = int(np.floor(test_split * data_set_size))
+    split = np.int(np.floor(test_split * data_set_size))
     if shuffle_data_set:
         np.random.seed(life_seed)
         np.random.shuffle(indices)
@@ -86,10 +88,3 @@ def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
                                               num_workers=0, pin_memory=True, shuffle=False, drop_last=True)
 
     return train_loader, test_loader, train_sampler, test_sampler
-
-
-
-
-
-
-

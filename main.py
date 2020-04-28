@@ -5,6 +5,7 @@ from guppy import hpy
 
 from learn import Learn
 import dataloader
+import Dumb_dataloader
 import vae
 
 h = hpy()
@@ -23,7 +24,7 @@ parser.add_argument('--input_dim', type=int, default=100,
 parser.add_argument('--epochs', type=int, default=14, metavar='N',
                     help='number of epochs to train (default: 14)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
-                    help='learning rate (default: 1.0)')
+                    help='learning rate (default: 0.01)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
@@ -42,8 +43,13 @@ use_cuda = not args.no_cuda and torch.cuda.is_available()
 kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
+
     train_loader, test_loader, train_set, test_set = dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
                                                                                 batch_size=args.batch_size, export=False)
+    # Here Dumb Dataloader
+    # train_loader, test_loader, train_set, test_set = Dumb_dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
+    #                                                                             batch_size=args.batch_size,
+    #                                                                             export=False)
     learn = Learn(train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set,
                   batch_size=args.batch_size, seed=args.seed, lr=args.lr)
     # Load Dataset
