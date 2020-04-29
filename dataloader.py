@@ -51,17 +51,18 @@ class PianoRollRep(Dataset):
 
     def bar_export(self):
         # load midi in a pretty midi object
-        for index in range(len(self.midi_files)):
+        for index in np.arange(start=0, stop=np.size(self.midi_files)):
             midi_data = pretty_midi.PrettyMIDI(self.root_dir + '/' + self.midi_files[index])
             downbeats = midi_data.get_downbeats()
-            bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
-            fs = int(self.frame_bar / round(bar_time))
+            bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])  # NP not possible
+            fs = int(self.frame_bar / round(bar_time))  # NP not possible
             piano_roll = midi_data.get_piano_roll(fs=fs)
             for i in range(len(downbeats) - 1):
                 # compute the piano-roll for one bar and save it
-                sliced_piano_roll = piano_roll[:, math.ceil(downbeats[i] * fs) + 1:math.ceil(downbeats[i + 1] * fs) + 1]
+                sliced_piano_roll = np.array(piano_roll[:,
+                                             math.ceil(downbeats[i] * fs) + 1:math.ceil(downbeats[i + 1] * fs) + 1])
                 if sliced_piano_roll.shape[1] > self.frame_bar:
-                    sliced_piano_roll = sliced_piano_roll[:, 0:self.frame_bar]
+                    sliced_piano_roll = np.array(sliced_piano_roll[:, 0:self.frame_bar])
                 elif sliced_piano_roll.shape[1] < self.frame_bar:
                     sliced_piano_roll = np.pad(sliced_piano_roll,
                                                ((0, 0), (0, self.frame_bar - sliced_piano_roll.shape[1])), 'edge')
@@ -73,12 +74,12 @@ def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
     data_set = PianoRollRep(bar_dir, frame_bar, export)
     data_set_size = len(data_set)
     # compute indices for train/test split
-    indices = list(range(data_set_size))
+    indices = np.array(list(range(data_set_size)))
     split = np.int(np.floor(test_split * data_set_size))
     if shuffle_data_set:
         np.random.seed(life_seed)
         np.random.shuffle(indices)
-    train_indices, test_indices = indices[split:], indices[:split]
+    train_indices, test_indices = np.array(indices[split:]), np.array(indices[:split])
     # create corresponding subsets
     train_sampler = SubsetRandomSampler(train_indices)
     test_sampler = SubsetRandomSampler(test_indices)
