@@ -5,7 +5,7 @@ from guppy import hpy
 
 from learn import Learn
 import data_loader
-import Dumb_dataloader
+import dumb_dataloader
 import vae
 
 h = hpy()
@@ -44,20 +44,20 @@ kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
 
-    train_loader, test_loader, train_set, test_set = data_loader.get_data_loader(bar_dir=data_dir,
-                                                                                 frame_bar=100,
-                                                                                 batch_size=args.batch_size,
-                                                                                 export=False)
+    # train_loader, test_loader, train_set, test_set = data_loader.get_data_loader(bar_dir=data_dir,
+    #                                                                              frame_bar=100,
+    #                                                                              batch_size=args.batch_size,
+    #                                                                              export=False)
     # Here Dumb Dataloader
-    # train_loader, test_loader, train_set, test_set = Dumb_dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
-    #                                                                                  batch_size=args.batch_size,
-    #                                                                                  export=False)
+    train_loader, test_loader, train_set, test_set = dumb_dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
+                                                                                     batch_size=args.batch_size,
+                                                                                     export=False)
 
     learn = Learn(train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set,
                   batch_size=args.batch_size, seed=args.seed, lr=args.lr)
 
     # Set time
-    print(h.heap())
+    # print(h.heap())
     time0 = time()
     # Initial training of the model
     learn.test()  # First test on randomly initialized data
