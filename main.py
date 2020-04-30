@@ -4,7 +4,7 @@ import torch.nn.utils
 from guppy import hpy
 
 from learn import Learn
-import dataloader
+import data_loader
 import Dumb_dataloader
 import vae
 
@@ -44,23 +44,17 @@ kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
 
-    train_loader, test_loader, train_set, test_set = dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
-                                                                                batch_size=args.batch_size, export=False)
+    train_loader, test_loader, train_set, test_set = data_loader.get_data_loader(bar_dir=data_dir,
+                                                                                 frame_bar=100,
+                                                                                 batch_size=args.batch_size,
+                                                                                 export=False)
     # Here Dumb Dataloader
     # train_loader, test_loader, train_set, test_set = Dumb_dataloader.get_data_loader(bar_dir=data_dir, frame_bar=100,
-    #                                                                             batch_size=args.batch_size,
-    #                                                                             export=False)
+    #                                                                                  batch_size=args.batch_size,
+    #                                                                                  export=False)
+
     learn = Learn(train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set,
                   batch_size=args.batch_size, seed=args.seed, lr=args.lr)
-    # Load Dataset
-    # train_set = dataloader.PianoRollRep(midi_path)
-    # test_set = dataloader.PianoRollRep(test_path)
-    #
-    # # Initialize Dataloader
-    # data_loader = torch.utils.data.Dataloader(train_set, batch_size=args.batch_size, num_workers=4, pin_memory=True,
-    #                                           shuffle=True, drop_last=True)
-    # test_loader = torch.utils.data.Dataloader(test_set, batch_size=args.batch_size, num_workers=4, pin_memory=True,
-    #                                           shuffle=True, drop_last=True)
 
     # Set time
     print(h.heap())

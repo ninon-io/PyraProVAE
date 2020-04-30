@@ -54,9 +54,9 @@ class PianoRollRep(Dataset):
         for index in np.arange(start=0, stop=np.size(self.midi_files)):
             midi_data = pretty_midi.PrettyMIDI(self.root_dir + '/' + self.midi_files[index])
             downbeats = midi_data.get_downbeats()
-            bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])  # NP not possible
-            fs = int(self.frame_bar / round(bar_time))  # NP not possible
-            piano_roll = midi_data.get_piano_roll(fs=fs)
+            bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
+            fs = int(self.frame_bar / round(bar_time))
+            piano_roll = midi_data.get_piano_roll(fs=fs)  # Returns np.array, shape=(128, times.shape[0])
             for i in range(len(downbeats) - 1):
                 # compute the piano-roll for one bar and save it
                 sliced_piano_roll = np.array(piano_roll[:,
