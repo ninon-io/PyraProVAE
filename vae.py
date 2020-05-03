@@ -79,7 +79,10 @@ class HierarchicalDecoder(nn.Module):
 
         # Define init for architecture: first conductor then decoder
         self.tanh = nn.Tanh()
+        # TODO: use one of them eventually?
         self.sigmoid = nn.Sigmoid()
+        self.softmax = nn.Softmax()
+
         self.fc_init_cond = nn.Linear(latent_size, cond_hidden_size * num_layers)
         self.conductor_RNN = nn.LSTM(latent_size // num_subsequences, cond_hidden_size, batch_first=True, num_layers=2,
                                      bidirectional=False, dropout=0.6)
