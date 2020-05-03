@@ -4,9 +4,13 @@ from torch.nn import functional as F
 from tqdm import tqdm
 import numpy as np
 from guppy import hpy
-
+# VAE model
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
+
+# Dumb model
+from dumb_vae import Identity
+from dumb_vae import DumbEncoder, DumbDecoder
 
 # Track the memory usage
 h = hpy()
@@ -27,13 +31,24 @@ class Learn:
     def __init__(self, train_loader, test_loader, train_set, test_set, batch_size=512, seed=1, lr=0.01):
         torch.manual_seed(seed)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,
-                                           latent_size=latent_size)
-        self.decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,
-                                           cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
-                                           dec_hidden_size=dec_hidden_size, num_layers=num_layers,
-                                           num_subsequences=num_subsequences, seq_length=seq_length)
-        self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).double().to(device=self.device)
+
+        # Normal usage
+        # self.encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,
+        #                                    latent_size=latent_size)
+        # self.decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,
+        #                                    cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
+        #                                    dec_hidden_size=dec_hidden_size, num_layers=num_layers,
+        #                                    num_subsequences=num_subsequences, seq_length=seq_length)
+        # self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).double().to(device=self.device)
+
+        # Identity model trials
+        self.encoder = DumbEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size, latent_size=latent_size)
+        self.decoder = DumbDecoder(input_size=input_dim, latent_size=latent_size,
+                                   cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
+                                   dec_hidden_size=dec_hidden_size, num_layers=num_layers,
+                                   num_subsequences=num_subsequences, seq_length=seq_length)
+        self.model = Identity(encoder=self.encoder, decoder=self.decoder).double().to(device=self.device)
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.batch_size = batch_size
         self.n_epochs = 1
@@ -59,7 +74,7 @@ class Learn:
             # print(h.heap())
             with torch.no_grad():
                 log_var = np.log(sigma ** 2)
-            kl_div = - 1/2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+            kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
             self.recon_loss_mean += recon_loss
             self.kl_div_mean += kl_div
@@ -80,12 +95,12 @@ class Learn:
     def test(self):
         self.model.eval()
         with torch.no_grad():
-            for i, V in tqdm(enumerate(self.test_loader), total=len(self.test_set)//self.batch_size):
-                if V.max() != 0:
-                    x = V / V.max()
+            for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // self.batch_size):
+                if x.max() != 0:
+                    x = x / x.max()
                 x = x.to(self.device)
                 mu, sigma, latent, x_recon = self.model(x)
-                log_var = np.log(sigma**2)
+                log_var = np.log(sigma ** 2)
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
                 self.recon_loss_mean_test += recon_loss
@@ -93,5 +108,3 @@ class Learn:
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_test += loss
                 self.epoch_test += 1
-
-
