@@ -32,22 +32,14 @@ class Learn:
         torch.manual_seed(seed)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Normal usage
-        # self.encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,
-        #                                    latent_size=latent_size)
-        # self.decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,
-        #                                    cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
-        #                                    dec_hidden_size=dec_hidden_size, num_layers=num_layers,
-        #                                    num_subsequences=num_subsequences, seq_length=seq_length)
-        # self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).double().to(device=self.device)
-
-        # Identity model trials
-        self.encoder = DumbEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size, latent_size=latent_size)
-        self.decoder = DumbDecoder(input_size=input_dim, latent_size=latent_size,
-                                   cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
-                                   dec_hidden_size=dec_hidden_size, num_layers=num_layers,
-                                   num_subsequences=num_subsequences, seq_length=seq_length)
-        self.model = Identity(encoder=self.encoder, decoder=self.decoder).double().to(device=self.device)
+        # Define model
+        self.encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,
+                                           latent_size=latent_size)
+        self.decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,
+                                           cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
+                                           dec_hidden_size=dec_hidden_size, num_layers=num_layers,
+                                           num_subsequences=num_subsequences, seq_length=seq_length)
+        self.model = VaeModel(encoder=self.encoder, decoder=self.decoder).float().to(device=self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.batch_size = batch_size
@@ -71,23 +63,20 @@ class Learn:
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
             x = x.to(self.device)
             mu, sigma, latent, x_recon = self.model(x)
-            # print(h.heap())
             with torch.no_grad():
-                log_var = np.log(sigma ** 2)
+                log_var = np.log(sigma.detach() ** 2)
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
-            self.recon_loss_mean += recon_loss
-            self.kl_div_mean += kl_div
+            self.recon_loss_mean += recon_loss.detach()
+            self.kl_div_mean += kl_div.detach()
             # Training pass
             loss = recon_loss + self.beta * kl_div
-            self.loss_mean += loss
-            print(h.heap())
+            self.loss_mean += loss.detach()
             self.optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
             # Optimizes weights
             self.optimizer.step()
-            print(h.heap())
             if self.n_epochs > 10 and self.beta < 1:
                 self.beta += 0.0025
             self.n_epochs += 1
@@ -103,8 +92,8 @@ class Learn:
                 log_var = np.log(sigma ** 2)
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
-                self.recon_loss_mean_test += recon_loss
-                self.kl_div_mean_test += kl_div
+                self.recon_loss_mean_test += recon_loss.detach()
+                self.kl_div_mean_test += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
-                self.loss_mean_test += loss
+                self.loss_mean_test += loss.detach()
                 self.epoch_test += 1
