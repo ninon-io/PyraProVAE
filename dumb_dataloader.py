@@ -19,7 +19,7 @@ class Toy_set(Dataset):
         self.transform = transform
 
     def __getitem__(self, index):
-        sample = torch.from_numpy((self.sample[index]))
+        sample = torch.from_numpy((self.sample[index])).float()
         if self.transform:
             sample = self.transform(sample)
         return sample

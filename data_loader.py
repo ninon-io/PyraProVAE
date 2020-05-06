@@ -66,7 +66,7 @@ class PianoRollRep(Dataset):
                 elif sliced_piano_roll.shape[1] < self.frame_bar:
                     sliced_piano_roll = np.pad(sliced_piano_roll,
                                                ((0, 0), (0, self.frame_bar - sliced_piano_roll.shape[1])), 'edge')
-                sliced_piano_roll = torch.from_numpy(sliced_piano_roll)
+                sliced_piano_roll = torch.from_numpy(sliced_piano_roll).float()
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
 
