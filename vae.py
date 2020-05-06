@@ -53,12 +53,12 @@ class HierarchicalEncoder(nn.Module):
     def init_hidden(self, batch_size=1):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
-        return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.double, device=device),
-                torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.double, device=device))
+        return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=device),
+                torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=device))
 
     def forward(self, x, h0, c0):
         batch_size = x.shape[0]
-        _, (h, _) = self.RNN(x, (h0, c0))
+        _, (h, _) = self.RNN(x.float(), (h0.float(), c0.float()))
         h = h.view(self.num_layers, 2, batch_size, -1)
         h = h[-1]
         h = torch.cat([h[0], h[1]], dim=1)
@@ -110,8 +110,8 @@ class HierarchicalDecoder(nn.Module):
                                                                       self.num_subsequences, -1).contiguous()
 
         # Init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.double, device=device)
-        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.double, device=device)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
+        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=device)
 
         # autoregressively output token
         for subseq in range(self.num_subsequences):
