@@ -43,9 +43,9 @@ class Learn:
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
         self.batch_size = batch_size
-        self.n_epochs = 1
+        self.iter_train = 1
         self.epoch = 0
-        self.epoch_test = 0
+        self.iter_test = 0
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.train_set = train_set
@@ -77,9 +77,9 @@ class Learn:
             loss.backward()
             # Optimizes weights
             self.optimizer.step()
-            if self.n_epochs > 10 and self.beta < 1:
+            if self.iter_train > 10 and self.beta < 1:
                 self.beta += 0.0025
-            self.n_epochs += 1
+            self.iter_train += 1
 
     def test(self):
         self.model.eval()
