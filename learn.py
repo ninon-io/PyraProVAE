@@ -4,13 +4,12 @@ from torch.nn import functional as F
 from tqdm import tqdm
 import numpy as np
 from guppy import hpy
+import os
 # VAE model
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
 
-# Dumb model
-from dumb_vae import Identity
-from dumb_vae import DumbEncoder, DumbDecoder
+from tensorboardX import SummaryWriter
 
 # Track the memory usage
 h = hpy()
@@ -25,6 +24,9 @@ dec_hidden_size = 1024
 num_layers = 2
 num_subsequences = 8
 seq_length = 128
+
+# Tensorboard initialization
+writer = SummaryWriter('./output/runs')
 
 
 class Learn:
@@ -96,4 +98,24 @@ class Learn:
                 self.kl_div_mean_test += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_test += loss.detach()
-                self.epoch_test += 1
+                self.iter_test += 1
+
+    def fill_tensorboard(self, epoch):
+        print("Adding means to tensorboard")
+        with torch.no_grad():
+            both_loss = {'train': self.loss_mean / self.iter_train, 'test': self.loss_mean_test / self.iter_test}
+            writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
+            writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
+            writer.add_scalar('data/reconst_loss_mean', self.recon_loss_mean / self.iter_train, epoch)
+            writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
+            writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
+            writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
+            writer.add_scalars('data/losses', both_loss, epoch)
+
+    def save(self, model_weights_saving_path, entire_model_saving_path, epoch):
+        if not os.path.exists(model_weights_saving_path):
+            os.makedirs(model_weights_saving_path)
+        if not os.path.exists(entire_model_saving_path):
+            os.makedirs(entire_model_saving_path)
+        torch.save(self.model.state_dict(), model_weights_saving_path + '_epoch_' + str(epoch) + '.pth')
+        torch.save(self.model, entire_model_saving_path + '_epoch_' + str(epoch) + '.pth')
