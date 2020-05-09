@@ -15,7 +15,7 @@ data_dir = 'midi_short_dataset'
 # test_path = "fast-1/ninon/datasets/maestro_folder/test"
 
 # Tensorboard initialization
-writer = SummaryWriter('./output/runs')
+# writer = SummaryWriter('./output/runs')
 
 # get the arguments, if not on command line, the arguments are default
 parser = argparse.ArgumentParser(description='Music VAE')
@@ -48,10 +48,10 @@ kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
 
-    train_loader, test_loader, train_set, test_set = data_loader.get_data_loader(bar_dir=data_dir,
-                                                                                 frame_bar=100,
-                                                                                 batch_size=args.batch_size,
-                                                                                 export=False)
+    data_set, train_loader, test_loader, train_set, test_set = data_loader.get_data_loader(bar_dir=data_dir,
+                                                                                           frame_bar=100,
+                                                                                           batch_size=args.batch_size,
+                                                                                           export=False)
 
     learn = Learn(train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set,
                   batch_size=args.batch_size, seed=args.seed, lr=args.lr)
@@ -61,20 +61,16 @@ if __name__ == "__main__":
     # Initial training of the model
     # learn.save('/slow-1/ninon/output/models/weights/', 'slow-1/ninon/output/models/entire_model/', epoch=0)
     learn.save('./models/weights/', './models/entire_model/', epoch=0)
-    learn.test()  # First test on randomly initialized data
+    # learn.test(epoch=0)  # First test on randomly initialized data
     for epoch in range(1, args.epochs + 1, 1):
         print('Epoch:' + str(epoch))
-        learn.train()
-        learn.test()
-        learn.fill_tensorboard(epoch)
+        learn.test_random(data_set)
+        learn.train(epoch)
+        learn.test(epoch)
+        # learn.fill_tensorboard(epoch)
         # learn.save('/slow-1/ninon/output/models/weights/', 'slow-1/ninon/output/models/entire_model/', epoch)
         learn.save('./models/weights/', './models/entire_model/', epoch)
-    writer.close()
+    # writer.close()
     # learn.plot()
 
     print('\nTraining Time in minutes =', (time() - time0) / 60)
-
-
-
-
-

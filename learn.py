@@ -3,6 +3,7 @@ from torch import optim
 from torch.nn import functional as F
 from tqdm import tqdm
 import numpy as np
+import random
 from guppy import hpy
 import os
 # VAE model
@@ -60,7 +61,7 @@ class Learn:
         self.kl_div_mean_test = 0
         self.recon_loss_mean_test = 0
 
-    def train(self):
+    def train(self, epoch, log_interval=10):
         self.model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
             x = x.to(self.device)
@@ -79,11 +80,19 @@ class Learn:
             loss.backward()
             # Optimizes weights
             self.optimizer.step()
+            if batch_idx % log_interval == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    self.iter_train, batch_idx * len(x), len(self.train_loader.dataset),
+                    100. * batch_idx / len(self.train_loader), self.loss_mean))
             if self.iter_train > 10 and self.beta < 1:
                 self.beta += 0.0025
             self.iter_train += 1
+        with torch.no_grad():
+            writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
+            writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
+            writer.add_scalar('data/reconst_loss_mean', self.recon_loss_mean / self.iter_train, epoch)
 
-    def test(self):
+    def test(self, epoch):
         self.model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // self.batch_size):
@@ -99,18 +108,13 @@ class Learn:
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_test += loss.detach()
                 self.iter_test += 1
-
-    def fill_tensorboard(self, epoch):
-        print("Adding means to tensorboard")
-        with torch.no_grad():
-            both_loss = {'train': self.loss_mean / self.iter_train, 'test': self.loss_mean_test / self.iter_test}
-            writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
-            writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
-            writer.add_scalar('data/reconst_loss_mean', self.recon_loss_mean / self.iter_train, epoch)
             writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
-            writer.add_scalars('data/losses', both_loss, epoch)
+        # Print stuffs
+        print('\nTest set: Average Loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+            self.loss_mean_test, loss, len(self.test_loader.dataset), 100. * loss / len(self.test_loader)))
+
     # generate random index for testing random data
     def test_random(self, data_set):
         rand_ind = [random.randint(0, len(data_set)) for i in range(6)]
@@ -125,6 +129,19 @@ class Learn:
             mu, sigma, latent, x_recon = self.model(x)
             print(x_recon.max(dim=2))
             ind += 1
+
+    # # TODO:Put the function inside the test and train function maybe that will work
+    # def fill_tensorboard(self, epoch):
+    #     print("Adding means to tensorboard")
+    #     with torch.no_grad():
+    #         both_loss = {'train': self.loss_mean / self.iter_train, 'test': self.loss_mean_test / self.iter_test}
+    #         writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
+    #         writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
+    #         writer.add_scalar('data/reconst_loss_mean', self.recon_loss_mean / self.iter_train, epoch)
+    #         writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
+    #         writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
+    #         writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
+    #         writer.add_scalars('data/losses', both_loss, epoch)
 
     def save(self, model_weights_saving_path, entire_model_saving_path, epoch):
         if not os.path.exists(model_weights_saving_path):
