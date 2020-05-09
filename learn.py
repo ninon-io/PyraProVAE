@@ -111,6 +111,20 @@ class Learn:
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
             writer.add_scalars('data/losses', both_loss, epoch)
+    # generate random index for testing random data
+    def test_random(self, data_set):
+        rand_ind = [random.randint(0, len(data_set)) for i in range(6)]
+        ind = 0
+
+        for i in range(6):
+            print('-' * 50)
+            print(data_set[rand_ind[ind]])
+            print('-')
+            x = data_set[rand_ind[ind]].unsqueeze(0)
+            x = x.to(self.device)
+            mu, sigma, latent, x_recon = self.model(x)
+            print(x_recon.max(dim=2))
+            ind += 1
 
     def save(self, model_weights_saving_path, entire_model_saving_path, epoch):
         if not os.path.exists(model_weights_saving_path):

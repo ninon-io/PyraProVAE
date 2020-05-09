@@ -88,4 +88,4 @@ def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
     test_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=test_sampler,
                                               num_workers=0, pin_memory=True, shuffle=False, drop_last=True)
 
-    return train_loader, test_loader, train_sampler, test_sampler
+    return data_set, train_loader, test_loader, train_sampler, test_sampler
