@@ -7,6 +7,7 @@ from tensorboardX import SummaryWriter
 
 from learn import Learn
 import data_loader
+from comparison import Comparison
 
 h = hpy()
 
@@ -64,12 +65,13 @@ if __name__ == "__main__":
     # learn.test(epoch=0)  # First test on randomly initialized data
     for epoch in range(1, args.epochs + 1, 1):
         print('Epoch:' + str(epoch))
-        learn.test_random(data_set)
+        learn.test_random(data_set, nb_test=1)
         learn.train(epoch)
         learn.test(epoch)
         # learn.fill_tensorboard(epoch)
         # learn.save('/slow-1/ninon/output/models/weights/', 'slow-1/ninon/output/models/entire_model/', epoch)
         learn.save('./models/weights/', './models/entire_model/', epoch)
+        learn.piano_roll_recon('./models/entire_model/' + '_epoch_' + str(epoch) + '.pth')
     # writer.close()
     # learn.plot()
 
