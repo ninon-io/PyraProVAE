@@ -38,7 +38,7 @@ class PianoRollRep(Dataset):
         # files names .pt
         self.bar_files = np.array([files_names for files_names in os.listdir(self.bar_dir)
                                    if files_names.endswith('.pt')])
-        # number of tracks in dataset
+        # number of tracks in data set
         self.nb_track = np.size(self.midi_files)
         # number of bars
         self.nb_bars = np.size(self.bar_files)
