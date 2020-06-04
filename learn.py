@@ -61,7 +61,7 @@ class Learn:
         self.recon_loss_mean_test = 0
 
     def train(self, epoch, log_interval=10):
-        writer = SummaryWriter('slow-2/ninon/pyrapro/output/runs')
+        writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
         self.model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
             x = x.to(self.device)
@@ -95,7 +95,7 @@ class Learn:
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
     def test(self, epoch):
-        writer = SummaryWriter('slow-2/ninon/pyrapro/output/runs')
+        writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
         self.model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // self.batch_size):

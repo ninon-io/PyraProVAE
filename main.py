@@ -16,8 +16,8 @@ midi_path = '/fast-1/mathieu/datasets/maestro_folders/train'
 # test_path = "fast-1/mathieu/datasets/maestro_folder/test"
 
 # Saving Paths of the model
-entire_model_saving_path = 'slow-2/ninon/pyrapro/models/entire_model/'
-model_weights_saving_path = 'slow-2/ninon/pyrapro/models/weights/'
+entire_model_saving_path = '/slow-2/ninon/pyrapro/models/entire_model/'
+model_weights_saving_path = '/slow-2/ninon/pyrapro/models/weights/'
 
 # get the arguments, if not on command line, the arguments are default
 parser = argparse.ArgumentParser(description='Music VAE')
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # Set time
     time0 = time()
     # Initial training of the model
-    learn.save('slow-2/ninon/pyrapro/models/weights/', 'slow-2/ninon/pyrapro/models/entire_model/', epoch=0)
+    learn.save('/slow-2/ninon/pyrapro/models/weights/', '/slow-2/ninon/pyrapro/models/entire_model/', epoch=0)
     learn.test(epoch=0)  # First test on randomly initialized data
 
     for epoch in range(1, args.epochs + 1, 1):
@@ -69,6 +69,6 @@ if __name__ == "__main__":
         loss_mean, kl_div_mean, recon_loss_mean = learn.train(epoch)
         loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(epoch)
         learn.save(model_weights_saving_path, entire_model_saving_path, epoch)
-        reconstruction(midi_path, entire_model_saving_path, 'slow-2/ninon/pyrapro/reconstruction/', epoch)
+        reconstruction(midi_path, entire_model_saving_path, '/slow-2/ninon/pyrapro/reconstruction/', epoch)
 
     print('\nTraining Time in minutes =', (time() - time0) / 60)
