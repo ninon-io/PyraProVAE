@@ -10,7 +10,8 @@ from reconstruction import reconstruction
 # h = hpy()
 
 # Dataset Path
-midi_path = 'midi_short_dataset'
+# midi_path = 'midi_short_dataset'
+midi_path = '/fast-1/mathieu/dataset/maestro_folders/train'
 # train_path = "fast-1/mathieu/datasets/maestro_folder/train"
 # test_path = "fast-1/mathieu/datasets/maestro_folder/test"
 
