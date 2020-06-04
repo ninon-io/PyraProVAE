@@ -63,7 +63,7 @@ class Learn:
         self.model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
             x = x.to(self.device)
-            mu, sigma, latent, x_recon = self.model(x).cuda()
+            mu, sigma, latent, x_recon = self.model(x)
             with torch.no_grad():
                 log_var = np.log(sigma.detach() ** 2)
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
