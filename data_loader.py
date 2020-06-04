@@ -9,7 +9,8 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 from guppy import hpy
 
-data_dir = 'midi_short_dataset'
+# data_dir = 'midi_short_dataset'
+data_dir = '/fast-1/mathieu/dataset/maestro_folders/train'
 h = hpy()
 batch_plot = 4
 test_split = 0.2
