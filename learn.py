@@ -61,7 +61,7 @@ class Learn:
         self.recon_loss_mean_test = 0
 
     def train(self, epoch, log_interval=10):
-        writer = SummaryWriter('./output/runs')
+        writer = SummaryWriter('slow-2/ninon/pyrapro/output/runs')
         self.model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // self.batch_size):
             x = x.to(self.device)
@@ -95,7 +95,7 @@ class Learn:
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
     def test(self, epoch):
-        writer = SummaryWriter('./output/runs')
+        writer = SummaryWriter('slow-2/ninon/pyrapro/output/runs')
         self.model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // self.batch_size):
@@ -135,7 +135,8 @@ class Learn:
         state_dict = torch.load(entire_model_saving_path + '_epoch_' + str(epoch) + '.pth')
         model.eval()
 
-    def piano_roll_recon(self, entire_model_saving_path, fs=100, program=0):  # TODO: FIX THE RECON FROM LATENT
+    # TODO: NOT WORKING
+    def piano_roll_recon(self, entire_model_saving_path, fs=100, program=0):
         # state_dict = torch.load(entire_model_saving_path)
         # loss_mean, kl_div_mean, recon_loss_mean = learn.train()
         model = self.model
