@@ -31,7 +31,7 @@ parser.add_argument('--epochs', type=int, default=14, metavar='N',
                     help='number of epochs to train (default: 14)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
-parser.add_argument('--no-cuda', action='store_true', default=True,
+parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
@@ -46,7 +46,7 @@ parser.add_argument('--save-model', action='store_true', default=True,
 args = parser.parse_args()
 
 use_cuda = not args.no_cuda and torch.cuda.is_available()
-kwargs = {'num_workers': 0, 'pin_memory': True} if use_cuda else {}
+kwargs = {'num_workers': 3, 'pin_memory': True} if use_cuda else {}
 
 if __name__ == "__main__":
 

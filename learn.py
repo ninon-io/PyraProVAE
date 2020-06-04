@@ -3,11 +3,9 @@ from torch import optim
 from torch.nn import functional as F
 from tqdm import tqdm
 import numpy as np
-import random
 from guppy import hpy
 import os
 import pretty_midi
-from music21 import *
 # VAE model
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
