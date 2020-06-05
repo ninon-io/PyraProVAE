@@ -20,7 +20,7 @@ entire_model_saving_path = '/slow-2/ninon/pyrapro/models/entire_model/'
 model_weights_saving_path = '/slow-2/ninon/pyrapro/models/weights/'
 
 # get the arguments, if not on command line, the arguments are default
-parser = argparse.ArgumentParser(description='Music VAE')
+parser = argparse.ArgumentParser(description='PyraProVAE')
 parser.add_argument('--batch_size', type=int, default=16, metavar='N',
                     help='input batch size for training (default: 16)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
@@ -31,7 +31,7 @@ parser.add_argument('--epochs', type=int, default=14, metavar='N',
                     help='number of epochs to train (default: 14)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
-parser.add_argument('--no-cuda', action='store_true', default=True,
+parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='disables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
