@@ -11,6 +11,7 @@ from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
 
 from tensorboardX import SummaryWriter
+from torch import backends
 
 # Track the memory usage
 h = hpy()
@@ -95,6 +96,7 @@ class Learn:
 
     def test(self, epoch):
         print('cuda_available', torch.cuda.is_available())
+        print('Enable Cuda', torch.backends.cudnn.enabled)
         print('test pass:', self.device)
         writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
         self.model.eval()
