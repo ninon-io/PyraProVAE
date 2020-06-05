@@ -94,6 +94,7 @@ class Learn:
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
     def test(self, epoch):
+        print('cuda_available', torch.cuda.is_available())
         print('test pass:', self.device)
         writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
         self.model.eval()
