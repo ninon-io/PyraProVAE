@@ -30,7 +30,7 @@ seq_length = 128
 class Learn:
     def __init__(self, train_loader, test_loader, train_set, test_set, batch_size=512, seed=1, lr=0.01):
         torch.manual_seed(seed)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         # Define model
         self.encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,

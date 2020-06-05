@@ -15,7 +15,7 @@ dec_hidden_size = 1024
 num_layers = 2
 num_subsequences = 8
 seq_length = 128
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,
                               latent_size=latent_size)
 decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,

@@ -52,7 +52,7 @@ class HierarchicalEncoder(nn.Module):
                            bidirectional=True, dropout=0.6)
 
     def init_hidden(self, batch_size=1):
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
         return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=device),
                 torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=device))
@@ -96,7 +96,7 @@ class HierarchicalDecoder(nn.Module):
     def forward(self, latent, target, teacher_forcing):
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         # Get the initial states of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
