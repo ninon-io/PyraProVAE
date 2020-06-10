@@ -103,7 +103,9 @@ class HierarchicalDecoder(nn.Module):
         # Divide the latent space into subsequences:
         latent = latent.view(batch_size, self.num_subsequences, -1)
         # Pass through the conductor
+        # Taking latent (batch x latent_dim)
         subseq_embeddings, _ = self.conductor_RNN(latent, (h0_cond, h0_cond))
+        # Output is (batch x time x rnn_dim)
         subseq_embeddings = self.conductor_output(subseq_embeddings)
 
         # Get the initial state of decoder

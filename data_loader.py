@@ -9,10 +9,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 from guppy import hpy
 
-# data_dir = 'midi_short_dataset'
-data_dir = '/fast-1/mathieu/datasets/maestro_folders/train'
 h = hpy()
-batch_plot = 4
 test_split = 0.2
 shuffle_data_set = True
 life_seed = 42
@@ -50,6 +47,7 @@ class PianoRollRep(Dataset):
     def __getitem__(self, index):
         return torch.load(self.bar_dir + '/' + self.bar_files[index])
 
+    # Pre-processing of the data: loading in a sliced piano roll
     def bar_export(self):
         # load midi in a pretty midi object
         for index in np.arange(start=0, stop=np.size(self.midi_files)):
@@ -71,22 +69,70 @@ class PianoRollRep(Dataset):
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
 
-def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
-    data_set = PianoRollRep(bar_dir, frame_bar, export)
-    data_set_size = len(data_set)
-    # compute indices for train/test split
-    indices = np.array(list(range(data_set_size)))
-    split = np.int(np.floor(test_split * data_set_size))
-    if shuffle_data_set:
-        np.random.seed(life_seed)
-        np.random.shuffle(indices)
-    train_indices, test_indices = np.array(indices[split:]), np.array(indices[:split])
-    # create corresponding subsets
-    train_sampler = SubsetRandomSampler(train_indices)
-    test_sampler = SubsetRandomSampler(test_indices)
-    train_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=train_sampler,
-                                               num_workers=3, pin_memory=True, shuffle=False, drop_last=True)
-    test_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=test_sampler,
-                                              num_workers=3, pin_memory=True, shuffle=False, drop_last=True)
+# Main data import
+def import_dataset(args):
+    # Retrieve correct data loader
+    if args.dataset == "maestro":  # Dataset is already splitted in 3 folders
+        train_path = "fast-1/mathieu/datasets/maestro_folder/train"
+        test_path = "fast-1/mathieu/datasets/maestro_folder/test"
+        valid_path = "fast-1/mathieu/datasets/maestro_folder/valid"
+        train_set = PianoRollRep(train_path, args.frame_bar, export=False)
+        test_set = PianoRollRep(test_path, args.frame_bar, export=False)
+        valid_set = PianoRollRep(valid_path, args.frame_bar, export=False)
+        train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
+        train_sampler = SubsetRandomSampler(train_indices)
+        valid_sampler = SubsetRandomSampler(valid_indices)
 
-    return data_set, train_loader, test_loader, train_sampler, test_sampler
+    elif args.dataset == "midi_folder":  # One folder with all midi files
+        data_set = PianoRollRep(args.bar_dir, args.frame_bar, export=False)
+        data_set_size = len(data_set)
+        # compute indices for train/test split
+        indices = np.array(list(range(data_set_size)))
+        split = np.int(np.floor(test_split * data_set_size))
+        if shuffle_data_set:
+            np.random.seed(life_seed)
+            np.random.shuffle(indices)
+        global_train_indices, test_indices = np.array(indices[split:]), np.array(indices[:split])
+        # Compute indices
+        split = int(np.floor(args.valid_size * len(global_train_indices)))
+        # Shuffle examples
+        np.random.shuffle(global_train_indices)
+        # Split the trainset to obtain a validation set
+        train_indices, valid_indices = indices[split:], indices[:split]
+        # create corresponding subsets
+        train_sampler = SubsetRandomSampler(train_indices)
+        valid_sampler = SubsetRandomSampler(valid_indices)
+    else:
+        print("Oh no, too bad: unknown dataset " + args.dataset + ".\n")
+        exit()
+
+    # Create all the loaders
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, num_workers=args.nbworkers,
+                                               drop_last=True, sampler=train_sampler, pin_memory=True)
+    valid_loader = torch.utils.data.DataLoader(valid_set, batch_size=args.batch_size, num_workers=args.nbworkers,
+                                               drop_last=True, sampler=valid_sampler, pin_memory=True)
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, num_workers=args.nbworkers,
+                                              drop_last=True, shuffle=False, pin_memory=True)
+    return train_loader, valid_loader, test_loader, train_set, test_set, args
+
+
+# # If dataset not splitted into train, test, valid
+# def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
+#     data_set = PianoRollRep(bar_dir, frame_bar, export)
+#     data_set_size = len(data_set)
+#     # compute indices for train/test split
+#     indices = np.array(list(range(data_set_size)))
+#     split = np.int(np.floor(test_split * data_set_size))
+#     if shuffle_data_set:
+#         np.random.seed(life_seed)
+#         np.random.shuffle(indices)
+#     train_indices, test_indices = np.array(indices[split:]), np.array(indices[:split])
+#     # create corresponding subsets
+#     train_sampler = SubsetRandomSampler(train_indices)
+#     test_sampler = SubsetRandomSampler(test_indices)
+#     train_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=train_sampler,
+#                                                num_workers=3, pin_memory=True, shuffle=False, drop_last=True)
+#     test_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=test_sampler,
+#                                               num_workers=3, pin_memory=True, shuffle=False, drop_last=True)
+#
+#     return data_set, train_loader, test_loader, train_sampler, test_sampler

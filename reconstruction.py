@@ -25,7 +25,7 @@ decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,
 model = VaeModel(encoder=encoder, decoder=decoder).float().to(device=device)
 
 
-def reconstruction(midi_path, model_path, figure_saving_path, epoch):
+def reconstruction(args, midi_path, model_path, figure_saving_path, epoch):
     dataset = data_loader.PianoRollRep(midi_path)
     # Load the entire model
     torch.load(model_path + '_epoch_' + str(epoch) + '.pth')
