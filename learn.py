@@ -77,7 +77,7 @@ class Learn:
                     x = x / x.max()
                 x = x.to(args.device)
                 mu, sigma, latent, x_recon = model(x)
-                log_var = np.log(sigma ** 2)
+                log_var = np.log(sigma ** 2).cuda
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
                 self.recon_loss_mean_test += recon_loss.detach()
