@@ -43,7 +43,7 @@ parser.add_argument('--cond_output_dim', type=int, default=512, help='do not tou
 parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not touch if you do not know')
 parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
 parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
-parser.add_argument('--seq_lenght', type=int, default=128, help='do not touch if you do not know')
+parser.add_argument('--seq_length', type=int, default=128, help='do not touch if you do not know')
 
 # Optimization parameters
 parser.add_argument('--batch_size', type=int, default=16, help='input batch size')
