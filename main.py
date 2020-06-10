@@ -122,15 +122,15 @@ else:
 time0 = time()
 
 # Initial training of the model
-# learn.save(model, epoch=0, args)
+learn.save(model, args, epoch=0)
 # Saves entire model
-if not os.path.exists(args.model_path):
-    os.makedirs(args.model_path)
-torch.save(args.model, args.model_path + '_epoch_0' + '.pth')
-# Saves only the weights
-if not os.path.exists(args.weights_path):
-    os.makedirs(args.weights_path)
-torch.save(model.state_dict(), args.weights_path + '_epoch_0' + '.pth')
+# if not os.path.exists(args.model_path):
+#     os.makedirs(args.model_path)
+# torch.save(args.model, args.model_path + '_epoch_0' + '.pth')
+# # Saves only the weights
+# if not os.path.exists(args.weights_path):
+#     os.makedirs(args.weights_path)
+# torch.save(model.state_dict(), args.weights_path + '_epoch_0' + '.pth')
 
 # Initial test
 print('INITIAL TEST')
@@ -139,9 +139,9 @@ print('EPOCH BEGINS')
 # Through the epochs
 for epoch in range(1, args.epochs + 1, 1):
     print('Epoch:' + str(epoch))
-    loss_mean, kl_div_mean, recon_loss_mean = learn.train(args, epoch)
-    loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(args, epoch)
-    learn.save(model, epoch, args)
+    loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
+    loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
+    learn.save(model, args, epoch)
 
     # # Saves entire model
     # if not os.path.exists(args.model_path):

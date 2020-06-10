@@ -36,13 +36,13 @@ class Learn:
         self.kl_div_mean_test = torch.zeros(1).to(args.device)
         self.recon_loss_mean_test = torch.zeros(1).to(args.device)
 
-    def train(self, args, epoch):
+    def train(self, model, optimizer, args, epoch):
         writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
         print('train pass:', args.device)
-        args.model.train()
+        model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
-            mu, sigma, latent, x_recon = args.model(x)
+            mu, sigma, latent, x_recon = model(x)
             with torch.no_grad():
                 log_var = np.log(sigma.detach() ** 2)
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
@@ -52,11 +52,11 @@ class Learn:
             # Training pass
             loss = recon_loss + self.beta * kl_div
             self.loss_mean += loss.detach()
-            args.optimizer.zero_grad()
+            optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
             # Optimizes weights
-            args.optimizer.step()
+            optimizer.step()
             if self.iter_train > 10 and self.beta < 1:
                 self.beta += 0.0025
             self.iter_train += 1
@@ -76,7 +76,7 @@ class Learn:
                 if x.max() != 0:
                     x = x / x.max()
                 x = x.to(args.device)
-                mu, sigma, latent, x_recon = args.model(x)
+                mu, sigma, latent, x_recon = model(x)
                 log_var = np.log(sigma ** 2)
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
@@ -94,7 +94,7 @@ class Learn:
         #     self.loss_mean_test, loss, len(self.test_loader.dataset), 100. * loss / len(self.test_loader)))
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
-    def save(self, model, epoch, args):
+    def save(self, model,  args, epoch):
         # Save entire model
         if not os.path.exists(args.model_path):
             os.makedirs(args.model_path)
