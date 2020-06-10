@@ -88,19 +88,19 @@ class Learn:
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
         # Print stuffs
-        print('\nTest set: Average Loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-            self.loss_mean_test, loss, len(self.test_loader.dataset), 100. * loss / len(self.test_loader)))
+        # print('\nTest set: Average Loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        #     self.loss_mean_test, loss, len(self.test_loader.dataset), 100. * loss / len(self.test_loader)))
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
-    def save(self, args, model_weights_saving_path, entire_model_saving_path, epoch):
-        # Save entire model
-        if not os.path.exists(entire_model_saving_path):
-            os.makedirs(entire_model_saving_path)
-        torch.save(args.model, entire_model_saving_path + '_epoch_' + str(epoch) + '.pth')
-        # Save only the weights
-        if not os.path.exists(model_weights_saving_path):
-            os.makedirs(model_weights_saving_path)
-        torch.save(args.model.state_dict(), model_weights_saving_path + '_epoch_' + str(epoch) + '.pth')
+    # def save(self, args, model_weights_saving_path, entire_model_saving_path, epoch):
+    #     # Save entire model
+    #     if not os.path.exists(entire_model_saving_path):
+    #         os.makedirs(entire_model_saving_path)
+    #     torch.save(args.model, entire_model_saving_path + '_epoch_' + str(epoch) + '.pth')
+    #     # Save only the weights
+    #     if not os.path.exists(model_weights_saving_path):
+    #         os.makedirs(model_weights_saving_path)
+    #     torch.save(args.model.state_dict(), model_weights_saving_path + '_epoch_' + str(epoch) + '.pth')
 
     def resume_training(self, args, entire_model_saving_path, epoch):  # Specify the wishing epoch resuming here
         model = args.model

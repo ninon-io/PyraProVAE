@@ -1,6 +1,7 @@
 from time import time
 import argparse
 import torch.nn.utils
+import os
 from guppy import hpy
 # %%
 from learn import Learn
@@ -119,15 +120,36 @@ else:
 
 # Set time
 time0 = time()
+
 # Initial training of the model
-learn.save(args, args.weights_path, args.model_path, epoch=0)
+# Saves entire model
+if not os.path.exists(args.model_path):
+    os.makedirs(args.model_path)
+torch.save(args.model, args.model_path + '_epoch_0' + '.pth')
+# Saves only the weights
+if not os.path.exists(args.weights_path):
+    os.makedirs(args.weights_path)
+torch.save(args.model.state_dict(), args.weights_path + '_epoch_0' + '.pth')
+
+# Initial test
 learn.test(args, epoch=0)  # First test on randomly initialized data
 
+# Through the epochs
 for epoch in range(1, args.epochs + 1, 1):
     print('Epoch:' + str(epoch))
     loss_mean, kl_div_mean, recon_loss_mean = learn.train(args, epoch)
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(args, epoch)
-    learn.save(args, args.weights_path, args.model_path, epoch)
+    #learn.save(args, args.weights_path, args.model_path, epoch)
+
+    # Saves entire model
+    if not os.path.exists(args.model_path):
+        os.makedirs(args.model_path)
+    torch.save(args.model, args.model_path + '_epoch_' + str(epoch) + '.pth')
+    # Saves only the weights
+    if not os.path.exists(args.weights_path):
+        os.makedirs(args.weights_path)
+    torch.save(args.model.state_dict(), args.weights_path + '_epoch_' + str(epoch) + '.pth')
+
     reconstruction(args, args.midi_path, args.model_path, '/slow-2/ninon/pyrapro/reconstruction/', epoch)
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
