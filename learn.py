@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from torch import optim
 from torch.nn import functional as F
 from tqdm import tqdm
@@ -26,6 +27,7 @@ class Learn:
         self.test_loader = test_loader
         self.train_set = train_set
         self.test_set = test_set
+        # Settings
         self.loss_mean = torch.zeros(1).to(args.device)
         self.recon_loss_mean = torch.zeros(1).to(args.device)
         self.kl_div_mean = torch.zeros(1).to(args.device)
@@ -65,10 +67,10 @@ class Learn:
             writer.close()
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
-    def test(self, args, epoch):
+    def test(self, model, args, epoch):
         print('test pass:', args.device)
         writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
-        args.model.eval()
+        model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // args.batch_size):
                 if x.max() != 0:
@@ -92,15 +94,15 @@ class Learn:
         #     self.loss_mean_test, loss, len(self.test_loader.dataset), 100. * loss / len(self.test_loader)))
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
-    # def save(self, args, model_weights_saving_path, entire_model_saving_path, epoch):
-    #     # Save entire model
-    #     if not os.path.exists(entire_model_saving_path):
-    #         os.makedirs(entire_model_saving_path)
-    #     torch.save(args.model, entire_model_saving_path + '_epoch_' + str(epoch) + '.pth')
-    #     # Save only the weights
-    #     if not os.path.exists(model_weights_saving_path):
-    #         os.makedirs(model_weights_saving_path)
-    #     torch.save(args.model.state_dict(), model_weights_saving_path + '_epoch_' + str(epoch) + '.pth')
+    def save(self, model, epoch, args):
+        # Save entire model
+        if not os.path.exists(args.model_path):
+            os.makedirs(args.model_path)
+        torch.save(model, args.model_path + '_epoch_' + str(epoch) + '.pth')
+        # Save only the weights
+        if not os.path.exists(args.weights_path):
+            os.makedirs(args.weights_path)
+        torch.save(model.state_dict(), args.weights_path + '_epoch_' + str(epoch) + '.pth')
 
     def resume_training(self, args, entire_model_saving_path, epoch):  # Specify the wishing epoch resuming here
         model = args.model
