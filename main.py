@@ -59,11 +59,6 @@ parser.add_argument('--log-interval', type=int, default=10,
 parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
 parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
 
-# Pruning and trimming arguments
-# parser.add_argument('--local', dest='local', default=False, action='store_true')
-# parser.add_argument('--pruning_percent', type=int, default=99.7, metavar='P',
-#                     help='percentage of pruning for each cycle (default: 10)')
-
 # Parse the arguments
 args = parser.parse_args()
 
@@ -78,19 +73,14 @@ args.device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 use_cuda = not args.no_cuda and torch.cuda.is_available()
 kwargs = {'num_workers': 3, 'pin_memory': True} if use_cuda else {}
 
-print(10 * '*******')
-print('Lovely run info:')
-print('The great optimization will be on ' + str(args.device) + '.')
-print('The wonderful model is ' + str(args.model) + '.')
-print(10 * '*******')
+print(7 * '*******')
+print('* Lovely run info:')
+print('* Your great optimization will be on ' + str(args.device) + '.')
+print('* Your wonderful model is ' + str(args.model) + '.')
+print(7 * '*******')
 
 # Data importing
 train_loader, valid_loader, test_loader, train_set, test_set, args = import_dataset(args)
-
-# data_set, train_loader, test_loader, train_set, test_set = data_loader.get_data_loader(bar_dir=args.midi_path,
-#                                                                                        frame_bar=100,
-#                                                                                        batch_size=args.batch_size,
-#                                                                                        export=False)
 
 # Model creation
 if args.model == 'PyraPro':
@@ -134,16 +124,6 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
     learn.save(model, args, epoch)
-
-    # # Saves entire model
-    # if not os.path.exists(args.model_path):
-    #     os.makedirs(args.model_path)
-    # torch.save(args.model, args.model_path + '_epoch_' + str(epoch) + '.pth')
-    # # Saves only the weights
-    # if not os.path.exists(args.weights_path):
-    #     os.makedirs(args.weights_path)
-    # torch.save(model.state_dict(), args.weights_path + '_epoch_' + str(epoch) + '.pth')
-
     reconstruction(args, args.midi_path, args.model_path, '/slow-2/ninon/pyrapro/reconstruction/', epoch)
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
