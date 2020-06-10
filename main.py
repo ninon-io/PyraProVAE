@@ -109,6 +109,14 @@ model.to(args.device)
 # Define learning environment
 learn = Learn(args, train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set)
 
+# Optimizer and Loss
+if args.model == 'PyraPro':
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+else:
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+# if args.model == 'PyraPro':
+#     criterion = nn.MSELoss()
+
 # Set time
 time0 = time()
 # Initial training of the model

@@ -20,8 +20,8 @@ class Learn:
     def __init__(self, args, train_loader, test_loader, train_set, test_set):
         torch.manual_seed(args.seed)
         # Define model
-        self.model = args.model
-        self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
+        # self.model = args.model
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=args.lr)
         self.iter_train = 1
         self.epoch = torch.zeros(1).to(args.device)
         self.iter_test = torch.zeros(1).to(args.device)
@@ -53,11 +53,11 @@ class Learn:
             # Training pass
             loss = recon_loss + self.beta * kl_div
             self.loss_mean += loss.detach()
-            self.optimizer.zero_grad()
+            args.optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
             # Optimizes weights
-            self.optimizer.step()
+            args.optimizer.step()
             if self.iter_train > 10 and self.beta < 1:
                 self.beta += 0.0025
             self.iter_train += 1
