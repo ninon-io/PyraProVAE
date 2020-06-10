@@ -123,14 +123,6 @@ time0 = time()
 
 # Initial training of the model
 learn.save(model, args, epoch=0)
-# Saves entire model
-# if not os.path.exists(args.model_path):
-#     os.makedirs(args.model_path)
-# torch.save(args.model, args.model_path + '_epoch_0' + '.pth')
-# # Saves only the weights
-# if not os.path.exists(args.weights_path):
-#     os.makedirs(args.weights_path)
-# torch.save(model.state_dict(), args.weights_path + '_epoch_0' + '.pth')
 
 # Initial test
 print('INITIAL TEST')

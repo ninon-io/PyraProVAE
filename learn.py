@@ -44,7 +44,7 @@ class Learn:
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
             with torch.no_grad():
-                log_var = np.log(sigma.detach() ** 2)
+                log_var = torch.log(sigma.detach() ** 2)
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
             self.recon_loss_mean += recon_loss.detach()
