@@ -73,9 +73,9 @@ class PianoRollRep(Dataset):
 def import_dataset(args):
     # Retrieve correct data loader
     if args.dataset == "maestro":  # Dataset is already splitted in 3 folders
-        train_path = "fast-1/mathieu/datasets/maestro_folders/train"
-        test_path = "fast-1/mathieu/datasets/maestro_folders/test"
-        valid_path = "fast-1/mathieu/datasets/maestro_folders/valid"
+        train_path = "/fast-1/mathieu/datasets/maestro_folders/train"
+        test_path = "/fast-1/mathieu/datasets/maestro_folders/test"
+        valid_path = "/fast-1/mathieu/datasets/maestro_folders/valid"
         train_set = PianoRollRep(train_path, args.frame_bar, export=False)
         test_set = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set = PianoRollRep(valid_path, args.frame_bar, export=False)
