@@ -113,7 +113,7 @@ def import_dataset(args):
                                                drop_last=True, sampler=valid_sampler, pin_memory=True)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                               drop_last=True, shuffle=False, pin_memory=True)
-    return train_loader, valid_loader, test_loader, train_set, test_set, args
+    return train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args
 
 
 # # If dataset not splitted into train, test, valid

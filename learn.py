@@ -18,27 +18,35 @@ h = hpy()
 
 
 class Learn:
-    def __init__(self, args, train_loader, test_loader, train_set, test_set):
+    def __init__(self, args, train_loader, validate_loader, test_loader, train_set, validate_set, test_set):
         torch.manual_seed(args.seed)
         self.iter_train = 1
         self.epoch = torch.zeros(1).to(args.device)
         self.iter_test = torch.zeros(1).to(args.device)
         self.train_loader = train_loader
+        self.validate_loader = validate_loader
         self.test_loader = test_loader
         self.train_set = train_set
+        self.validate_set = validate_set
         self.test_set = test_set
         # Settings
         self.loss_mean = torch.zeros(1).to(args.device)
         self.recon_loss_mean = torch.zeros(1).to(args.device)
         self.kl_div_mean = torch.zeros(1).to(args.device)
         self.beta = torch.zeros(1).to(args.device)
+
+        self.loss_mean_validate = torch.zeros(1).to(args.device)
+        self.recon_loss_mean_validate = torch.zeros(1).to(args.device)
+        self.kl_div_mean_validate = torch.zeros(1).to(args.device)
+        self.beta_validate = torch.zeros(1).to(args.device)
+
         self.loss_mean_test = torch.zeros(1).to(args.device)
         self.kl_div_mean_test = torch.zeros(1).to(args.device)
         self.recon_loss_mean_test = torch.zeros(1).to(args.device)
 
     def train(self, model, optimizer, args, epoch):
         writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
-        print('train pass:', args.device)
+        print('train pass on:', args.device)
         model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
@@ -64,6 +72,37 @@ class Learn:
             writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
             writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
             writer.add_scalar('data/reconst_loss_mean', self.recon_loss_mean / self.iter_train, epoch)
+            writer.close()
+        return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
+
+    def validate(self, model, optimizer, args, epoch):
+        writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
+        print('validation pass on:', args.device)
+        model.validate()
+        with torch.no_grad():
+            for batch_idx, x in tqdm(enumerate(self.validate_loader), total=len(self.validate_set) // args.batch_size):
+                x = x.to(args.device, non_blocking=True)
+                mu, sigma, latent, x_recon = model(x)
+                log_var = torch.log(sigma.detach() ** 2)
+                kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                recon_loss = F.mse_loss(x_recon.squeeze(1), x)
+                self.recon_loss_mean_validate += recon_loss.detach()
+                self.kl_div_mean_validate += kl_div.detach()
+                # Training pass
+                loss = recon_loss + self.beta_validate * kl_div
+                self.loss_mean_validate += loss.detach()
+                optimizer.zero_grad()
+                # Learning with back-propagation
+                loss.backward()
+                # Optimizes weights
+                optimizer.step()
+                if self.iter_train > 10 and self.beta < 1:
+                    self.beta_validate += 0.0025
+                self.iter_train += 1
+        with torch.no_grad():
+            writer.add_scalar('data/loss_mean_VALID', self.loss_mean_validate / self.iter_train, epoch)
+            writer.add_scalar('data/kl_div_mean_VALID', self.kl_div_mean_validate / self.iter_train, epoch)
+            writer.add_scalar('data/reconst_loss_mean_VALID', self.recon_loss_mean_validate / self.iter_train, epoch)
             writer.close()
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 

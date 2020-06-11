@@ -82,7 +82,7 @@ print('* Your wonderful model is ' + str(args.model) + '.')
 print(7 * '*******')
 
 # Data importing
-train_loader, valid_loader, test_loader, train_set, test_set, args = import_dataset(args)
+train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
 
 # Model creation
 if args.model == 'PyraPro':
@@ -100,7 +100,8 @@ else:
 model.to(args.device)
 
 # Define learning environment
-learn = Learn(args, train_loader=train_loader, test_loader=test_loader, train_set=train_set, test_set=test_set)
+learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, test_loader=test_loader,
+              train_set=train_set, validate_set=valid_set, test_set=test_set)
 
 # Optimizer and Loss
 if args.model == 'PyraPro':
@@ -109,6 +110,12 @@ else:
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 # if args.model == 'PyraPro':
 #     criterion = nn.MSELoss()
+
+# Scheduler
+if args.model == 'PyraPro':
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20,
+                                                           verbose=False, threshold=0.0001, threshold_mode='rel',
+                                                           cooldown=0, min_lr=1e-07, eps=1e-08)
 
 # Set time
 time0 = time()
@@ -124,6 +131,8 @@ print('EPOCH BEGINS')
 for epoch in range(1, args.epochs + 1, 1):
     print('Epoch:' + str(epoch))
     loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
+    loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate = learn.validate(model, optimizer, args, epoch)
+    scheduler.step(loss_mean_validate)
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
     learn.save(model, args, epoch)
     reconstruction(args, model, epoch)
