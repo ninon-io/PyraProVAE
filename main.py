@@ -136,7 +136,7 @@ print('EPOCH BEGINS')
 for epoch in range(1, args.epochs + 1, 1):
     print('Epoch:' + str(epoch))
     loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
-    loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate = learn.validate(model, optimizer, args, epoch)
+    loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate = learn.validate(model, args, epoch)
     scheduler.step(loss_mean_validate)
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
     learn.save(model, args, epoch)
