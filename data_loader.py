@@ -9,10 +9,8 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 from guppy import hpy
 
-h = hpy()
-test_split = 0.2
-shuffle_data_set = True
-life_seed = 42
+# Memory tracking if needed
+# h = hpy()
 
 
 # Take the folder of midi files and output Piano-roll representation
@@ -88,9 +86,9 @@ def import_dataset(args):
         data_set_size = len(data_set)
         # compute indices for train/test split
         indices = np.array(list(range(data_set_size)))
-        split = np.int(np.floor(test_split * data_set_size))
-        if shuffle_data_set:
-            np.random.seed(life_seed)
+        split = np.int(np.floor(args.test_size * data_set_size))
+        if args.shuffle_data_set:
+            np.random.seed(args.seed)
             np.random.shuffle(indices)
         global_train_indices, test_indices = np.array(indices[split:]), np.array(indices[:split])
         # Compute indices

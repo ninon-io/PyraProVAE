@@ -33,7 +33,7 @@ class VaeModel(nn.Module):
     def generate(self, latent):
         # Create dumb target
         input_shape = (1, self.decoder.seq_length, self.decoder.input_size)
-        trg = torch.zeros(input_shape)  # TODO: here maybe random more than zeros?
+        trg = torch.zeros(input_shape)
         # Forward pass in the decoder
         generated_bar = self.decoder(latent.unsqueeze(0), trg, teacher_forcing=False)
 

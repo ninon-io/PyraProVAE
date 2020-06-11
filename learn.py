@@ -19,7 +19,6 @@ h = hpy()
 
 class Learn:
     def __init__(self, args, train_loader, validate_loader, test_loader, train_set, validate_set, test_set):
-        torch.manual_seed(args.seed)
         self.iter_train = 1
         self.epoch = torch.zeros(1).to(args.device)
         self.iter_test = torch.zeros(1).to(args.device)

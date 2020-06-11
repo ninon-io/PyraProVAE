@@ -11,7 +11,7 @@ from reconstruction import reconstruction
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
 
-# For memory checking point if needed
+# For memory tracking if needed
 # h = hpy()
 
 # # Argument parser, get the arguments, if not on command line, the arguments are default
@@ -23,8 +23,10 @@ parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or
 # Data Parameters
 parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
                     help='path to midi folder')
+parser.add_argument("--test_size", type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="maestro", help="maestro | midi_folder")
+parser.add_argument("--shuffle_data_set", type=str, default=True, help='')
 
 # Model Saving and reconstruction
 parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
@@ -55,7 +57,7 @@ parser.add_argument('--frame_bar', type=int, default=100, help='correspond to in
 parser.add_argument('--epochs', type=int, default=14, help='number of epochs to train')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
-parser.add_argument('--seed', type=int, default=1, help='random seed')
+parser.add_argument('--seed', type=int, default=42, help='random seed')
 parser.add_argument('--log-interval', type=int, default=10,
                     help='how many batches to wait before logging training status')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
@@ -63,6 +65,9 @@ parser.add_argument('--save-model', action='store_true', default=True, help='For
 
 # Parse the arguments
 args = parser.parse_args()
+
+# Sets the seed for generating random numbers
+torch.manual_seed(args.seed)
 
 # Enable CuDNN optimization
 if args.device != 'cpu':
