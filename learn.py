@@ -125,7 +125,7 @@ class Learn:
             writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
-    def save(self, model,  args, epoch):
+    def save(self, model, args, epoch):
         # Save entire model
         if not os.path.exists(args.model_path):
             os.makedirs(args.model_path)
@@ -185,6 +185,3 @@ class Learn:
     #         pm.instruments.append(instrument)
     #         return pm
     #     print('PianoRoll', pm)
-
-
-

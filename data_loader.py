@@ -9,6 +9,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 from guppy import hpy
 
+
 # Memory tracking if needed
 # h = hpy()
 
@@ -112,7 +113,6 @@ def import_dataset(args):
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                               drop_last=True, shuffle=False, pin_memory=True)
     return train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args
-
 
 # # If dataset not splitted into train, test, valid
 # def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):

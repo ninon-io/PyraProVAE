@@ -32,6 +32,7 @@ def reconstruction(args, model, epoch):
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
             dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
+            model.to(args.device)
             mu, sigma, latent, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0))
             x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().numpy()
             axi.matshow(x_reconstruct, alpha=1)
