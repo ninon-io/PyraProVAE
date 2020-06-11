@@ -74,27 +74,22 @@ class Learn:
             writer.close()
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
-    def validate(self, model, optimizer, args, epoch):
+    def validate(self, model, args, epoch):
         writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
         print('validation pass on:', args.device)
         model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.validate_loader), total=len(self.validate_set) // args.batch_size):
-                x = x.to(args.device, non_blocking=True)
+                x = x.to(args.device)
                 mu, sigma, latent, x_recon = model(x)
                 log_var = torch.log(sigma.detach() ** 2)
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
                 self.recon_loss_mean_validate += recon_loss.detach()
                 self.kl_div_mean_validate += kl_div.detach()
-                # Training pass
                 loss = recon_loss + self.beta_validate * kl_div
                 self.loss_mean_validate += loss.detach()
-                optimizer.zero_grad()
-                # Learning with back-propagation
                 loss.backward()
-                # Optimizes weights
-                optimizer.step()
                 if self.iter_train > 10 and self.beta < 1:
                     self.beta_validate += 0.0025
                 self.iter_train += 1
@@ -122,6 +117,8 @@ class Learn:
                 self.kl_div_mean_test += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_test += loss.detach()
+                if self.iter_train > 10 and self.beta < 1:
+                    self.beta += 0.0025
                 self.iter_test += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
