@@ -6,29 +6,11 @@ import random
 import torch
 import os
 
-input_dim = 100
-enc_hidden_size = 2048
-latent_size = 512
-cond_hidden_size = 1024
-cond_output_dim = 512
-dec_hidden_size = 1024
-num_layers = 2
-num_subsequences = 8
-seq_length = 128
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-encoder = HierarchicalEncoder(input_dim=input_dim, enc_hidden_size=enc_hidden_size,
-                              latent_size=latent_size)
-decoder = HierarchicalDecoder(input_size=input_dim, latent_size=latent_size,
-                              cond_hidden_size=cond_hidden_size, cond_outdim=cond_output_dim,
-                              dec_hidden_size=dec_hidden_size, num_layers=num_layers,
-                              num_subsequences=num_subsequences, seq_length=seq_length)
-model = VaeModel(encoder=encoder, decoder=decoder).float().to(device=device)
 
-
-def reconstruction(args, midi_path, model_path, figure_saving_path, epoch):
-    dataset = data_loader.PianoRollRep(midi_path)
+def reconstruction(args, model, epoch):
+    dataset = data_loader.PianoRollRep(args.midi_path)
     # Load the entire model
-    torch.load(model_path + '_epoch_' + str(epoch) + '.pth')
+    torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
 
     # Plot settings
     nrows, ncols = 4, 2  # array of sub-plots
@@ -59,7 +41,7 @@ def reconstruction(args, midi_path, model_path, figure_saving_path, epoch):
 
     plt.tight_layout(True)
     # plt.subplots(constrained_layout=True)
-    if not os.path.exists(figure_saving_path):
-        os.makedirs(figure_saving_path)
-    plt.savefig(figure_saving_path + 'epoch_' + str(epoch))
+    if not os.path.exists(args.figure_reconstruction_path):
+        os.makedirs(args.figure_reconstruction_path)
+    plt.savefig(args.figure_reconstruction_path + 'epoch_' + str(epoch))
     # plt.show()

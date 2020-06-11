@@ -26,11 +26,13 @@ parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/m
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="maestro", help="maestro | midi_folder")
 
-# Model Saving
+# Model Saving and reconstruction
 parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
                     help='path to the saved model')
 parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models/weights/',
                     help='path to the saved model')
+parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
+                    help='path to reconstruction figures')
 
 # Model Parameters
 parser.add_argument("--model", type=str, default="PyraPro", help='Name of the model')
@@ -66,7 +68,7 @@ args = parser.parse_args()
 if args.device != 'cpu':
     torch.backends.cudnn.benchmark = True
 
-# Handling cuda
+# Handling Cuda
 args.cuda = not args.device == 'cpu' and torch.cuda.is_available()
 args.device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 # TODO: chose one of the method to handle cuda
@@ -124,6 +126,6 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
     learn.save(model, args, epoch)
-    reconstruction(args, args.midi_path, args.model_path, '/slow-2/ninon/pyrapro/reconstruction/', epoch)
+    reconstruction(args, model, epoch)
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
