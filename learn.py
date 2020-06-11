@@ -89,9 +89,6 @@ class Learn:
             writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
-        # Print stuffs
-        # print('\nTest set: Average Loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        #     self.loss_mean_test, loss, len(self.test_loader.dataset), 100. * loss / len(self.test_loader)))
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
     def save(self, model,  args, epoch):
@@ -104,9 +101,8 @@ class Learn:
             os.makedirs(args.weights_path)
         torch.save(model.state_dict(), args.weights_path + '_epoch_' + str(epoch) + '.pth')
 
-    def resume_training(self, args, entire_model_saving_path, epoch):  # Specify the wishing epoch resuming here
-        model = args.model
-        state_dict = torch.load(entire_model_saving_path + '_epoch_' + str(epoch) + '.pth')
+    def resume_training(self, args, model, epoch):  # Specify the wishing epoch resuming here
+        torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
         model.eval()
 
     # # TODO: NOT WORKING
