@@ -77,7 +77,7 @@ class Learn:
     def validate(self, model, optimizer, args, epoch):
         writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
         print('validation pass on:', args.device)
-        model.validate()
+        model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.validate_loader), total=len(self.validate_set) // args.batch_size):
                 x = x.to(args.device, non_blocking=True)
