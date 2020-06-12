@@ -8,7 +8,7 @@ import argparse
 
 
 def reconstruction(args, epoch):
-    dataset = data_loader.PianoRollRep(args.midi_path).to(args.device)
+    dataset = data_loader.PianoRollRep(args.midi_path)
     # Load the entire model
     model = torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
     model.to(args.device)
