@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
 import data_loader
-from vae import VaeModel
-from vae import HierarchicalDecoder, HierarchicalEncoder
 import random
 import torch
 import os
@@ -10,7 +8,8 @@ import os
 def reconstruction(args, model, epoch):
     dataset = data_loader.PianoRollRep(args.midi_path)
     # Load the entire model
-    torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
+    model = torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
+    model.to(args.device)
 
     # Plot settings
     nrows, ncols = 4, 2  # array of sub-plots

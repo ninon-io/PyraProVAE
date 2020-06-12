@@ -6,10 +6,6 @@ from tqdm import tqdm
 import numpy as np
 from guppy import hpy
 import os
-import pretty_midi
-# VAE model
-from vae import VaeModel
-from vae import HierarchicalDecoder, HierarchicalEncoder
 
 from tensorboardX import SummaryWriter
 
