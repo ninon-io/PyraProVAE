@@ -31,8 +31,8 @@ def reconstruction(args, epoch):
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
             dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
-            _, _, _, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0)).numpy()
-            x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach()
+            _, _, _, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0)).cpu()
+            x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
             axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Reconstruction number " + str(rand_ind[ind]))
