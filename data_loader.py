@@ -9,7 +9,6 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 from guppy import hpy
 
-
 # Memory tracking if needed
 # h = hpy()
 
@@ -113,24 +112,3 @@ def import_dataset(args):
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                               drop_last=True, shuffle=False, pin_memory=True)
     return train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args
-
-# # If dataset not splitted into train, test, valid
-# def get_data_loader(bar_dir, frame_bar=100, batch_size=16, export=False):
-#     data_set = PianoRollRep(bar_dir, frame_bar, export)
-#     data_set_size = len(data_set)
-#     # compute indices for train/test split
-#     indices = np.array(list(range(data_set_size)))
-#     split = np.int(np.floor(test_split * data_set_size))
-#     if shuffle_data_set:
-#         np.random.seed(life_seed)
-#         np.random.shuffle(indices)
-#     train_indices, test_indices = np.array(indices[split:]), np.array(indices[:split])
-#     # create corresponding subsets
-#     train_sampler = SubsetRandomSampler(train_indices)
-#     test_sampler = SubsetRandomSampler(test_indices)
-#     train_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=train_sampler,
-#                                                num_workers=3, pin_memory=True, shuffle=False, drop_last=True)
-#     test_loader = torch.utils.data.DataLoader(data_set, batch_size=batch_size, sampler=test_sampler,
-#                                               num_workers=3, pin_memory=True, shuffle=False, drop_last=True)
-#
-#     return data_set, train_loader, test_loader, train_sampler, test_sampler
