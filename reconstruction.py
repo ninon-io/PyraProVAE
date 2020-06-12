@@ -56,5 +56,7 @@ if __name__ == "__main__":
                         help='path to the saved model')
     args = parser.parse_args()
     epoch = 0
+    print("DEBUG BEGIN")
     reconstruction(args, epoch)
+    print("DEBUG END")
 
