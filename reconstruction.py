@@ -32,7 +32,7 @@ def reconstruction(args, epoch):
         else:
             dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
             model.to(args.device)
-            mu, sigma, latent, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0))
+            mu, sigma, latent, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0)).to(args.device)
             x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach()
             axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
