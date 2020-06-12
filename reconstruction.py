@@ -7,11 +7,11 @@ import os
 import argparse
 
 
+# TODO PUT EVERYTHING ON GPU IF POSSIBLE
 def reconstruction(args, epoch):
     dataset = data_loader.PianoRollRep(args.midi_path)
     # Load the entire model
     model = torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
-    model.to(args.device)
 
     # Plot settings
     nrows, ncols = 4, 2  # array of sub-plots
@@ -25,14 +25,13 @@ def reconstruction(args, epoch):
 
     for i, axi in enumerate(ax.flat):
         if i % 2 == 0:
-            piano_roll = dataset[rand_ind[ind]].to(args.device)
+            piano_roll = dataset[rand_ind[ind]]
             axi.matshow(piano_roll, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
             dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
-            model.to(args.device)
-            _, _, _, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0)).to(args.device)
+            _, _, _, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0))
             x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach()
             axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
