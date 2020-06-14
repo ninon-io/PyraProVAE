@@ -54,6 +54,8 @@ if __name__ == "__main__":
                         help='path to midi folder')
     parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
                         help='path to the saved model')
+    parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
+                        help='path to reconstruction figures')
     args = parser.parse_args()
     epoch = 0
     print("DEBUG BEGIN")
