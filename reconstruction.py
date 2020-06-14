@@ -7,7 +7,7 @@ import os
 import argparse
 
 
-# TODO PUT EVERYTHING ON GPU IF POSSIBLE
+# TODO PUT EVERYTHING ON GPU/CPU IF POSSIBLE
 def reconstruction(args, epoch):
     dataset = data_loader.PianoRollRep(args.midi_path)
     # Load the entire model
@@ -31,7 +31,8 @@ def reconstruction(args, epoch):
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
             dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
-            _, _, _, x_reconstruct = model(dataset[rand_ind[ind]].unsqueeze(0)).cpu()
+            cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
+            _, _, _, x_reconstruct = model(cur_input).cpu()
             x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
             axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
