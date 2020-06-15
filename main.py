@@ -100,6 +100,7 @@ if args.model == 'PyraPro':
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 else:
     print("Oh no, unknown model " + args.model + ".\n")
+    model = None
     exit()
 # Send model to the device
 model.to(args.device)
@@ -121,6 +122,8 @@ if args.model == 'PyraPro':
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20,
                                                            verbose=False, threshold=0.0001, threshold_mode='rel',
                                                            cooldown=0, min_lr=1e-07, eps=1e-08)
+else:
+    scheduler = None
 
 # Set time
 time0 = time()
@@ -140,7 +143,7 @@ for epoch in range(1, args.epochs + 1, 1):
     scheduler.step(loss_mean_validate)
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
     learn.save(model, args, epoch)
-    reconstruction(args, model, epoch)
+    reconstruction(args, epoch)
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
 
