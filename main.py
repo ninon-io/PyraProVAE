@@ -10,6 +10,7 @@ from data_loader import import_dataset
 from reconstruction import reconstruction
 from vae import VaeModel
 from vae import HierarchicalDecoder, HierarchicalEncoder
+from texttable import Texttable
 
 # For memory tracking if needed
 # h = hpy()
@@ -144,6 +145,16 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
     learn.save(model, args, epoch)
     reconstruction(args, model, epoch)
+    # Track on stuffs
+    print(7 * '*******')
+    print('* Useful & incredible tracking:')
+    t = Texttable()
+    t.add_rows([['Name', 'loss mean', 'kl_div mean', 'recon_loss mean'],
+                ['Train', loss_mean, kl_div_mean, recon_loss_mean],
+                ['Validate', loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate],
+                ['Test', loss_mean_test, kl_div_mean_test, recon_loss_mean_test]])
+    print(t.draw())
+    print(7 * '*******')
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
 
