@@ -143,7 +143,7 @@ for epoch in range(1, args.epochs + 1, 1):
     scheduler.step(loss_mean_validate)
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
     learn.save(model, args, epoch)
-    reconstruction(args, epoch)
+    reconstruction(args, model, epoch)
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
 

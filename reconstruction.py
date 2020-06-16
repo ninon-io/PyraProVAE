@@ -7,11 +7,8 @@ import os
 import argparse
 
 
-# TODO PUT EVERYTHING ON GPU/CPU IF POSSIBLE
-def reconstruction(args, epoch):
+def reconstruction(args, model, epoch):
     dataset = data_loader.PianoRollRep(args.midi_path)
-    # Load the entire model
-    model = torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
 
     # Plot settings
     nrows, ncols = 4, 2  # array of sub-plots
