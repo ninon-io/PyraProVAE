@@ -166,13 +166,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
-    track_train = train_set[0]
+    track_train = []
     print('DEBUG track 0:', track_train)
-    for track in train_set[1:]:
+    for track in train_set:
         # torch.isnan(track)
         # torch.isinf(track)
         simple_track = track.view(-1)
-        track_train = torch.cat(track_train, track)
+        track_train.append(simple_track)
+        # track_train = torch.cat(track_train, track)
         # track_train = torch.stack(track_train, track)
     print('Maximum for trainset:', torch.max(track_train))
     print('Minimum for trainset:', torch.min(track_train))
