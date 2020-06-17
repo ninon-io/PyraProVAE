@@ -170,8 +170,8 @@ if __name__ == "__main__":
     for track in train_set:
         # torch.isnan(track)
         # torch.isinf(track)
-        track_train = torch.cat(track_train, track)
-        # track_train = torch.stack(track_train, track)
+        # track_train = torch.cat(track_train, track)
+        track_train = torch.stack(track_train, track)
     print('Maximum for trainset:', torch.max(track_train))
     print('Minimum for trainset:', torch.min(track_train))
     print('Mean for trainset:', torch.mean(track_train))
