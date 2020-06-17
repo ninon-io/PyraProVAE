@@ -7,6 +7,7 @@ import pretty_midi
 from statistics import mean
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
+import torchvision.transforms as transforms
 from guppy import hpy
 import argparse
 from texttable import Texttable
@@ -71,6 +72,8 @@ class PianoRollRep(Dataset):
 
 # Main data import
 def import_dataset(args):
+    # Main transform
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=0.5)])
     # Retrieve correct data loader
     if args.dataset == "maestro":  # Dataset is already splitted in 3 folders
         train_path = "/fast-1/mathieu/datasets/maestro_folders/train"
@@ -182,20 +185,26 @@ if __name__ == "__main__":
     for z in test_set:
         z_simple = z.view(-1)
         track_test.append(z_simple)
-    t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Nan', 'Inf'],
+    t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
                  torch.min(torch.stack(track_train)),
                  torch.mean(torch.stack(track_train)),
+                 torch.std(torch.stack(track_train)),
+                 torch.var(torch.stack(track_train)),
                  torch.isnan(torch.stack(track_train)).byte().any(),
                  torch.isinf(torch.stack(track_train)).byte().any()],
                 ['Validate', torch.max(torch.stack(track_valid)),
                  torch.min(torch.stack(track_valid)),
                  torch.mean(torch.stack(track_valid)),
+                 torch.std(torch.stack(track_valid)),
+                 torch.var(torch.stack(track_valid)),
                  torch.isnan(torch.stack(track_valid)).byte().any(),
                  torch.isinf(torch.stack(track_valid)).byte().any()],
                 ['Test', torch.max(torch.stack(track_test)),
                  torch.min(torch.stack(track_test)),
                  torch.mean(torch.stack(track_test)),
+                 torch.std(torch.stack(track_test)),
+                 torch.var(torch.stack(track_test)),
                  torch.isnan(torch.stack(track_test)).byte().any(),
                  torch.isinf(torch.stack(track_test)).byte().any()]])
     print(t.draw())
