@@ -46,7 +46,10 @@ class PianoRollRep(Dataset):
         return self.nb_bars
 
     def __getitem__(self, index):
-        return torch.load(self.bar_dir + '/' + self.bar_files[index])
+        transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=12.476)])
+        sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
+        norm_sample = transform(sample)
+        return norm_sample
 
     # Pre-processing of the data: loading in a sliced piano roll
     def bar_export(self):
@@ -73,7 +76,7 @@ class PianoRollRep(Dataset):
 # Main data import
 def import_dataset(args):
     # Main transform
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=0.5)])
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=12.476)])  # Rescale?
     # Retrieve correct data loader
     if args.dataset == "maestro":  # Dataset is already splitted in 3 folders
         train_path = "/fast-1/mathieu/datasets/maestro_folders/train"
