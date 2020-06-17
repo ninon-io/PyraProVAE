@@ -167,7 +167,7 @@ class Learn:
                     start=note_on_time[note],
                     end=time)
                 instrument.notes.append(pm_note)
-                prev_velocities[note]=0
+                prev_velocities[note] = 0
             pm.instruments.append(instrument)
             return pm
         print('PianoRoll', pm)

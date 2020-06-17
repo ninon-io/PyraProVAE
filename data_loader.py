@@ -8,6 +8,7 @@ from statistics import mean
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 from guppy import hpy
+import argparse
 
 # Memory tracking if needed
 # h = hpy()
@@ -113,4 +114,47 @@ def import_dataset(args):
                                               drop_last=True, shuffle=False, pin_memory=True)
     return train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args
 
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Dataloader')
+    parser.add_argument("--dataset", type=str, default="maestro", help="maestro | midi_folder")
+    # Parse the arguments
+    args = parser.parse_args()
+    # Data importing
+    train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
+    track_train = []
+    for track in train_set:
+        # torch.isnan(track)
+        # torch.isinf(track)
+        track_train = torch.cat(track_train, track)
+        # track_train = torch.stack(track_train, track)
+    print('Maximum for trainset:', torch.max(track_train))
+    print('Minimum for trainset:', torch.min(track_train))
+    print('Mean for trainset:', torch.mean(track_train))
+    print('Is there any Nan in train? \t', torch.isnan(track_train).byte().any())
+    print('Is there any Inf in train? \t', torch.isinf(track_train).byte().any())
+
+    track_valid = []
+    for track in valid_set:
+        # torch.isnan(track)
+        # torch.isinf(track)
+        track_valid = torch.cat(track_valid, track)
+        # track_train = torch.stack(track_train, track)
+    print('Maximum for validation:', torch.max(track_valid))
+    print('Minimum for validation:', torch.min(track_valid))
+    print('Mean for validation:', torch.mean(track_valid))
+    print('Is there any Nan in valid? \t', torch.isnan(track_valid).byte().any())
+    print('Is there any Inf in valid? \t', torch.isinf(track_valid).byte().any())
+
+    track_test = []
+    for track in test_set:
+        # torch.isnan(track)
+        # torch.isinf(track)
+        track_test = torch.cat(track_test, track)
+        # track_test = torch.stack(track_test, track)
+    print('Maximum for test:', torch.max(track_valid))
+    print('Minimum for test:', torch.min(track_valid))
+    print('Mean for test:', torch.mean(track_valid))
+    print('Is there any Nan in test? \t', torch.isnan(track_test).byte().any())
+    print('Is there any Inf in test? \t', torch.isinf(track_test).byte().any())
 
