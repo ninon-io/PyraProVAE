@@ -118,6 +118,7 @@ def import_dataset(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Dataloader')
     parser.add_argument("--dataset", type=str, default="maestro", help="maestro | midi_folder")
+    parser.add_argument('--frame_bar', type=int, default=100, help='correspond to input dim')
     # Parse the arguments
     args = parser.parse_args()
     # Data importing
