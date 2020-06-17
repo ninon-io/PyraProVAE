@@ -166,8 +166,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
-    track_train = []
-    for track in train_set:
+    track_train = train_set[0].view(-1)
+    for track in train_set[1:]:
         # torch.isnan(track)
         # torch.isinf(track)
         simple_track = track.view(-1)
