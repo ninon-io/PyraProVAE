@@ -8,6 +8,7 @@ from statistics import mean
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
+from torchvision.transforms import functional
 from guppy import hpy
 import argparse
 from texttable import Texttable
@@ -46,7 +47,7 @@ class PianoRollRep(Dataset):
         return self.nb_bars
 
     def __getitem__(self, index):
-        transform = transforms.Compose([transforms.Normalize(mean=0, std=1), transforms.RandomResizedCrop((128, 100))])
+        transform = transforms.Compose([transforms.Normalize(mean=0, std=1), transforms.functional.center_crop((0, 0), (128, 100))])
         sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
         norm_sample = transform(sample.unsqueeze(0))
         return norm_sample
