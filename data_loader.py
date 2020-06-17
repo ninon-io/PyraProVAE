@@ -174,28 +174,30 @@ if __name__ == "__main__":
     track_valid = []
     track_test = []
     for x in train_set:
-        for y in valid_set:
-            for z in test_set:
-                x_simple, y_simple, z_simple = x.view(-1), y.view(-1), z.view(-1)
-                track_train.append(x_simple)
-                track_valid.append(y_simple)
-                track_test.append(z_simple)
-            t.add_rows([['Name', 'Maximum', 'Minimum', 'Mean', 'Nan', 'Inf'],
-                        ['Train', torch.max(torch.stack(track_train)),
-                         torch.min(torch.stack(track_train)),
-                         torch.mean(torch.stack(track_train)),
-                         torch.isnan(torch.stack(track_train)).byte().any(),
-                         torch.isinf(torch.stack(track_train)).byte().any()],
-                        ['Validate', torch.max(torch.stack(track_valid)),
-                         torch.min(torch.stack(track_valid)),
-                         torch.mean(torch.stack(track_valid)),
-                         torch.isnan(torch.stack(track_valid)).byte().any(),
-                         torch.isinf(torch.stack(track_valid)).byte().any()],
-                        ['Test', torch.max(torch.stack(track_test)),
-                         torch.min(torch.stack(track_test)),
-                         torch.mean(torch.stack(track_test)),
-                         torch.isnan(torch.stack(track_test)).byte().any(),
-                         torch.isinf(torch.stack(track_test)).byte().any()]])
+        x_simple = x.view(-1)
+        track_train.append(x_simple)
+    for y in valid_set:
+        y_simple = y.view(-1)
+        track_valid.append(y_simple)
+    for z in test_set:
+        z_simple = z.view(-1)
+        track_test.append(z_simple)
+    t.add_rows([['Name', 'Maximum', 'Minimum', 'Mean', 'Nan', 'Inf'],
+                ['Train', torch.max(torch.stack(track_train)).item,
+                 torch.min(torch.stack(track_train)),
+                 torch.mean(torch.stack(track_train)),
+                 torch.isnan(torch.stack(track_train)).byte().any(),
+                 torch.isinf(torch.stack(track_train)).byte().any()],
+                ['Validate', torch.max(torch.stack(track_valid)),
+                 torch.min(torch.stack(track_valid)),
+                 torch.mean(torch.stack(track_valid)),
+                 torch.isnan(torch.stack(track_valid)).byte().any(),
+                 torch.isinf(torch.stack(track_valid)).byte().any()],
+                ['Test', torch.max(torch.stack(track_test)),
+                 torch.min(torch.stack(track_test)),
+                 torch.mean(torch.stack(track_test)),
+                 torch.isnan(torch.stack(track_test)).byte().any(),
+                 torch.isinf(torch.stack(track_test)).byte().any()]])
     print(t.draw())
 
 
