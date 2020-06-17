@@ -182,7 +182,7 @@ if __name__ == "__main__":
     for z in test_set:
         z_simple = z.view(-1)
         track_test.append(z_simple)
-    t.add_rows([['Name', 'Maximum', 'Minimum', 'Mean', 'Nan', 'Inf'],
+    t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Nan', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
                  torch.min(torch.stack(track_train)),
                  torch.mean(torch.stack(track_train)),
