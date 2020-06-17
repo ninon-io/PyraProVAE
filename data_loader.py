@@ -46,7 +46,7 @@ class PianoRollRep(Dataset):
         return self.nb_bars
 
     def __getitem__(self, index):
-        transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=12.476)])
+        transform = transforms.Compose([transforms.Normalize(mean=2.342, std=12.476)])
         sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
         norm_sample = transform(sample)
         return norm_sample
