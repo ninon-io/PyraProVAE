@@ -44,18 +44,18 @@ def reconstruction(args, model, epoch):
     # plt.show()
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Reconstruction')
-    parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
-    parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
-                        help='path to midi folder')
-    parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
-                        help='path to the saved model')
-    parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
-                        help='path to reconstruction figures')
-    args = parser.parse_args()
-    epoch = 0
-    print("DEBUG BEGIN")
-    reconstruction(args, epoch)
-    print("DEBUG END")
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser(description='Reconstruction')
+#     parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
+#     parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
+#                         help='path to midi folder')
+#     parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
+#                         help='path to the saved model')
+#     parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
+#                         help='path to reconstruction figures')
+#     args = parser.parse_args()
+#     epoch = 0
+#     print("DEBUG BEGIN")
+#     reconstruction(args, model, epoch)
+#     print("DEBUG END")
 
