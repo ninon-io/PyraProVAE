@@ -9,6 +9,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data import Dataset
 from guppy import hpy
 import argparse
+from texttable import Texttable
 
 # Memory tracking if needed
 # h = hpy()
@@ -166,41 +167,39 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
+
+    t = Texttable()
+
     track_train = []
-    for track in train_set:
-        # torch.isnan(track)
-        # torch.isinf(track)
-        simple_track = track.view(-1)
-        track_train.append(simple_track)
-        # track_train = torch.cat(track_train, track)
-        # track_train = torch.stack(track_train, track)
-    print('Maximum for trainset:', torch.max(torch.stack(track_train, dim=0)))
-    print('Minimum for trainset:', torch.min(torch.stack(track_train, dim=0)))
-    print('Mean for trainset:', torch.mean(torch.stack(track_train, dim=0)))
-    print('Is there any Nan in train? \t', torch.isnan(torch.stack(track_train, dim=0)).byte().any())
-    print('Is there any Inf in train? \t', torch.isinf(torch.stack(track_train, dim=0)).byte().any())
-
-    track_valid = []
-    for track in valid_set:
-        # torch.isnan(track)
-        # torch.isinf(track)
-        track_valid = torch.cat(track_valid, track)
-        # track_train = torch.stack(track_train, track)
-    print('Maximum for validation:', torch.max(track_valid))
-    print('Minimum for validation:', torch.min(track_valid))
-    print('Mean for validation:', torch.mean(track_valid))
-    print('Is there any Nan in valid? \t', torch.isnan(track_valid).byte().any())
-    print('Is there any Inf in valid? \t', torch.isinf(track_valid).byte().any())
-
+    track_valid =[]
     track_test = []
-    for track in test_set:
-        # torch.isnan(track)
-        # torch.isinf(track)
-        track_test = torch.cat(track_test, track)
-        # track_test = torch.stack(track_test, track)
-    print('Maximum for test:', torch.max(track_valid))
-    print('Minimum for test:', torch.min(track_valid))
-    print('Mean for test:', torch.mean(track_valid))
-    print('Is there any Nan in test? \t', torch.isnan(track_test).byte().any())
-    print('Is there any Inf in test? \t', torch.isinf(track_test).byte().any())
+    for x, y, z in train_set, valid_set, test_set:
+        x_simple, y_simple, z_simple = x.view(-1), y.view(-1), z.view(-1)
+        track_train.append(x_simple)
+        track_valid.append(y_simple)
+        track_test.append(z_simple)
+    print('Maximum for trainset:', torch.max(torch.stack(track_train)))
+    print('Minimum for trainset:', torch.min(torch.stack(track_train)))
+    print('Mean for trainset:', torch.mean(torch.stack(track_train)))
+    print('Is there any Nan in train? \t', torch.isnan(torch.stack(track_train)).byte().any())
+    print('Is there any Inf in train? \t', torch.isinf(torch.stack(track_train)).byte().any())
+    t.add_rows([['Name', 'Maximum', 'Minimum', 'Mean', 'Nan', 'Inf'],
+                ['Train', torch.max(torch.stack(track_train)),
+                 torch.min(torch.stack(track_train)),
+                 torch.mean(torch.stack(track_train)),
+                 torch.isnan(torch.stack(track_train)).byte().any(),
+                 torch.isinf(torch.stack(track_train)).byte().any()],
+                ['Validate', torch.max(torch.stack(track_valid)),
+                 torch.min(torch.stack(track_valid)),
+                 torch.mean(torch.stack(track_valid)),
+                 torch.isnan(torch.stack(track_valid)).byte().any(),
+                 torch.isinf(torch.stack(track_valid)).byte().any()],
+                ['Test', torch.max(torch.stack(track_test)),
+                 torch.min(torch.stack(track_test)),
+                 torch.mean(torch.stack(track_test)),
+                 torch.isnan(torch.stack(track_test)).byte().any(),
+                 torch.isinf(torch.stack(track_test)).byte().any()]])
+    print(t.draw())
+
+
 
