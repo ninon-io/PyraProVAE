@@ -167,6 +167,7 @@ if __name__ == "__main__":
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
     track_train = train_set[0].view(-1)
+    print('track 0:', track_train)
     for track in train_set[1:]:
         # torch.isnan(track)
         # torch.isinf(track)
