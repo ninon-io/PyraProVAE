@@ -180,11 +180,6 @@ if __name__ == "__main__":
                 track_train.append(x_simple)
                 track_valid.append(y_simple)
                 track_test.append(z_simple)
-            print('Maximum for trainset:', torch.max(torch.stack(track_train)))
-            print('Minimum for trainset:', torch.min(torch.stack(track_train)))
-            print('Mean for trainset:', torch.mean(torch.stack(track_train)))
-            print('Is there any Nan in train? \t', torch.isnan(torch.stack(track_train)).byte().any())
-            print('Is there any Inf in train? \t', torch.isinf(torch.stack(track_train)).byte().any())
             t.add_rows([['Name', 'Maximum', 'Minimum', 'Mean', 'Nan', 'Inf'],
                         ['Train', torch.max(torch.stack(track_train)),
                          torch.min(torch.stack(track_train)),
