@@ -167,7 +167,6 @@ if __name__ == "__main__":
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
     track_train = []
-    print('DEBUG track 0:', track_train)
     for track in train_set:
         # torch.isnan(track)
         # torch.isinf(track)
@@ -175,11 +174,11 @@ if __name__ == "__main__":
         track_train.append(simple_track)
         # track_train = torch.cat(track_train, track)
         # track_train = torch.stack(track_train, track)
-    print('Maximum for trainset:', torch.max(track_train))
-    print('Minimum for trainset:', torch.min(track_train))
-    print('Mean for trainset:', torch.mean(track_train))
-    print('Is there any Nan in train? \t', torch.isnan(track_train).byte().any())
-    print('Is there any Inf in train? \t', torch.isinf(track_train).byte().any())
+    print('Maximum for trainset:', torch.max(torch.stack(track_train, dim=0)))
+    print('Minimum for trainset:', torch.min(torch.stack(track_train, dim=0)))
+    print('Mean for trainset:', torch.mean(torch.stack(track_train, dim=0)))
+    print('Is there any Nan in train? \t', torch.isnan(torch.stack(track_train, dim=0)).byte().any())
+    print('Is there any Inf in train? \t', torch.isinf(torch.stack(track_train, dim=0)).byte().any())
 
     track_valid = []
     for track in valid_set:
