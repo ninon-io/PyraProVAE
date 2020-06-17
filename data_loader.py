@@ -48,7 +48,7 @@ class PianoRollRep(Dataset):
     def __getitem__(self, index):
         transform = transforms.Compose([transforms.Normalize(mean=2.342, std=12.476)])
         sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
-        norm_sample = transform(sample)
+        norm_sample = transform(sample.unsqueeze(0))
         return norm_sample
 
     # Pre-processing of the data: loading in a sliced piano roll
