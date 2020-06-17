@@ -117,8 +117,51 @@ def import_dataset(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Dataloader')
+    # Device Information
+    parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
+
+    # Data Parameters
+    parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
+                        help='path to midi folder')
+    parser.add_argument("--test_size", type=float, default=0.2, help="% of data used in test set")
+    parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
     parser.add_argument("--dataset", type=str, default="maestro", help="maestro | midi_folder")
+    parser.add_argument("--shuffle_data_set", type=str, default=True, help='')
+
+    # Model Saving and reconstruction
+    parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
+                        help='path to the saved model')
+    parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models/weights/',
+                        help='path to the saved model')
+    parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
+                        help='path to reconstruction figures')
+
+    # Model Parameters
+    parser.add_argument("--model", type=str, default="PyraPro", help='Name of the model')
+
+    # PyraPro specific parameters: dimensions of the architecture
+    parser.add_argument('--input_dim', type=int, default=100, help='do not touch if you do not know')
+    parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
+    parser.add_argument('--latent_size', type=int, default=512, help='do not touch if you do not know')
+    parser.add_argument('--cond_hidden_size', type=int, default=1024, help='do not touch if you do not know')
+    parser.add_argument('--cond_output_dim', type=int, default=512, help='do not touch if you do not know')
+    parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not touch if you do not know')
+    parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
+    parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
+    parser.add_argument('--seq_length', type=int, default=128, help='do not touch if you do not know')
+
+    # Optimization parameters
+    parser.add_argument('--batch_size', type=int, default=4, help='input batch size')
+    parser.add_argument('--test-batch-size', type=int, default=1000, help='input batch size for testing')
     parser.add_argument('--frame_bar', type=int, default=100, help='correspond to input dim')
+    parser.add_argument('--epochs', type=int, default=30, help='number of epochs to train')
+    parser.add_argument('--nbworkers', type=int, default=3, help='')
+    parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
+    parser.add_argument('--seed', type=int, default=42, help='random seed')
+    parser.add_argument('--log-interval', type=int, default=10,
+                        help='how many batches to wait before logging training status')
+    parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
+    parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
     # Parse the arguments
     args = parser.parse_args()
     # Data importing
