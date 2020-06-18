@@ -105,8 +105,8 @@ def normalize(train_set, valid_set, test_set):
     # train_set_norm = torch.div(train_set[:], max_global)
     # valid_set_norm = torch.div(valid_set[:], max_global)
     # test_set_norm = torch.div(test_set[:], max_global)
-    print(7 * '*******')
-    print('Casual Info on your beautiful Dataset:')
+    print(10 * '*******')
+    print('Casual information on your beautiful Dataset:')
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
                  torch.min(torch.stack(track_train)),
@@ -130,7 +130,8 @@ def normalize(train_set, valid_set, test_set):
                  torch.isnan(torch.stack(track_test)).byte().any(),
                  torch.isinf(torch.stack(track_test)).byte().any()]])
     print(t.draw())
-    print(7 * '*******')
+    print('Maximum global:', max_global)
+    print(10 * '*******')
     return max_global
 
 
@@ -149,7 +150,6 @@ def import_dataset(args):
 
         # max_global = normalize(train_set, valid_set, test_set)
         max_global = normalize(train_set, valid_set, test_set)
-        print('Maximum global', max_global)
         # train_set_norm = torch.div(train_set[:], max_global)
         # valid_set_norm = torch.div(valid_set[:], max_global)
         # test_set_norm = torch.div(test_set[:], max_global)
@@ -182,13 +182,13 @@ def import_dataset(args):
         exit()
 
     # Create all the loaders
-    train_loader = torch.utils.data.DataLoader(train_set_norm, batch_size=args.batch_size, num_workers=args.nbworkers,
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                                drop_last=True, sampler=train_sampler, pin_memory=True)
-    valid_loader = torch.utils.data.DataLoader(valid_set_norm, batch_size=args.batch_size, num_workers=args.nbworkers,
+    valid_loader = torch.utils.data.DataLoader(valid_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                                drop_last=True, sampler=valid_sampler, pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(test_set_norm, batch_size=args.batch_size, num_workers=args.nbworkers,
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                               drop_last=True, shuffle=False, pin_memory=True)
-    return train_loader, valid_loader, test_loader, train_set_norm, valid_set_norm, test_set_norm, args
+    return train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args
 
 
 if __name__ == "__main__":
