@@ -78,6 +78,59 @@ class PianoRollRep(Dataset):
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
 
+def normalize(train_set, valid_set, test_set):
+    t = Texttable()
+    # Compute the maximum of the dataset
+    global_track = []
+    for x in train_set:
+        global_track.append(x)
+    for y in valid_set:
+        global_track.append(y)
+    for z in test_set:
+        global_track.append(z)
+    max_global = torch.max(torch.stack(global_track))
+    print('Maximum global', max_global)
+    track_train = []
+    track_valid = []
+    track_test = []
+    for x in train_set:
+        x_norm = torch.div(x, max_global)
+        track_train.append(x_norm)
+    for y in valid_set:
+        y_norm = torch.div(y, max_global)
+        track_valid.append(y_norm)
+    for z in test_set:
+        z_norm = torch.div(z, max_global)
+        track_test.append(z_norm)
+    print(7 * '*******')
+    print('Casual Info on your beautiful Dataset:')
+    t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
+                ['Train', torch.max(torch.stack(track_train)),
+                 torch.min(torch.stack(track_train)),
+                 torch.mean(torch.stack(track_train)),
+                 torch.std(torch.stack(track_train)),
+                 torch.var(torch.stack(track_train)),
+                 torch.isnan(torch.stack(track_train)).byte().any(),
+                 torch.isinf(torch.stack(track_train)).byte().any()],
+                ['Validate', torch.max(torch.stack(track_valid)),
+                 torch.min(torch.stack(track_valid)),
+                 torch.mean(torch.stack(track_valid)),
+                 torch.std(torch.stack(track_valid)),
+                 torch.var(torch.stack(track_valid)),
+                 torch.isnan(torch.stack(track_valid)).byte().any(),
+                 torch.isinf(torch.stack(track_valid)).byte().any()],
+                ['Test', torch.max(torch.stack(track_test)),
+                 torch.min(torch.stack(track_test)),
+                 torch.mean(torch.stack(track_test)),
+                 torch.std(torch.stack(track_test)),
+                 torch.var(torch.stack(track_test)),
+                 torch.isnan(torch.stack(track_test)).byte().any(),
+                 torch.isinf(torch.stack(track_test)).byte().any()]])
+    print(t.draw())
+    print(7 * '*******')
+    return track_train, track_valid, track_test
+
+
 # Main data import
 def import_dataset(args):
     # Main transform
@@ -90,6 +143,7 @@ def import_dataset(args):
         train_set = PianoRollRep(train_path, args.frame_bar, export=False)
         test_set = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set = PianoRollRep(valid_path, args.frame_bar, export=False)
+        # train_set, valid_set, test_set, = normalize(train_set, valid_set, test_set)
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)
@@ -178,60 +232,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
-
-    t = Texttable()
-
-    sample_train = []
-    sample_valid = []
-    sample_test = []
-    global_track = []
-    for x in train_set:
-        torch.div(x, 0.5)
-        sample_train.append(x)
-        global_track.append(x)
-    for y in valid_set:
-        sample_valid.append(y)
-        global_track.append(y)
-    for z in test_set:
-        sample_test.append(z)
-        global_track.append(z)
-    max_global = torch.max(torch.stack(global_track))
-    print('Maximum global', max_global)
-    track_train = []
-    track_valid = []
-    track_test = []
-    for x in train_set:
-        x_norm = torch.div(x, max_global)
-        track_train.append(x_norm)
-    for y in valid_set:
-        y_norm = torch.div(y, max_global)
-        track_valid.append(y_norm)
-    for z in test_set:
-        z_norm = torch.div(z, max_global)
-        track_test.append(z_norm)
-    t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
-                ['Train', torch.max(torch.stack(track_train)),
-                 torch.min(torch.stack(track_train)),
-                 torch.mean(torch.stack(track_train)),
-                 torch.std(torch.stack(track_train)),
-                 torch.var(torch.stack(track_train)),
-                 torch.isnan(torch.stack(track_train)).byte().any(),
-                 torch.isinf(torch.stack(track_train)).byte().any()],
-                ['Validate', torch.max(torch.stack(track_valid)),
-                 torch.min(torch.stack(track_valid)),
-                 torch.mean(torch.stack(track_valid)),
-                 torch.std(torch.stack(track_valid)),
-                 torch.var(torch.stack(track_valid)),
-                 torch.isnan(torch.stack(track_valid)).byte().any(),
-                 torch.isinf(torch.stack(track_valid)).byte().any()],
-                ['Test', torch.max(torch.stack(track_test)),
-                 torch.min(torch.stack(track_test)),
-                 torch.mean(torch.stack(track_test)),
-                 torch.std(torch.stack(track_test)),
-                 torch.var(torch.stack(track_test)),
-                 torch.isnan(torch.stack(track_test)).byte().any(),
-                 torch.isinf(torch.stack(track_test)).byte().any()]])
-    print(t.draw())
-
-
-
+    print(train_set[0])
+    
