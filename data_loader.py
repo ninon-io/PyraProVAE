@@ -96,7 +96,6 @@ def maximum(train_set, valid_set, test_set):
     for x in train_set:
         x_norm = torch.div(x, max_global)
         track_train.append(x_norm)
-        print('')
     for y in valid_set:
         y_norm = torch.div(y, max_global)
         track_valid.append(y_norm)
