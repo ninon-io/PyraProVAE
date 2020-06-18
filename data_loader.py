@@ -106,6 +106,8 @@ def maximum(train_set, valid_set, test_set):
     # valid_set_norm = torch.div(valid_set[:], max_global)
     # test_set_norm = torch.div(test_set[:], max_global)
     # print('train norm', track_train)
+    print('train norm layer 1', track_train)
+    print('train norm layer 1', track_train[0])
     print('train norm layer 1', track_train[0][0])
     print(10 * '*******')
     print('Casual information on your beautiful Dataset with normalization:')
