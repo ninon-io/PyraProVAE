@@ -78,7 +78,7 @@ class PianoRollRep(Dataset):
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
 
-def normalize(train_set, valid_set, test_set):
+def maximum(train_set, valid_set, test_set):
     t = Texttable()
     # Compute the maximum of the dataset
     global_track = []
@@ -106,7 +106,7 @@ def normalize(train_set, valid_set, test_set):
     # valid_set_norm = torch.div(valid_set[:], max_global)
     # test_set_norm = torch.div(test_set[:], max_global)
     print(10 * '*******')
-    print('Casual information on your beautiful Dataset:')
+    print('Casual information on your beautiful Dataset with normalization:')
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
                  torch.min(torch.stack(track_train)),
@@ -130,7 +130,7 @@ def normalize(train_set, valid_set, test_set):
                  torch.isnan(torch.stack(track_test)).byte().any(),
                  torch.isinf(torch.stack(track_test)).byte().any()]])
     print(t.draw())
-    print('Maximum global:', max_global)
+    print('Maximum global before normalization:', max_global)
     print(10 * '*******')
     return max_global
 
@@ -148,13 +148,15 @@ def import_dataset(args):
         test_set = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set = PianoRollRep(valid_path, args.frame_bar, export=False)
 
-        # max_global = normalize(train_set, valid_set, test_set)
-        max_global = normalize(train_set, valid_set, test_set)
-        # train_set_norm = torch.div(train_set[:], max_global)
-        # valid_set_norm = torch.div(valid_set[:], max_global)
-        # test_set_norm = torch.div(test_set[:], max_global)
+        max_global = maximum(train_set, valid_set, test_set)
+        train_set_norm = torch.div(train_set[:], max_global)
+        print('TRAIN SET', train_set)
+        print('Train set layer 1', train_set[0])
+        print('train set norm', train_set_norm)
+        valid_set_norm = torch.div(valid_set[:], max_global)
+        test_set_norm = torch.div(test_set[:], max_global)
 
-        train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
+        train_indices, valid_indices = list(range(len(train_set_norm))), list(range(len(valid_set)))
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)
 
