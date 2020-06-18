@@ -146,10 +146,8 @@ def import_dataset(args):
         valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
         # Normalization
         max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
-        # train_set_norm = torch.div(train_set[:], max_global)
-        # print('TRAIN SET', train_norm)
-        print('Train set layer 1', train_set[0])
-        print('train set norm', train_set[0][0])
+        # print('Train set layer 1', train_set[0])
+        # print('train set norm', train_set[0][0])
         # Get sampler
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
         train_sampler = SubsetRandomSampler(train_indices)
