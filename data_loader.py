@@ -201,14 +201,14 @@ if __name__ == "__main__":
     track_valid = []
     track_test = []
     for x in train_set:
-        torch.div(x, max_global)
-        track_train.append(x)
+        x_norm = torch.div(x, max_global)
+        track_train.append(x_norm)
     for y in valid_set:
-        torch.div(y, max_global)
-        track_valid.append(y)
+        y_norm = torch.div(y, max_global)
+        track_valid.append(y_norm)
     for z in test_set:
-        torch.div(z, max_global)
-        track_test.append(z)
+        z_norm = torch.div(z, max_global)
+        track_test.append(z_norm)
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
                  torch.min(torch.stack(track_train)),
