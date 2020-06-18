@@ -181,22 +181,25 @@ if __name__ == "__main__":
 
     t = Texttable()
 
-    track_train = []
-    track_valid = []
-    track_test = []
+    sample_train = []
+    sample_valid = []
+    sample_test = []
     global_track = []
     for x in train_set:
         torch.div(x, 0.5)
-        track_train.append(x)
+        sample_train.append(x)
         global_track.append(x)
     for y in valid_set:
-        track_valid.append(y)
+        sample_valid.append(y)
         global_track.append(y)
     for z in test_set:
-        track_test.append(z)
+        sample_test.append(z)
         global_track.append(z)
     max_global = torch.max(torch.stack(global_track))
     print('Maximum global', max_global)
+    track_train = []
+    track_valid = []
+    track_test = []
     for x in train_set:
         torch.div(x, max_global)
         track_train.append(x)
