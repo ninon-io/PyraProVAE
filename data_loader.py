@@ -49,7 +49,7 @@ class PianoRollRep(Dataset):
     def __getitem__(self, index):  # TODO: Find the perfect match transforms , transforms.functional.center_crop((0, 0), (128, 100, 0))
         transform = transforms.Compose([transforms.Normalize([0.5], [0.5])])
         sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
-        norm_sample = transform(sample)
+        norm_sample = transform(sample.unsqueeze(0))
         return norm_sample
 
     # Pre-processing of the data: loading in a sliced piano roll
