@@ -233,4 +233,6 @@ if __name__ == "__main__":
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
     print(train_set[0])
-    
+    print(train_set[0][0])
+    print(20*'*')
+    print(test_set)
