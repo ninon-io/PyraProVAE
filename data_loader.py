@@ -136,7 +136,7 @@ def maximum(train_set, valid_set, test_set):
     print(t.draw())
     print('Maximum global before normalization:', max_global)
     print(10 * '*******')
-    return max_global
+    return max_global, track_train
 
 
 # Main data import
@@ -152,15 +152,15 @@ def import_dataset(args):
         test_set = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set = PianoRollRep(valid_path, args.frame_bar, export=False)
 
-        max_global = maximum(train_set, valid_set, test_set)
-        train_set_norm = torch.div(train_set[:], max_global)
-        print('TRAIN SET', train_set)
-        print('Train set layer 1', train_set[0])
-        print('train set norm', train_set_norm)
-        valid_set_norm = torch.div(valid_set[:], max_global)
-        test_set_norm = torch.div(test_set[:], max_global)
+        max_global, train_norm = maximum(train_set, valid_set, test_set)
+        # train_set_norm = torch.div(train_set[:], max_global)
+        print('TRAIN SET', train_norm)
+        print('Train set layer 1', train_norm[0])
+        print('train set norm', train_norm)
+        # valid_set_norm = torch.div(valid_set[:], max_global)
+        # test_set_norm = torch.div(test_set[:], max_global)
 
-        train_indices, valid_indices = list(range(len(train_set_norm))), list(range(len(valid_set)))
+        train_indices, valid_indices = list(range(len(train_norm))), list(range(len(valid_set)))
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)
 
@@ -188,7 +188,7 @@ def import_dataset(args):
         exit()
 
     # Create all the loaders
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=args.batch_size, num_workers=args.nbworkers,
+    train_loader = torch.utils.data.DataLoader(train_norm, batch_size=args.batch_size, num_workers=args.nbworkers,
                                                drop_last=True, sampler=train_sampler, pin_memory=True)
     valid_loader = torch.utils.data.DataLoader(valid_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                                drop_last=True, sampler=valid_sampler, pin_memory=True)
