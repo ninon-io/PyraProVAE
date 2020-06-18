@@ -89,7 +89,7 @@ def normalize(train_set, valid_set, test_set):
     for z in test_set:
         global_track.append(z)
     max_global = torch.max(torch.stack(global_track))
-    print('Maximum global', max_global)
+    # print('Maximum global', max_global)
     track_train = []
     track_valid = []
     track_test = []
@@ -102,9 +102,9 @@ def normalize(train_set, valid_set, test_set):
     for z in test_set:
         z_norm = torch.div(z, max_global)
         track_test.append(z_norm)
-    train_set_norm = torch.div(train_set[:], max_global)
-    valid_set_norm = torch.div(valid_set[:], max_global)
-    test_set_norm = torch.div(test_set[:], max_global)
+    # train_set_norm = torch.div(train_set[:], max_global)
+    # valid_set_norm = torch.div(valid_set[:], max_global)
+    # test_set_norm = torch.div(test_set[:], max_global)
     print(7 * '*******')
     print('Casual Info on your beautiful Dataset:')
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
@@ -131,7 +131,7 @@ def normalize(train_set, valid_set, test_set):
                  torch.isinf(torch.stack(track_test)).byte().any()]])
     print(t.draw())
     print(7 * '*******')
-    return max_global, train_set_norm, valid_set_norm, test_set_norm
+    return max_global
 
 
 # Main data import
@@ -148,7 +148,8 @@ def import_dataset(args):
         valid_set = PianoRollRep(valid_path, args.frame_bar, export=False)
 
         # max_global = normalize(train_set, valid_set, test_set)
-        max_global, train_set_norm, valid_set_norm, test_set_norm, = normalize(train_set, valid_set, test_set)
+        max_global = normalize(train_set, valid_set, test_set)
+        print('Maximum global', max_global)
         # train_set_norm = torch.div(train_set[:], max_global)
         # valid_set_norm = torch.div(valid_set[:], max_global)
         # test_set_norm = torch.div(test_set[:], max_global)
