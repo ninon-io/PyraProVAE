@@ -156,7 +156,7 @@ def import_dataset(args):
         # train_set_norm = torch.div(train_set[:], max_global)
         # print('TRAIN SET', train_norm)
         print('Train set layer 1', train_set[0])
-        print('train set norm', train_set)
+        print('train set norm', train_set[0][0])
         # Get sampler
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
         train_sampler = SubsetRandomSampler(train_indices)
