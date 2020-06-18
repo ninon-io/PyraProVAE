@@ -185,13 +185,13 @@ if __name__ == "__main__":
     track_valid = []
     track_test = []
     for x in train_set:
-        # x_simple = x.view(-1)
-        track_train.append(x)
+        if 0 > x > 128:
+            track_train.append(x)
+        else:
+            pass
     for y in valid_set:
-        # y_simple = y.view(-1)
         track_valid.append(y)
     for z in test_set:
-        # z_simple = z.view(-1)
         track_test.append(z)
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
