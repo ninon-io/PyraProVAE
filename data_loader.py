@@ -46,11 +46,15 @@ class PianoRollRep(Dataset):
     def __len__(self):
         return self.nb_bars
 
-    def __getitem__(self, index):  # TODO: Find the perfect match transforms , transforms.functional.center_crop((0, 0), (128, 100, 0))
-        transform = transforms.Compose([transforms.Normalize([0.5], [0.5])])
-        sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
-        norm_sample = transform(sample.unsqueeze(0))
-        return norm_sample
+    def __getitem__(self, index):
+        return torch.load(self.bar_dir + '/' + self.bar_files[index])
+
+    # Find the perfect match transforms, transforms.functional.center_crop((0, 0), (128, 100, 0))
+    # def __getitem__(self, index):
+    #     transform = transforms.Compose([transforms.Normalize([0.5], [0.5])])
+    #     sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
+    #     norm_sample = transform(sample.unsqueeze(0))
+    #     return norm_sample
 
     # Pre-processing of the data: loading in a sliced piano roll
     def bar_export(self):
@@ -181,14 +185,14 @@ if __name__ == "__main__":
     track_valid = []
     track_test = []
     for x in train_set:
-        x_simple = x.view(-1)
-        track_train.append(x_simple)
+        # x_simple = x.view(-1)
+        track_train.append(x)
     for y in valid_set:
-        y_simple = y.view(-1)
-        track_valid.append(y_simple)
+        # y_simple = y.view(-1)
+        track_valid.append(y)
     for z in test_set:
-        z_simple = z.view(-1)
-        track_test.append(z_simple)
+        # z_simple = z.view(-1)
+        track_test.append(z)
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
                  torch.min(torch.stack(track_train)),
