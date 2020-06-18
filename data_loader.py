@@ -96,6 +96,7 @@ def maximum(train_set, valid_set, test_set):
     for x in train_set:
         x_norm = torch.div(x, max_global)
         track_train.append(x_norm)
+        print('')
     for y in valid_set:
         y_norm = torch.div(y, max_global)
         track_valid.append(y_norm)
@@ -105,6 +106,8 @@ def maximum(train_set, valid_set, test_set):
     # train_set_norm = torch.div(train_set[:], max_global)
     # valid_set_norm = torch.div(valid_set[:], max_global)
     # test_set_norm = torch.div(test_set[:], max_global)
+    print('train norm', track_train)
+    print('train norm layer 1', track_train[0])
     print(10 * '*******')
     print('Casual information on your beautiful Dataset with normalization:')
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
