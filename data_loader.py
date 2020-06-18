@@ -185,7 +185,7 @@ if __name__ == "__main__":
     track_valid = []
     track_test = []
     for x in train_set:
-        if 0 > x > 128:
+        if torch.zeros > x > 128:
             track_train.append(x)
         else:
             pass
