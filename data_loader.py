@@ -184,14 +184,27 @@ if __name__ == "__main__":
     track_train = []
     track_valid = []
     track_test = []
+    global_track = []
     for x in train_set:
-        if torch.zeros > x > 128:
-            track_train.append(x)
-        else:
-            pass
+        torch.div(x, 0.5)
+        track_train.append(x)
+        global_track.append(x)
     for y in valid_set:
         track_valid.append(y)
+        global_track.append(y)
     for z in test_set:
+        track_test.append(z)
+        global_track.append(z)
+    max_global = torch.max(torch.stack(global_track))
+    print('Maximum global', max_global)
+    for x in train_set:
+        torch.div(x, max_global)
+        track_train.append(x)
+    for y in valid_set:
+        torch.div(y, max_global)
+        track_valid.append(y)
+    for z in test_set:
+        torch.div(z, max_global)
         track_test.append(z)
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
