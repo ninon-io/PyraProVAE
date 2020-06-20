@@ -165,7 +165,6 @@ class Decoder(nn.Module):
 
     def forward(self, latent, target, teacher_forcing):
         batch_size = latent.shape[0]
-        print(latent.shape)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         target = torch.nn.functional.one_hot(target.long(), 389).float()
         h0, c0 = self.init_hidden(batch_size)
@@ -174,17 +173,12 @@ class Decoder(nn.Module):
         for subseq_idx in range(self.num_subsequences):
             subseq_embedding, (h0, c0) = self.conductor_RNN(latent.unsqueeze(1), (h0, c0))
             subseq_embedding = self.tanh(self.conductor_output(subseq_embedding))
-            print(subseq_embedding.shape)
             # Initialize lower decoder hidden state
             h0_dec = (torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device),
                       torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device))
 
             use_teacher_forcing = False #if random.random() < self.teacher_forcing_ratio else False
-            print(prev_note.shape)
             for note_idx in range(int(self.seq_length/self.num_subsequences)):
-                print(note_idx)
-                print(prev_note.shape)
-                print(subseq_embedding.shape)
                 e = torch.cat((prev_note, subseq_embedding), -1)
                 prev_note, h0_dec = self.decoder_RNN(e, h0_dec)
                 prev_note = self.tanh(self.decoder_output(prev_note))
