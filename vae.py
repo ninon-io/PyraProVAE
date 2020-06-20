@@ -182,6 +182,9 @@ class Decoder(nn.Module):
             use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
             print(prev_note.shape)
             for note_idx in range(int(self.seq_length/self.num_subsequences)):
+                print(note_idx)
+                print(prev_note.shape)
+                print(subseq_embedding.shape)
                 e = torch.cat((prev_note, subseq_embedding), -1)
                 prev_note, h0_dec = self.decoder_RNN(e, h0_dec)
                 prev_note = self.tanh(self.decoder_output(prev_note))
