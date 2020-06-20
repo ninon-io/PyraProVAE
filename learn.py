@@ -48,7 +48,7 @@ class Learn:
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
-            print("Batch size is %d" % (x.shape[0]))
+            print("Beautiful batch size is %d" % (x.shape[0]))
             print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
             print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
             print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
