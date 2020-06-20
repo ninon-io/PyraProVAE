@@ -144,7 +144,7 @@ def import_dataset(args):
         test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
         # Normalization
-        max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
+        # max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
         # Get sampler
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
         train_indices = train_indices[:256]
