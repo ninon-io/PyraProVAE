@@ -57,7 +57,7 @@ parser.add_argument('--test-batch-size', type=int, default=1000, help='input bat
 parser.add_argument('--frame_bar', type=int, default=100, help='correspond to input dim')
 parser.add_argument('--epochs', type=int, default=30, help='number of epochs to train')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
-parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
+parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('--seed', type=int, default=42, help='random seed')
 parser.add_argument('--log-interval', type=int, default=10,
                     help='how many batches to wait before logging training status')
