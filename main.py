@@ -103,7 +103,7 @@ if args.model == 'PyraPro':
     #                              num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     decoder = Decoder(input_size=args.input_dim, latent_size=args.latent_size,
                     cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
-                    dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
+                    hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                     num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 else:
