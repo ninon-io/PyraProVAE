@@ -52,7 +52,8 @@ class Learn:
             print("Are you a motherfucking silence score ?")
             print(torch.sum(x, (1, 2)))
             for i in range(x.shape[0]):
-                print(x[i])
+                for j in range(x.shape[1]):
+                    print(x[i][j])
             print()
             print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
             print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
