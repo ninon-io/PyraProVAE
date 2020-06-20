@@ -143,3 +143,55 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
                     token = target[:, subseq * subseq_size: ((subseq + 1) * subseq_size), :]
         print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(out))))
         return out
+
+
+class Decoder(nn.Module):
+
+    def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, hidden_size, num_layers, num_subsequences, seq_length):
+        super(Decoder, self).__init__()
+        #self.latent_to_conductor = nn.Linear(latent_size, latent_size)
+        self.tanh = nn.Tanh()
+        self.conductor_RNN = nn.LSTM(latent_size, cond_hidden_size, batch_first=True, num_layers=2, bidirectional=False)
+        self.conductor_output = nn.Linear(cond_hidden_size, cond_outdim)
+        self.decoder_RNN = nn.LSTM(cond_outdim + input_size, hidden_size, batch_first=True, num_layers=2, bidirectional=False)
+        self.decoder_output = nn.Linear(hidden_size, input_size)
+        self.softmax = nn.Softmax()
+        self.num_subsequences = num_subsequences
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.seq_length = seq_length
+        self.teacher_forcing_ratio = 0.5
+
+    def forward(self, latent, target, teacher_forcing):
+        batch_size = latent.shape[0]
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        target = torch.nn.functional.one_hot(target.long(), 389).float()
+        h0, c0 = self.init_hidden(batch_size)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
+        prev_note = torch.zeros(batch_size, 1, self.input_size, dtype=torch.float, device=device)
+        for subseq_idx in range(self.num_subsequences):
+            subseq_embedding, (h0, c0) = self.conductor_RNN(latent.unsqueeze(1), (h0, c0))
+            subseq_embedding = self.tanh(self.conductor_output(subseq_embedding))
+
+            # Initialize lower decoder hidden state
+            h0_dec = (torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device),
+                      torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device))
+
+            use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
+
+            for note_idx in range(int(self.seq_length/self.num_subsequences)):
+                e = torch.cat((prev_note, subseq_embedding), -1)
+                prev_note, h0_dec = self.decoder_RNN(e, h0_dec)
+                prev_note = self.tanh(self.decoder_output(prev_note))
+
+                idx = subseq_idx * self.seq_length/self.num_subsequences + note_idx
+                out[:, int(idx), :] = prev_note.squeeze()
+                if use_teacher_forcing :
+                    prev_note = target[:,int(idx),:].unsqueeze(1)
+        return out
+
+    def init_hidden(self, batch_size=1):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        return (torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device),
+                torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device))

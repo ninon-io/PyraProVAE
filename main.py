@@ -9,7 +9,7 @@ import data_loader
 from data_loader import import_dataset
 from reconstruction import reconstruction
 from vae import VaeModel
-from vae import HierarchicalDecoder, HierarchicalEncoder
+from vae import HierarchicalDecoder, HierarchicalEncoder, Decoder
 from texttable import Texttable
 
 # For memory tracking if needed
@@ -97,10 +97,14 @@ train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = 
 if args.model == 'PyraPro':
     encoder = HierarchicalEncoder(input_dim=args.input_dim, enc_hidden_size=args.enc_hidden_size,
                                   latent_size=args.latent_size, num_layers=args.num_layers)
-    decoder = HierarchicalDecoder(input_size=args.input_dim, latent_size=args.latent_size,
-                                  cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
-                                  dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
-                                  num_subsequences=args.num_subsequences, seq_length=args.seq_length)
+    #decoder = HierarchicalDecoder(input_size=args.input_dim, latent_size=args.latent_size,
+    #                              cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
+    #                              dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
+    #                              num_subsequences=args.num_subsequences, seq_length=args.seq_length)
+    decoder = Decoder(input_size=args.input_dim, latent_size=args.latent_size,
+                    cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
+                    dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
+                    num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 else:
     print("Oh no, unknown model " + args.model + ".\n")
