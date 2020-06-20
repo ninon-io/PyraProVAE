@@ -48,6 +48,7 @@ class Learn:
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
+            print("Batch size is %d" % (x.shape[0]))
             print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
             print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
             print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
@@ -69,9 +70,9 @@ class Learn:
             loss.backward()
             # Optimizes weights
             optimizer.step()
-            if self.iter_train > 10 and self.beta < 1:
-                self.beta += 0.0025
-            self.iter_train += 1
+        if self.iter_train > 10 and self.beta < 1:
+            self.beta += 0.0025
+        self.iter_train += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
             writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
