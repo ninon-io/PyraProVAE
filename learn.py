@@ -51,6 +51,9 @@ class Learn:
             print("Beautiful batch size is %d" % (x.shape[0]))
             print("Are you a motherfucking silence score ?")
             print(torch.sum(x, (1, 2)))
+            for i in range(x.shape[0]):
+                print(x[i])
+            print()
             print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
             print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
             print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
