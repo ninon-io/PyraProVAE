@@ -64,11 +64,14 @@ parser.add_argument('--log-interval', type=int, default=10,
 parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
 parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
 
+
 # Parse the arguments
 args = parser.parse_args()
 
 # Sets the seed for generating random numbers
 torch.manual_seed(args.seed)
+import numpy as np
+np.random.seed(args.seed)
 
 # Enable CuDNN optimization
 if args.device != 'cpu':
