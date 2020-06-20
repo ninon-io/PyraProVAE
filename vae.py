@@ -179,7 +179,7 @@ class Decoder(nn.Module):
             h0_dec = (torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device),
                       torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device))
 
-            use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
+            use_teacher_forcing = True #if random.random() < self.teacher_forcing_ratio else False
             print(prev_note.shape)
             for note_idx in range(int(self.seq_length/self.num_subsequences)):
                 print(note_idx)
