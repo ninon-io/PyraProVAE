@@ -98,6 +98,7 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
         subseq_size = self.seq_length // self.num_subsequences
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
+        print("[RNN Style] = Cheese nan dans fc_init_cond ? - %d" % (torch.sum(torch.isnan(self.fc_init_cond(latent)))))
 
         # Get the initial states of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
