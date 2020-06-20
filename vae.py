@@ -106,8 +106,11 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
         # Divide the latent space into subsequences:
         latent = latent.view(batch_size, self.num_subsequences, -1)
         # Pass through the conductor
+        h0_ninja = torch.zeros(self.num_layers, batch_size, self.cond_hidden_size, dtype=torch.float, device=device)
+        c0_ninja = torch.zeros(self.num_layers, batch_size, self.cond_hidden_size, dtype=torch.float, device=device)
+
         # Taking latent (batch x latent_dim)
-        subseq_embeddings, _ = self.conductor_RNN(latent, (h0_cond, h0_cond))
+        subseq_embeddings, _ = self.conductor_RNN(latent, (h0_ninja, c0_ninja))
         print("[RNN Style] = Cheese nan dans subseq_embeddings ? - %d" % (torch.sum(torch.isnan(subseq_embeddings))))
         # Output is (batch x time x rnn_dim)
         subseq_embeddings = self.conductor_output(subseq_embeddings)
