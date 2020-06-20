@@ -51,11 +51,11 @@ class Learn:
             print("Beautiful batch size is %d" % (x.shape[0]))
             print("Are you a mofo silence ?")
             print(torch.sum(x, (1, 2)))
-            for i in range(x.shape[0]):
-                import matplotlib.pyplot as plt
-                plt.matshow(x[i].cpu(), alpha=1)
-                plt.savefig("reconstruction/batch_%d_example_%d.png" % (batch_idx, i))
-                plt.close()
+            #for i in range(x.shape[0]):
+            #    import matplotlib.pyplot as plt
+            #    plt.matshow(x[i].cpu(), alpha=1)
+            #    plt.savefig("reconstruction/batch_%d_example_%d.png" % (batch_idx, i))
+            #    plt.close()
             print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
             print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
             print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
