@@ -97,20 +97,25 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
 
         # Get the initial states of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
+        print("[RNN Style] = Cheese nan dans h0_cond ? - %d" % (torch.sum(torch.isnan(h0_cond))))
         # Divide the latent space into subsequences:
         latent = latent.view(batch_size, self.num_subsequences, -1)
         # Pass through the conductor
         # Taking latent (batch x latent_dim)
         subseq_embeddings, _ = self.conductor_RNN(latent, (h0_cond, h0_cond))
+        print("[RNN Style] = Cheese nan dans subseq_embeddings ? - %d" % (torch.sum(torch.isnan(subseq_embeddings))))
         # Output is (batch x time x rnn_dim)
         subseq_embeddings = self.conductor_output(subseq_embeddings)
+        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(subseq_embeddings))))
 
         # Get the initial state of decoder
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
+        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(h0s_dec))))
 
         # Init the output seq and the first token to 0 tensors
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
@@ -132,4 +137,5 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
             if teacher_forcing:
                 if random.random() <= self.teacher_forcing_ratio:
                     token = target[:, subseq * subseq_size: ((subseq + 1) * subseq_size), :]
+        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(out))))
         return out
