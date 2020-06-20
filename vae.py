@@ -66,7 +66,7 @@ class HierarchicalEncoder(nn.Module):
         return h
 
 
-class HierarchicalDecoder(nn.Module):
+class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
     def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
                  num_subsequences, seq_length):
         super(HierarchicalDecoder, self).__init__()

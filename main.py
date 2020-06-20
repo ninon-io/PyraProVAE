@@ -81,11 +81,11 @@ args.device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 use_cuda = not args.no_cuda and torch.cuda.is_available()
 kwargs = {'num_workers': 3, 'pin_memory': True} if use_cuda else {}
 
-print(7 * '*******')
-print('* Lovely run info:')
-print('* Your great optimization will be on ' + str(args.device) + '.')
-print('* Your wonderful model is ' + str(args.model) + '.')
-print(7 * '*******')
+print(10 * '*******')
+print('* Lovely run info:', 51 * ' ', '*')
+print('* Your great optimization will be on ' + str(args.device) + '.', 28 * ' ', '*')
+print('* Your wonderful model is ' + str(args.model) + '.', 37 * ' ', '*')
+print(10 * '*******')
 
 # Data importing
 train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
@@ -134,11 +134,11 @@ learn.save(model, args, epoch=0)
 
 # Initial test
 print('INITIAL TEST')
-learn.test(model, args, epoch=0)  # First test on randomly initialized data
+# learn.test(model, args, epoch=0)  # First test on randomly initialized data
 print('EPOCH BEGINS')
 # Through the epochs
 for epoch in range(1, args.epochs + 1, 1):
-    print('Epoch:' + str(epoch))
+    print('Epoch:' + str(epoch))  # TODO: print(f"Epoch: {epoch}")
     loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
     loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate = learn.validate(model, args, epoch)
     scheduler.step(loss_mean_validate)
@@ -146,15 +146,15 @@ for epoch in range(1, args.epochs + 1, 1):
     learn.save(model, args, epoch)
     reconstruction(args, model, epoch)
     # Track on stuffs
-    print(7 * '*******')
-    print('* Useful & incredible tracking:')
+    print("*******" * 10)
+    print('* Useful & incredible tracking:', 38 * ' ', '*')
     t = Texttable()
     t.add_rows([['Name', 'loss mean', 'kl_div mean', 'recon_loss mean'],
                 ['Train', loss_mean, kl_div_mean, recon_loss_mean],
                 ['Validate', loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate],
                 ['Test', loss_mean_test, kl_div_mean_test, recon_loss_mean_test]])
     print(t.draw())
-    print(7 * '*******')
+    print(10 * '*******')
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
 

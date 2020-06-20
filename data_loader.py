@@ -78,7 +78,7 @@ class PianoRollRep(Dataset):
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
 
-def maximum(train_set, valid_set, test_set):
+def maximum(train_set, valid_set, test_set):  # TODO: transfer to np
     t = Texttable()
     # Compute the maximum of the dataset
     global_track = []
@@ -89,7 +89,6 @@ def maximum(train_set, valid_set, test_set):
     for z in test_set:
         global_track.append(z)
     max_global = torch.max(torch.stack(global_track))
-    # print('Maximum global', max_global)
     track_train = []
     track_valid = []
     track_test = []
@@ -146,10 +145,10 @@ def import_dataset(args):
         valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
         # Normalization
         max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
-        # print('Train set layer 1', train_set[0])
-        # print('train set norm', train_set[0][0])
         # Get sampler
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
+        train_indices = train_indices[:256]
+        valid_indices = valid_indices[:256]
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)
 
@@ -237,3 +236,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
+    maestro_simple
