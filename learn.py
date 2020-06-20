@@ -49,6 +49,8 @@ class Learn:
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
             print("Beautiful batch size is %d" % (x.shape[0]))
+            print("Are you a mofo silence ?")
+            print(torch.sum(x, (1, 2)))
             print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
             print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
             print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
