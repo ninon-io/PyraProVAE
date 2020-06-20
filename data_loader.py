@@ -148,7 +148,7 @@ def import_dataset(args):
         train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw
         # Get sampler
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
-        train_indices = train_indices[:256]
+        train_indices = train_indices[:16000]
         valid_indices = valid_indices[:256]
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)
