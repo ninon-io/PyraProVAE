@@ -1,3 +1,5 @@
+# https://github.com/acids-ircam/flow_synthesizer/blob/master/code/models/vae/ae.py
+
 import torch
 import torch.nn as nn
 
