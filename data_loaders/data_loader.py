@@ -148,7 +148,41 @@ def import_dataset(args):
         train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw
         # Get sampler
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
-        train_indices = train_indices[:16000]
+        train_indices = train_indices[:16000]  # TODO: DON'T FORGET TO DELETE THIS
+        valid_indices = valid_indices[:256]
+        train_sampler = SubsetRandomSampler(train_indices)
+        valid_sampler = SubsetRandomSampler(valid_indices)
+
+    elif args.dataset == "nottingham":
+        train_path = "/fast-1/mathieu/datasets/Nottingham/train"
+        test_path = "/fast-1/mathieu/datasets/Nottingham/test"
+        valid_path = "/fast-1/mathieu/datasets/Nottingham/valid"
+        train_set_raw = PianoRollRep(train_path, args.frame_bar, export=False)
+        test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
+        valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
+        # Normalization
+        # max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
+        train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw
+        # Get sampler
+        train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
+        train_indices = train_indices[:16000]  # TODO: DON'T FORGET TO DELETE THIS
+        valid_indices = valid_indices[:256]
+        train_sampler = SubsetRandomSampler(train_indices)
+        valid_sampler = SubsetRandomSampler(valid_indices)
+
+    elif args.dataset == "bach_chorales":
+        train_path = "/fast-1/mathieu/datasets/JSB_Chorales/train"
+        test_path = "/fast-1/mathieu/datasets/JSB_Chorales/test"
+        valid_path = "/fast-1/mathieu/datasets/JSB_Chorales/valid"
+        train_set_raw = PianoRollRep(train_path, args.frame_bar, export=False)
+        test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
+        valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
+        # Normalization
+        # max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
+        train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw
+        # Get sampler
+        train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
+        train_indices = train_indices[:16000]  # TODO: DON'T FORGET TO DELETE THIS
         valid_indices = valid_indices[:256]
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)

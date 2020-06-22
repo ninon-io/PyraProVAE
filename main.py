@@ -1,6 +1,7 @@
 from time import time
 import argparse
 import torch.nn.utils
+import numpy as np
 # %%
 from learn import Learn
 from data_loaders.data_loader import import_dataset
@@ -23,7 +24,7 @@ parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/m
                     help='path to midi folder')
 parser.add_argument("--test_size", type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
-parser.add_argument("--dataset", type=str, default="maestro", help="maestro | midi_folder")
+parser.add_argument("--dataset", type=str, default="maestro", help="maestro | nottingham | bach_chorales | midi_folder")
 parser.add_argument("--shuffle_data_set", type=str, default=True, help='')
 
 # Model Saving and reconstruction
@@ -61,13 +62,11 @@ parser.add_argument('--log-interval', type=int, default=10,
 parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
 parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
 
-
 # Parse the arguments
 args = parser.parse_args()
 
 # Sets the seed for generating random numbers
 torch.manual_seed(args.seed)
-import numpy as np
 np.random.seed(args.seed)
 
 # Enable CuDNN optimization
@@ -82,9 +81,10 @@ use_cuda = not args.no_cuda and torch.cuda.is_available()
 kwargs = {'num_workers': 3, 'pin_memory': True} if use_cuda else {}
 
 print(10 * '*******')
-print('* Lovely run info:', 51 * ' ', '*')
-print('* Your great optimization will be on ' + str(args.device) + '.', 28 * ' ', '*')
-print('* Your wonderful model is ' + str(args.model) + '.', 37 * ' ', '*')
+print('* Lovely run info:')
+print('* Your great optimization will be on ' + str(args.device))
+print('* Your wonderful model is ' + str(args.model))
+print('* You are using the schwifty ' + str(args.dataset) + ' dataset')
 print(10 * '*******')
 
 # Data importing
@@ -94,14 +94,14 @@ train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = 
 if args.model == 'PyraPro':
     encoder = HierarchicalEncoder(input_dim=args.input_dim, enc_hidden_size=args.enc_hidden_size,
                                   latent_size=args.latent_size, num_layers=args.num_layers)
-    #decoder = HierarchicalDecoder(input_size=args.input_dim, latent_size=args.latent_size,
+    # decoder = HierarchicalDecoder(input_size=args.input_dim, latent_size=args.latent_size,
     #                              cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
     #                              dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
     #                              num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     decoder = Decoder(input_size=args.input_dim, latent_size=args.latent_size,
-                    cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
-                    hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
-                    num_subsequences=args.num_subsequences, seq_length=args.seq_length)
+                      cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
+                      hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
+                      num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 else:
     print("Oh no, unknown model " + args.model + ".\n")
@@ -161,4 +161,3 @@ for epoch in range(1, args.epochs + 1, 1):
     print(10 * '*******')
 
 print('\nTraining Time in minutes =', (time() - time0) / 60)
-
