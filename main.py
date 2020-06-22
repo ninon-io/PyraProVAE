@@ -1,15 +1,12 @@
 from time import time
 import argparse
 import torch.nn.utils
-import os
-from guppy import hpy
 # %%
 from learn import Learn
-import data_loader
-from data_loader import import_dataset
+from data_loaders.data_loader import import_dataset
 from reconstruction import reconstruction
-from vae import VaeModel
-from vae import HierarchicalDecoder, HierarchicalEncoder, Decoder
+from models.vae_pyrapro import VaeModel
+from models.vae_pyrapro import HierarchicalEncoder, Decoder
 from texttable import Texttable
 
 # For memory tracking if needed
@@ -30,9 +27,9 @@ parser.add_argument("--dataset", type=str, default="maestro", help="maestro | mi
 parser.add_argument("--shuffle_data_set", type=str, default=True, help='')
 
 # Model Saving and reconstruction
-parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
+parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/',
                     help='path to the saved model')
-parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models/weights/',
+parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/',
                     help='path to the saved model')
 parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
                     help='path to reconstruction figures')

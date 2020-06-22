@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
-import data_loader
+from data_loaders import data_loader
 import random
-import torch
 import numpy as np
 import os
-import argparse
 
 
 def reconstruction(args, model, epoch):
@@ -49,7 +47,7 @@ def reconstruction(args, model, epoch):
 #     parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
 #     parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
 #                         help='path to midi folder')
-#     parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models/entire_model/',
+#     parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/',
 #                         help='path to the saved model')
 #     parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
 #                         help='path to reconstruction figures')
