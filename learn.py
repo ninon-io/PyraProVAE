@@ -104,11 +104,8 @@ class Learn:
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
                 self.recon_loss_mean_validate += recon_loss.detach()
                 self.kl_div_mean_validate += kl_div.detach()
-                loss = recon_loss + self.beta_validate * kl_div
+                loss = recon_loss + self.beta * kl_div
                 self.loss_mean_validate += loss.detach()
-                if self.iter_train > 10 and self.beta < 1:
-                    self.beta_validate += 0.0025
-                self.iter_train += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean_VALID', self.loss_mean_validate / self.iter_train, epoch)
             writer.add_scalar('data/kl_div_mean_VALID', self.kl_div_mean_validate / self.iter_train, epoch)
@@ -137,9 +134,6 @@ class Learn:
                 self.kl_div_mean_test += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_test += loss.detach()
-                if self.iter_train > 10 and self.beta < 1:
-                    self.beta += 0.0025
-                self.iter_test += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
