@@ -5,7 +5,7 @@ import random
 
 class VAE_pianoroll(nn.Module):
     def __init__(self, encoder, decoder, teacher_forcing=True):
-        super(VAE_pianoroll, self)._init_()
+        super(VAE_pianoroll, self).__init__()
         self.tf = teacher_forcing
         self.encoder = encoder
         self.decoder = decoder
@@ -38,7 +38,7 @@ class VAE_pianoroll(nn.Module):
 class Encoder_pianoroll(nn.Module):
     def __init__(self, input_dim, hidden_size, latent_size, num_layers):
         """"" This initializes the encoder"""
-        super(Encoder_pianoroll, self)._init_()
+        super(Encoder_pianoroll, self).__init__()
         self.RNN = nn.LSTM(input_dim, hidden_size, batch_first=True, num_layers=num_layers, bidirectional=True,
                            dropout=0.6)
         self.num_layers = num_layers
@@ -63,7 +63,7 @@ class Encoder_pianoroll(nn.Module):
 class Decoder_pianoroll(nn.Module):
     def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
                num_subsequences, seq_length):
-        super(Decoder_pianoroll, self)._init_()
+        super(Decoder_pianoroll, self).__init__()
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
         self.fc_init_cond = nn.Linear(latent_size, cond_hidden_size * num_layers)
