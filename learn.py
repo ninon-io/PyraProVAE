@@ -65,14 +65,14 @@ class Learn:
             log_var = torch.log(sigma ** 2)
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
-            # self.recon_loss_mean += recon_loss.detach()
-            # self.kl_div_mean += kl_div.detach()
+            self.recon_loss_mean += recon_loss.detach()
+            self.kl_div_mean += kl_div.detach()
             # Training pass
             loss = recon_loss + self.beta * kl_div
             print("KL Loss is : %f" % (kl_div.item()))
             print("Recons loss is : %f" % (recon_loss.item()))
             print("Loss is : %f" % (loss.item()))
-            #self.loss_mean += loss.detach()
+            self.loss_mean += loss.detach()
             optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
