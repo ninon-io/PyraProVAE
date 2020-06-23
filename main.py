@@ -7,9 +7,9 @@ from learn import Learn
 from data_loaders.data_loader import import_dataset
 from reconstruction import reconstruction
 # Import models
-from models.vae_pyrapro import VaeModel
-from models.vae_pyrapro import HierarchicalEncoder, Decoder
+from models.vae_pyrapro import VaeModel, HierarchicalEncoder, Decoder
 from models.vae_mathieu import VAE_pianoroll, Encoder_pianoroll, Decoder_pianoroll
+from models.ae import RegressionAE, DisentanglingAE, AE
 from texttable import Texttable
 
 # For memory tracking if needed
@@ -40,7 +40,7 @@ parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/n
 # Model Parameters
 parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
 
-# PyraPro specific parameters: dimensions of the architecture
+# PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--input_dim', type=int, default=100, help='do not touch if you do not know')
 parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
 parser.add_argument('--latent_size', type=int, default=512, help='do not touch if you do not know')
@@ -105,6 +105,7 @@ if args.model == 'PyraPro':
                       hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                       num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VaeModel(encoder=encoder, decoder=decoder).float()
+
 elif args.model == 'vae_mathieu':
     encoder = Encoder_pianoroll(input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
                                   latent_size=args.latent_size, num_layers=args.num_layers)
@@ -113,6 +114,16 @@ elif args.model == 'vae_mathieu':
                       dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                       num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VAE_pianoroll(encoder=encoder, decoder=decoder).float()
+
+elif args.model == 'ae':
+    encoder = Encoder_pianoroll(input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
+                                  latent_size=args.latent_size, num_layers=args.num_layers)
+    decoder = Decoder_pianoroll(input_size=args.input_dim, latent_size=args.latent_size,
+                      cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
+                      dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
+                      num_subsequences=args.num_subsequences, seq_length=args.seq_length)
+    model = AE(encoder=encoder, decoder=decoder, encoder_dims=args.input_dim).float()
+
 else:
     print("Oh no, unknown model " + args.model + ".\n")
     model = None
@@ -125,7 +136,7 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
               train_set=train_set, validate_set=valid_set, test_set=test_set)
 
 # Optimizer and Loss
-if args.model == 'PyraPro':
+if args.model in ['PyraPro', 'vae_mathieu']:
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 else:
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
@@ -133,10 +144,11 @@ else:
 #     criterion = nn.MSELoss()
 
 # Scheduler
-if args.model == 'PyraPro':
+if args.model in ['PyraPro', 'vae_mathieu']
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20,
                                                            verbose=False, threshold=0.0001, threshold_mode='rel',
                                                            cooldown=0, min_lr=1e-07, eps=1e-08)
+
 else:
     scheduler = None
 
