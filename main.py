@@ -132,8 +132,12 @@ else:
 model.to(args.device)
 
 # Define learning environment
+# For PyraPro & vae_mathieu
 learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, test_loader=test_loader,
               train_set=train_set, validate_set=valid_set, test_set=test_set)
+# For ae & vae
+regression_ae = RegressionAE(ae_model=args.model, latent_dims=args.latent_size, regression_dims=None,
+                             recons_loss=args.recons_loss, regressor=None, regressor_name='')
 
 # Optimizer and Loss
 if args.model in ['PyraPro', 'vae_mathieu']:
@@ -158,28 +162,35 @@ time0 = time()
 # Initial training of the model
 learn.save(model, args, epoch=0)
 
-# Initial test
-print('INITIAL TEST')
-# learn.test(model, args, epoch=0)  # First test on randomly initialized data
-print('EPOCH BEGINS')
-# Through the epochs
-for epoch in range(1, args.epochs + 1, 1):
-    print('Epoch:' + str(epoch))  # TODO: print(f"Epoch: {epoch}")
-    loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
-    loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate = learn.validate(model, args, epoch)
-    scheduler.step(loss_mean_validate)
-    loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
-    learn.save(model, args, epoch)
-    reconstruction(args, model, epoch)
-    # Track on stuffs
-    print("*******" * 10)
-    print('* Useful & incredible tracking:', 38 * ' ', '*')
-    t = Texttable()
-    t.add_rows([['Name', 'loss mean', 'kl_div mean', 'recon_loss mean'],
-                ['Train', loss_mean, kl_div_mean, recon_loss_mean],
-                ['Validate', loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate],
-                ['Test', loss_mean_test, kl_div_mean_test, recon_loss_mean_test]])
-    print(t.draw())
-    print(10 * '*******')
 
-print('\nTraining Time in minutes =', (time() - time0) / 60)
+if args.model in ['PyraPro', 'vae_mathieu']:
+    # Initial test
+    print('INITIAL TEST')
+    # learn.test(model, args, epoch=0)  # First test on randomly initialized data
+    print('EPOCH BEGINS')
+    # Through the epochs
+    for epoch in range(1, args.epochs + 1, 1):
+        print('Epoch:' + str(epoch))  # TODO: print(f"Epoch: {epoch}")
+        loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
+        loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate = learn.validate(model, args, epoch)
+        scheduler.step(loss_mean_validate)
+        loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
+        learn.save(model, args, epoch)
+        reconstruction(args, model, epoch)
+        # Track on stuffs
+        print("*******" * 10)
+        print('* Useful & incredible tracking:', 38 * ' ', '*')
+        t = Texttable()
+        t.add_rows([['Name', 'loss mean', 'kl_div mean', 'recon_loss mean'],
+                    ['Train', loss_mean, kl_div_mean, recon_loss_mean],
+                    ['Validate', loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate],
+                    ['Test', loss_mean_test, kl_div_mean_test, recon_loss_mean_test]])
+        print(t.draw())
+        print(10 * '*******')
+
+    print('\nTraining Time in minutes =', (time() - time0) / 60)
+
+# elif args.model in ['ae', 'vae']:
+#     for epoch in range(1, args.epoch + 1, 1):
+#         print(f"Epoch: {epoch}")
+#         full_loss = regression_ae.train_epoch()

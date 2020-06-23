@@ -271,4 +271,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
-    maestro_simple

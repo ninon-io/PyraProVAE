@@ -59,7 +59,7 @@ class HierarchicalEncoder(nn.Module):
 
     def forward(self, x, h0, c0):
         batch_size = x.shape[0]
-        _, (h, _) = self.RNN(x.float(), (h0.float(), c0.float()))
+        _, (h, _) = self.RNN(x.float(), (h0.float(), c0.float()))  # TODO: UNIQUE DIFFERENCE
         h = h.view(self.num_layers, 2, batch_size, -1)
         h = h[-1]
         h = torch.cat([h[0], h[1]], dim=1)
