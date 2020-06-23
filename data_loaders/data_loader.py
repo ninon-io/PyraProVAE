@@ -102,7 +102,7 @@ def maximum(train_set, valid_set, test_set):  # TODO: transfer to np
         z_norm = torch.div(z, max_global)
         track_test.append(z_norm)
     print(10 * '*******')
-    print('Casual information on your beautiful' + str(args.dataset) + 'dataset with normalization:')
+    print('Casual information on your beautiful dataset with normalization:')
     t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
                 ['Train', torch.max(torch.stack(track_train)),
                  torch.min(torch.stack(track_train)),
