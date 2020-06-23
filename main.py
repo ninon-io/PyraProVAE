@@ -20,7 +20,7 @@ from texttable import Texttable
 parser = argparse.ArgumentParser(description='PyraProVAE')
 
 # Device Information
-parser.add_argument('--device', type=str, default='cuda:1', help='device cuda or cpu')
+parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
 
 # Data Parameters
 parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
