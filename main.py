@@ -137,7 +137,7 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
               train_set=train_set, validate_set=valid_set, test_set=test_set)
 # For ae & vae
 regression_ae = RegressionAE(ae_model=args.model, latent_dims=args.latent_size, regression_dims=None,
-                             recons_loss=args.recons_loss, regressor=None, regressor_name='')
+                             recons_loss=None, regressor=None, regressor_name='')
 
 # Optimizer and Loss
 if args.model in ['PyraPro', 'vae_mathieu']:
