@@ -5,7 +5,7 @@ import random
 
 class VAE_pianoroll(nn.Module):
     def __init__(self, encoder, decoder, teacher_forcing=True, **kwargs):
-        super(VAE_pianoroll, self).__init__()
+        super(VAE_pianoroll, self).__init__(**kwargs)
         self.tf = teacher_forcing
         self.encoder = encoder
         self.decoder = decoder
