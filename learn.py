@@ -49,18 +49,18 @@ class Learn:
             model.zero_grad()
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
-            print("Beautiful batch size is %d" % (x.shape[0]))
-            print("Are you a mofo silence ?")
-            print(torch.sum(x, (1, 2)))
+            # print("Beautiful batch size is %d" % (x.shape[0]))
+            # print("Are you a mofo silence ?")
+            # print(torch.sum(x, (1, 2)))
             # for i in range(x.shape[0]):
             #    import matplotlib.pyplot as plt
             #    plt.matshow(x[i].cpu(), alpha=1)
             #    plt.savefig("reconstruction/batch_%d_example_%d.png" % (batch_idx, i))
             #    plt.close()
-            print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
-            print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
-            print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
-            print("Cheese nan dans x_recon ? - %d" % (torch.sum(torch.isnan(x_recon))))
+            # print("Cheese nan dans mu ? - %d" % (torch.sum(torch.isnan(mu))))
+            # print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
+            # print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
+            # print("Cheese nan dans x_recon ? - %d" % (torch.sum(torch.isnan(x_recon))))
             log_var = torch.log(sigma ** 2 + 1e-9)
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
@@ -68,9 +68,9 @@ class Learn:
             self.kl_div_mean += kl_div.detach()
             # Training pass
             loss = recon_loss + self.beta * kl_div
-            print("KL Loss is : %f" % (kl_div.item()))
-            print("Recons loss is : %f" % (recon_loss.item()))
-            print("Loss is : %f" % (loss.item()))
+            # print("KL Loss is : %f" % (kl_div.item()))
+            # print("Recons loss is : %f" % (recon_loss.item()))
+            # print("Loss is : %f" % (loss.item()))
             self.loss_mean += loss.detach()
             optimizer.zero_grad()
             # Learning with back-propagation
