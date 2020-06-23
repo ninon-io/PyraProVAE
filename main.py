@@ -6,8 +6,10 @@ import numpy as np
 from learn import Learn
 from data_loaders.data_loader import import_dataset
 from reconstruction import reconstruction
+# Import models
 from models.vae_pyrapro import VaeModel
 from models.vae_pyrapro import HierarchicalEncoder, Decoder
+from models.vae_mathieu import VAE_pianoroll, Encoder_pianoroll, Decoder_pianoroll
 from texttable import Texttable
 
 # For memory tracking if needed
@@ -36,7 +38,7 @@ parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/n
                     help='path to reconstruction figures')
 
 # Model Parameters
-parser.add_argument("--model", type=str, default="PyraPro", help='Name of the model')
+parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
 
 # PyraPro specific parameters: dimensions of the architecture
 parser.add_argument('--input_dim', type=int, default=100, help='do not touch if you do not know')
@@ -103,6 +105,14 @@ if args.model == 'PyraPro':
                       hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                       num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VaeModel(encoder=encoder, decoder=decoder).float()
+elif args.model == 'vae_mathieu':
+    encoder = Encoder_pianoroll(input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
+                                  latent_size=args.latent_size, num_layers=args.num_layers)
+    decoder = Decoder_pianoroll(input_size=args.input_dim, latent_size=args.latent_size,
+                      cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
+                      dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
+                      num_subsequences=args.num_subsequences, seq_length=args.seq_length)
+    model = VAE_pianoroll(encoder=encoder, decoder=decoder).float()
 else:
     print("Oh no, unknown model " + args.model + ".\n")
     model = None
