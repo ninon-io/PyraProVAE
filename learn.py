@@ -46,6 +46,7 @@ class Learn:
         print('train pass on:', args.device)
         model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
+            model.zero_grad()
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
             print("Beautiful batch size is %d" % (x.shape[0]))
