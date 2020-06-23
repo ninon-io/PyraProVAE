@@ -1,5 +1,6 @@
 from time import time
 import argparse
+import torch.nn as nn
 import torch.nn.utils
 import numpy as np
 # %%
@@ -139,11 +140,19 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
 # regression_ae = RegressionAE(ae_model=args.model, latent_dims=args.latent_size, regression_dims=None,
 #                              recons_loss=torch.zeros(1).to(args.device), regressor=None, regressor_name='')
 
-# Optimizer and Loss
+# Optimizer
 if args.model in ['PyraPro', 'vae_mathieu']:
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
 else:
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+
+# Losses
+if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
+    criterion = nn.L1Loss()
+elif args.model in ['PyraPro', 'vae_mathieu']:
+    criterion = nn.MSELoss()
+else:
+    criterion = nn.CrossEntropyLoss()
 # if args.model == 'PyraPro':
 #     criterion = nn.MSELoss()
 
