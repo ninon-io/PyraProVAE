@@ -75,8 +75,8 @@ class Learn:
             optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
-            torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+            # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
             # Optimizes weights
             optimizer.step()
         if self.iter_train > 10 and self.beta < 1:
@@ -121,7 +121,7 @@ class Learn:
                     x = x / x.max()
                 x = x.to(args.device)
                 mu, sigma, latent, x_recon = model(x)
-                log_var = torch.log(sigma ** 2)
+                log_var = torch.log(sigma ** 2 + 1e-9)
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
                 recon_loss = F.mse_loss(x_recon.squeeze(1), x)
                 self.recon_loss_mean_test += recon_loss.detach()
