@@ -144,7 +144,7 @@ else:
 #     criterion = nn.MSELoss()
 
 # Scheduler
-if args.model in ['PyraPro', 'vae_mathieu']
+if args.model in ['PyraPro', 'vae_mathieu']:
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20,
                                                            verbose=False, threshold=0.0001, threshold_mode='rel',
                                                            cooldown=0, min_lr=1e-07, eps=1e-08)
