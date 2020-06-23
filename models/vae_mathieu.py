@@ -53,8 +53,8 @@ class Encoder_pianoroll(nn.Module):
         h = torch.cat([h[0], h[1]], dim=1)
         return h
 
-    def init_hidden(self, batch_size=1):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def init_hidden(self, args, batch_size=1):
+        device = args.device
         # Bidirectional lstm so num_layers*2
         return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
                 torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
@@ -82,10 +82,10 @@ class Decoder_pianoroll(nn.Module):
         self.seq_length = seq_length
         self.teacher_forcing_ratio = 0.5
 
-    def forward(self, latent, target, teacher_forcing):
+    def forward(self, latent, target, teacher_forcing, args):
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = args.device
         # Get the initial state of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
         # Divide the latent code in subsequences

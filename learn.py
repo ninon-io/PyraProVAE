@@ -52,7 +52,7 @@ class Learn:
             print("Beautiful batch size is %d" % (x.shape[0]))
             print("Are you a mofo silence ?")
             print(torch.sum(x, (1, 2)))
-            #for i in range(x.shape[0]):
+            # for i in range(x.shape[0]):
             #    import matplotlib.pyplot as plt
             #    plt.matshow(x[i].cpu(), alpha=1)
             #    plt.savefig("reconstruction/batch_%d_example_%d.png" % (batch_idx, i))
@@ -61,7 +61,6 @@ class Learn:
             print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
             print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
             print("Cheese nan dans x_recon ? - %d" % (torch.sum(torch.isnan(x_recon))))
-            #with torch.no_grad():
             log_var = torch.log(sigma ** 2 + 1e-9)
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)

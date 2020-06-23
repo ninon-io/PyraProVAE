@@ -93,10 +93,10 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
                                    bidirectional=False, dropout=0.6)
         self.decoder_output = nn.Linear(dec_hidden_size, input_size)
 
-    def forward(self, latent, target, teacher_forcing):
+    def forward(self, latent, target, teacher_forcing, args):
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        device = args.device
         print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
         print("[RNN Style] = Cheese nan dans fc_init_cond ? - %d" % (torch.sum(torch.isnan(self.fc_init_cond(latent)))))
 
@@ -163,9 +163,9 @@ class Decoder(nn.Module):
         self.seq_length = seq_length
         self.teacher_forcing_ratio = 0.5
 
-    def forward(self, latent, target, teacher_forcing):
+    def forward(self, latent, target, teacher_forcing, args):
         batch_size = latent.shape[0]
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = args.device
         target = torch.nn.functional.one_hot(target.long(), 389).float()
         h0, c0 = self.init_hidden(batch_size)
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
@@ -189,7 +189,7 @@ class Decoder(nn.Module):
                     prev_note = target[:,int(idx),:].unsqueeze(1)
         return out
 
-    def init_hidden(self, batch_size=1):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def init_hidden(self, args, batch_size=1):
+        device = args.device
         return (torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device),
                 torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device))
