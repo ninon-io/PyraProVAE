@@ -114,7 +114,7 @@ elif args.model == 'vae_mathieu':
                       cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
                       dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                       num_subsequences=args.num_subsequences, seq_length=args.seq_length)
-    model = VAE_pianoroll(encoder=encoder, decoder=decoder).float()
+    model = VAE_pianoroll(args, encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'ae':
     encoder = Encoder_pianoroll(input_dim=args.input_dim, hidden_size=args.enc_hidden_size,

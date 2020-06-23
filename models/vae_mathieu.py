@@ -4,7 +4,7 @@ import random
 
 
 class VAE_pianoroll(nn.Module):
-    def __init__(self, encoder, decoder, teacher_forcing=True):
+    def __init__(self, args, encoder, decoder, teacher_forcing=True):
         super(VAE_pianoroll, self).__init__()
         self.tf = teacher_forcing
         self.encoder = encoder
