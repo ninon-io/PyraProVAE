@@ -39,6 +39,7 @@ class Encoder_pianoroll(nn.Module):
     def __init__(self, args, input_dim, hidden_size, latent_size, num_layers):
         """"" This initializes the encoder"""
         super(Encoder_pianoroll, self).__init__()
+        self.device = args.device
         self.RNN = nn.LSTM(input_dim, hidden_size, batch_first=True, num_layers=num_layers, bidirectional=True,
                            dropout=0.6)
         self.num_layers = num_layers
@@ -63,6 +64,7 @@ class Decoder_pianoroll(nn.Module):
     def __init__(self, args, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
                num_subsequences, seq_length):
         super(Decoder_pianoroll, self).__init__()
+        self.device = args.device
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
         self.fc_init_cond = nn.Linear(latent_size, cond_hidden_size * num_layers)
