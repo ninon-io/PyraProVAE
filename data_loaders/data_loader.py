@@ -101,33 +101,33 @@ def maximum(train_set, valid_set, test_set):  # TODO: transfer to np
     for z in test_set:
         z_norm = torch.div(z, max_global)
         track_test.append(z_norm)
-    print(10 * '*******')
-    print('Casual information on your beautiful dataset with normalization:')
-    t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
-                ['Train', torch.max(torch.stack(track_train)),
-                 torch.min(torch.stack(track_train)),
-                 torch.mean(torch.stack(track_train)),
-                 torch.std(torch.stack(track_train)),
-                 torch.var(torch.stack(track_train)),
-                 torch.isnan(torch.stack(track_train)).byte().any(),
-                 torch.isinf(torch.stack(track_train)).byte().any()],
-                ['Validate', torch.max(torch.stack(track_valid)),
-                 torch.min(torch.stack(track_valid)),
-                 torch.mean(torch.stack(track_valid)),
-                 torch.std(torch.stack(track_valid)),
-                 torch.var(torch.stack(track_valid)),
-                 torch.isnan(torch.stack(track_valid)).byte().any(),
-                 torch.isinf(torch.stack(track_valid)).byte().any()],
-                ['Test', torch.max(torch.stack(track_test)),
-                 torch.min(torch.stack(track_test)),
-                 torch.mean(torch.stack(track_test)),
-                 torch.std(torch.stack(track_test)),
-                 torch.var(torch.stack(track_test)),
-                 torch.isnan(torch.stack(track_test)).byte().any(),
-                 torch.isinf(torch.stack(track_test)).byte().any()]])
-    print(t.draw())
-    print('Maximum global before normalization:', max_global)
-    print(10 * '*******')
+    # print(10 * '*******')
+    # print('Casual information on your beautiful dataset with normalization:')
+    # t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
+    #             ['Train', torch.max(torch.stack(track_train)),
+    #              torch.min(torch.stack(track_train)),
+    #              torch.mean(torch.stack(track_train)),
+    #              torch.std(torch.stack(track_train)),
+    #              torch.var(torch.stack(track_train)),
+    #              torch.isnan(torch.stack(track_train)).byte().any(),
+    #              torch.isinf(torch.stack(track_train)).byte().any()],
+    #             ['Validate', torch.max(torch.stack(track_valid)),
+    #              torch.min(torch.stack(track_valid)),
+    #              torch.mean(torch.stack(track_valid)),
+    #              torch.std(torch.stack(track_valid)),
+    #              torch.var(torch.stack(track_valid)),
+    #              torch.isnan(torch.stack(track_valid)).byte().any(),
+    #              torch.isinf(torch.stack(track_valid)).byte().any()],
+    #             ['Test', torch.max(torch.stack(track_test)),
+    #              torch.min(torch.stack(track_test)),
+    #              torch.mean(torch.stack(track_test)),
+    #              torch.std(torch.stack(track_test)),
+    #              torch.var(torch.stack(track_test)),
+    #              torch.isnan(torch.stack(track_test)).byte().any(),
+    #              torch.isinf(torch.stack(track_test)).byte().any()]])
+    # print(t.draw())
+    # print('Maximum global before normalization:', max_global)
+    # print(10 * '*******')
     return max_global, track_train, track_valid, track_test
 
 
@@ -145,7 +145,7 @@ def import_dataset(args):
         valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
         # Normalization
         max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
-        # train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw
+        # train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw  # No normalization
         # Get sampler
         train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
         train_indices = train_indices[:16000]  # TODO: DON'T FORGET TO DELETE THIS

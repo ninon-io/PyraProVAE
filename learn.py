@@ -49,6 +49,7 @@ class Learn:
             model.zero_grad()
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
+            # Debug Nan & Inf
             # print("Beautiful batch size is %d" % (x.shape[0]))
             # print("Are you a mofo silence ?")
             # print(torch.sum(x, (1, 2)))

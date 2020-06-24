@@ -39,7 +39,7 @@ parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/n
                     help='path to reconstruction figures')
 
 # Model Parameters
-parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
+parser.add_argument("--model", type=str, default="vae_mathieu", help='PyraPro | vae_mathieu | ae')
 
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--input_dim', type=int, default=100, help='do not touch if you do not know')
@@ -59,7 +59,7 @@ parser.add_argument('--frame_bar', type=int, default=100, help='correspond to in
 parser.add_argument('--epochs', type=int, default=30, help='number of epochs to train')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-parser.add_argument('--seed', type=int, default=42, help='random seed')
+parser.add_argument('--seed', type=int, default=1, help='random seed')
 parser.add_argument('--log-interval', type=int, default=10,
                     help='how many batches to wait before logging training status')
 parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
@@ -108,18 +108,18 @@ if args.model == 'PyraPro':
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'vae_mathieu':
-    encoder = Encoder_pianoroll(input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
+    encoder = Encoder_pianoroll(args, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
                                 latent_size=args.latent_size, num_layers=args.num_layers)
-    decoder = Decoder_pianoroll(input_size=args.input_dim, latent_size=args.latent_size,
+    decoder = Decoder_pianoroll(args, input_size=args.input_dim, latent_size=args.latent_size,
                                 cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
                                 dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                                 num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VAE_pianoroll(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'ae':
-    encoder = Encoder_pianoroll(input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
+    encoder = Encoder_pianoroll(args, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
                                 latent_size=args.latent_size, num_layers=args.num_layers)
-    decoder = Decoder_pianoroll(input_size=args.input_dim, latent_size=args.latent_size,
+    decoder = Decoder_pianoroll(args, input_size=args.input_dim, latent_size=args.latent_size,
                                 cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
                                 dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                                 num_subsequences=args.num_subsequences, seq_length=args.seq_length)
