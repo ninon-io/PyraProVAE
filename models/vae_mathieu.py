@@ -36,7 +36,7 @@ class VAE_pianoroll(nn.Module):
 
 
 class Encoder_pianoroll(nn.Module):
-    def __init__(self, device, input_dim, hidden_size, latent_size, num_layers):
+    def __init__(self, input_dim, hidden_size, latent_size, num_layers):
         """"" This initializes the encoder"""
         super(Encoder_pianoroll, self).__init__()
         self.RNN = nn.LSTM(input_dim, hidden_size, batch_first=True, num_layers=num_layers, bidirectional=True,
@@ -53,14 +53,15 @@ class Encoder_pianoroll(nn.Module):
         h = torch.cat([h[0], h[1]], dim=1)
         return h
 
-    def init_hidden(self, device, batch_size=1):
+    def init_hidden(self, batch_size=1):
+        device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
         # Bidirectional lstm so num_layers*2
         return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
                 torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
 
 
 class Decoder_pianoroll(nn.Module):
-    def __init__(self, device, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
+    def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
                num_subsequences, seq_length):
         super(Decoder_pianoroll, self).__init__()
         self.tanh = nn.Tanh()
@@ -81,7 +82,8 @@ class Decoder_pianoroll(nn.Module):
         self.seq_length = seq_length
         self.teacher_forcing_ratio = 0.5
 
-    def forward(self, device, latent, target, teacher_forcing):
+    def forward(self, latent, target, teacher_forcing):
+        device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
         # Get the initial state of the conductor

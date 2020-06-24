@@ -108,9 +108,9 @@ if args.model == 'PyraPro':
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'vae_mathieu':
-    encoder = Encoder_pianoroll(device=args.device, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
+    encoder = Encoder_pianoroll(input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
                                 latent_size=args.latent_size, num_layers=args.num_layers)
-    decoder = Decoder_pianoroll(device=args.device, input_size=args.input_dim, latent_size=args.latent_size,
+    decoder = Decoder_pianoroll(input_size=args.input_dim, latent_size=args.latent_size,
                                 cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
                                 dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                                 num_subsequences=args.num_subsequences, seq_length=args.seq_length)
