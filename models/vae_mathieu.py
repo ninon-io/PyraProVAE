@@ -54,10 +54,9 @@ class Encoder_pianoroll(nn.Module):
         return h
 
     def init_hidden(self, args, batch_size=1):
-        device = args.device
         # Bidirectional lstm so num_layers*2
-        return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
-                torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
+        return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=args.device),
+                torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=args.device))
 
 
 class Decoder_pianoroll(nn.Module):
@@ -85,7 +84,6 @@ class Decoder_pianoroll(nn.Module):
     def forward(self, args, latent, target, teacher_forcing):
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
-        device = args.device
         # Get the initial state of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
         # Divide the latent code in subsequences
@@ -97,8 +95,8 @@ class Decoder_pianoroll(nn.Module):
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
-        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=device)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=args.device)
+        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=args.device)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
