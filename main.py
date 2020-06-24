@@ -108,18 +108,18 @@ if args.model == 'PyraPro':
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'vae_mathieu':
-    encoder = Encoder_pianoroll(args, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
+    encoder = Encoder_pianoroll(device=args.device, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
                                 latent_size=args.latent_size, num_layers=args.num_layers)
-    decoder = Decoder_pianoroll(args, input_size=args.input_dim, latent_size=args.latent_size,
+    decoder = Decoder_pianoroll(device=args.device, input_size=args.input_dim, latent_size=args.latent_size,
                                 cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
                                 dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                                 num_subsequences=args.num_subsequences, seq_length=args.seq_length)
     model = VAE_pianoroll(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'ae':
-    encoder = Encoder_pianoroll(args, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
+    encoder = Encoder_pianoroll(device=args.device, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
                                 latent_size=args.latent_size, num_layers=args.num_layers)
-    decoder = Decoder_pianoroll(args, input_size=args.input_dim, latent_size=args.latent_size,
+    decoder = Decoder_pianoroll(device=args.device, input_size=args.input_dim, latent_size=args.latent_size,
                                 cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
                                 dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
                                 num_subsequences=args.num_subsequences, seq_length=args.seq_length)
@@ -178,7 +178,7 @@ if args.model in ['PyraPro', 'vae_mathieu']:
     print('EPOCH BEGINS')
     # Through the epochs
     for epoch in range(1, args.epochs + 1, 1):
-        print('Epoch:' + str(epoch))  # TODO: print(f"Epoch: {epoch}")
+        print(f"Epoch: {epoch}")
         loss_mean, kl_div_mean, recon_loss_mean = learn.train(model, optimizer, args, epoch)
         loss_mean_validate, kl_div_mean_validate, recon_loss_mean_validate = learn.validate(model, args, epoch)
         scheduler.step(loss_mean_validate)
@@ -187,7 +187,7 @@ if args.model in ['PyraPro', 'vae_mathieu']:
         reconstruction(args, model, epoch)
         # Track on stuffs
         print("*******" * 10)
-        print('* Useful & incredible tracking:', 38 * ' ', '*')
+        print('* Useful & incredible tracking:')
         t = Texttable()
         t.add_rows([['Name', 'loss mean', 'kl_div mean', 'recon_loss mean'],
                     ['Train', loss_mean, kl_div_mean, recon_loss_mean],
