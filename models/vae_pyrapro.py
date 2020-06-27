@@ -63,78 +63,66 @@ class HierarchicalEncoder(nn.Module):
         return h
 
 
-class HierarchicalDecoder(nn.Module):
+class DecoderPianoroll(nn.Module):
     def __init__(self, args):
-        super(HierarchicalDecoder, self).__init__()
+        super(DecoderPianoroll, self).__init__()
+        self.tanh = nn.Tanh()
+        self.sigmoid = torch.nn.Sigmoid()
+        self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
+        self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True,
+                                     num_layers=2,
+                                     bidirectional=False, dropout=0.6)
+        self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
+        self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
+        self.decoder_RNN = nn.LSTM(args.cond_output_dim + args.input_size, args.dec_hidden_size, batch_first=True,
+                                   num_layers=2,
+                                   bidirectional=False, dropout=0.6)
+        self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size)
         self.num_subsequences = args.num_subsequences
         self.input_size = args.input_size
         self.cond_hidden_size = args.cond_hidden_size
         self.dec_hidden_size = args.dec_hidden_size
         self.num_layers = args.num_layers
         self.seq_length = args.seq_length
-        self.teacher_forcing_ratio = 0  # TFR must be 0: worsen the training except for non piano-roll representation
+        self.teacher_forcing_ratio = 0.5
 
-        # Define init for architecture: first conductor then decoder
-        self.tanh = nn.Tanh()
-        # TODO: use one of them eventually?
-        self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
-
-        self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
-        self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True, num_layers=2,
-                                     bidirectional=False, dropout=0.6)
-        self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_outdim)
-        self.fc_init_dec = nn.Linear(args.cond_outdim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.LSTM(args.cond_outdim + args.input_size, args.dec_hidden_size, batch_first=True, num_layers=2,
-                                   bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size)
-
-    def forward(self, latent, target, teacher_forcing, args):
+    def forward(self, latent, target, teacher_forcing):
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
-        device = args.device
-
-        # Get the initial states of the conductor
+        # Get the initial state of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
-        # Divide the latent space into subsequences:
+        # Divide the latent code in subsequences
         latent = latent.view(batch_size, self.num_subsequences, -1)
         # Pass through the conductor
-        h0_ninja = torch.zeros(self.num_layers, batch_size, self.cond_hidden_size, dtype=torch.float, device=device)
-        c0_ninja = torch.zeros(self.num_layers, batch_size, self.cond_hidden_size, dtype=torch.float, device=device)
-
-        # Taking latent (batch x latent_dim)
-        subseq_embeddings, _ = self.conductor_RNN(latent, (h0_ninja, c0_ninja))
-        # Output is (batch x time x rnn_dim)
+        subseq_embeddings, _ = self.conductor_RNN(latent, (h0_cond, h0_cond))
         subseq_embeddings = self.conductor_output(subseq_embeddings)
-
-        # Get the initial state of decoder
+        # Get the initial states of the decoder
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
-
-        # Init the output seq and the first token to 0 tensors
+        # init the output seq and the first token to 0 tensors
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
         token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=device)
-
-        # autoregressively output token
-        for subseq in range(self.num_subsequences):
-            subseq_embedding = subseq_embeddings[:, subseq, :]
-            h0_dec = h0s_dec[:, :, subseq, :].contiguous()
-            c0_dec = h0s_dec[:, :, subseq, :].contiguous()
-            # Concat the previous token and the current subseq embedding as input
+        # autoregressivly output tokens
+        for sub in range(self.num_subsequences):
+            subseq_embedding = subseq_embeddings[:, sub, :]
+            h0_dec = h0s_dec[:, :, sub, :].contiguous()
+            c0_dec = h0s_dec[:, :, sub, :].contiguous()
+            # Concat the previous token and the current sub embedding as input
             dec_input = torch.cat((token, subseq_embedding.unsqueeze(1).expand(-1, subseq_size, -1)), -1)
             # Pass through the decoder
             token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
             token = self.decoder_output(token)
             # Fill the out tensor with the token
-            out[:, subseq * subseq_size:((subseq + 1) * subseq_size), :] = token
-            # If teacher forcing replace the output token by the real one sometimes
+            out[:, sub * subseq_size:((sub + 1) * subseq_size), :] = token
+            # If teacher_forcing replace the output token by the real one sometimes
             if teacher_forcing:
                 if random.random() <= self.teacher_forcing_ratio:
-                    token = target[:, subseq * subseq_size: ((subseq + 1) * subseq_size), :]
+                    token = target[:, sub * subseq_size:((sub + 1) * subseq_size), :]
         return out
 
 
-class Decoder(nn.Module):
+class Decoder(nn.Module):  # from Mathieu, simplified decoder
 
     def __init__(self, args):
         super(Decoder, self).__init__()

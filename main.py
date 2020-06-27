@@ -11,7 +11,7 @@ from learn import Learn
 from data_loaders.data_loader import import_dataset
 from reconstruction import reconstruction
 # Import models
-from models.vae_pyrapro import VaeModel, HierarchicalEncoder, Decoder
+from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
 from models.ae import RegressionAE, DisentanglingAE, AE
 # from utils import init_classic
@@ -110,8 +110,8 @@ print('[Creating model]')
 # Then select different models
 if args.model == 'PyraPro':
     encoder = HierarchicalEncoder(args)
-    # decoder = HierarchicalDecoder(args)
-    decoder = Decoder(args)
+    decoder = HierarchicalDecoder(args)
+    # decoder = Decoder(args)
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'vae_mathieu':
