@@ -33,6 +33,7 @@ parser.add_argument("--dataset", type=str, default="nottingham", help="maestro |
 parser.add_argument("--shuffle_data_set", type=int, default=1, help='')
 # Model Saving and reconstruction
 parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
+parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
 parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
 parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/', help='path to reconstruction figures')
 # Model Parameters

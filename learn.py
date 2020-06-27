@@ -42,7 +42,7 @@ class Learn:
         self.recon_loss_mean_test = torch.zeros(1).to(args.device)
 
     def train(self, model, optimizer, args, epoch):
-        writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
+        writer = SummaryWriter(args.tensorboard_path)
         print('train pass on:', args.device)
         model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
@@ -90,7 +90,7 @@ class Learn:
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
     def validate(self, model, args, epoch):
-        writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
+        writer = SummaryWriter(args.tensorboard_path)
         print('validation pass on:', args.device)  # print(f"validation pass on: {args.device}")
         model.eval()
         with torch.no_grad():
@@ -113,7 +113,7 @@ class Learn:
 
     def test(self, model, args, epoch):
         print('test pass:', args.device)
-        writer = SummaryWriter('/slow-2/ninon/pyrapro/output/runs')
+        writer = SummaryWriter(args.tensorboard_path)
         model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // args.batch_size):
