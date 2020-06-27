@@ -17,16 +17,13 @@ class VaeModel(nn.Module):
         batch_size = x.size(0)
         h_enc, c_enc = self.encoder.init_hidden(batch_size)
         hidden = self.encoder(x, h_enc, c_enc)
-
         # Reparameterization
         mu = self.hidden_to_mu(hidden)
         sigma = self.hidden_to_sigma(hidden)
         eps = torch.randn_like(mu).detach().to(x.device)
         latent = (sigma.exp().sqrt() * eps) + mu
-
         # Decoder pass
-        x_reconstruct = self.decoder(latent, x, teacher_forcing=False)
-
+        x_reconstruct = self.decoder(latent, x, teacher_forcing=self.tf)
         return mu, sigma, latent, x_reconstruct
 
     # Generate bar from latent space
@@ -59,14 +56,14 @@ class HierarchicalEncoder(nn.Module):
 
     def forward(self, x, h0, c0):
         batch_size = x.shape[0]
-        _, (h, _) = self.RNN(x.float(), (h0.float(), c0.float()))  # TODO: UNIQUE DIFFERENCE
+        _, (h, _) = self.RNN(x, (h0, c0))
         h = h.view(self.num_layers, 2, batch_size, -1)
         h = h[-1]
         h = torch.cat([h[0], h[1]], dim=1)
         return h
 
 
-class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
+class HierarchicalDecoder(nn.Module):
     def __init__(self, args):
         super(HierarchicalDecoder, self).__init__()
         self.num_subsequences = args.num_subsequences
@@ -96,12 +93,9 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
         device = args.device
-        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
-        print("[RNN Style] = Cheese nan dans fc_init_cond ? - %d" % (torch.sum(torch.isnan(self.fc_init_cond(latent)))))
 
         # Get the initial states of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
-        print("[RNN Style] = Cheese nan dans h0_cond ? - %d" % (torch.sum(torch.isnan(h0_cond))))
         # Divide the latent space into subsequences:
         latent = latent.view(batch_size, self.num_subsequences, -1)
         # Pass through the conductor
@@ -110,15 +104,12 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
 
         # Taking latent (batch x latent_dim)
         subseq_embeddings, _ = self.conductor_RNN(latent, (h0_ninja, c0_ninja))
-        print("[RNN Style] = Cheese nan dans subseq_embeddings ? - %d" % (torch.sum(torch.isnan(subseq_embeddings))))
         # Output is (batch x time x rnn_dim)
         subseq_embeddings = self.conductor_output(subseq_embeddings)
-        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(subseq_embeddings))))
 
         # Get the initial state of decoder
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
-        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(h0s_dec))))
 
         # Init the output seq and the first token to 0 tensors
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
@@ -140,7 +131,6 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
             if teacher_forcing:
                 if random.random() <= self.teacher_forcing_ratio:
                     token = target[:, subseq * subseq_size: ((subseq + 1) * subseq_size), :]
-        print("[RNN Style] = Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(out))))
         return out
 
 
