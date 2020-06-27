@@ -153,7 +153,7 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
 # %%
 # -----------------------------------------------------------
 #
-# Losses functions (to add in models)
+# Losses functions
 #
 # -----------------------------------------------------------
 print('[Creating criterion]')
@@ -168,7 +168,7 @@ else:
 # %%
 # -----------------------------------------------------------
 #
-# Losses functions (to add in models)
+# Losses functions
 #
 # -----------------------------------------------------------
 # Initial training of the model
