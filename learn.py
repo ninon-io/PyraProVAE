@@ -46,7 +46,6 @@ class Learn:
         print('train pass on:', args.device)
         model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
-            model.zero_grad()
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
             # Debug Nan & Inf
@@ -110,7 +109,7 @@ class Learn:
             writer.add_scalar('data/kl_div_mean_VALID', self.kl_div_mean_validate / self.iter_train, epoch)
             writer.add_scalar('data/reconst_loss_mean_VALID', self.recon_loss_mean_validate / self.iter_train, epoch)
             writer.close()
-        return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
+        return self.loss_mean_validate, self.kl_div_mean_validate, self.recon_loss_mean_validate
 
     def test(self, model, args, epoch):
         print('test pass:', args.device)

@@ -3,6 +3,7 @@ import argparse
 import torch.nn as nn
 import torch.nn.utils
 import numpy as np
+import os
 # %%
 from learn import Learn
 from data_loaders.data_loader import import_dataset
@@ -170,6 +171,8 @@ time0 = time()
 
 # Initial training of the model
 learn.save(model, args, epoch=0)
+
+os.system('rm -rf /slow-2/ninon/pyrapro/*')
 
 if args.model in ['PyraPro', 'vae_mathieu']:
     # Initial test
