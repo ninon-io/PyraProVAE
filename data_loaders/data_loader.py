@@ -133,13 +133,16 @@ def maximum(train_set, valid_set, test_set):  # TODO: transfer to np
 
 # Main data import
 def import_dataset(args):
+    base_path = args.midi_path
     # Main transform
     # transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=12.476)])  # Rescale?
+    folder_str = {'maestro':'maestro_folders', 'nottingham':'Nottingham', 'bach':'JSB_Chorales'}
+    base_path += '/' + folder_str[args.dataset]
     # Retrieve correct data loader
-    if args.dataset == "maestro":  # Dataset is already splitted in 3 folders
-        train_path = "/fast-1/mathieu/datasets/maestro_folders/train"
-        test_path = "/fast-1/mathieu/datasets/maestro_folders/test"
-        valid_path = "/fast-1/mathieu/datasets/maestro_folders/valid"
+    if args.dataset in ["maestro", "nottingham", "bach_chorales"]:
+        train_path = base_path + "/train"
+        test_path = base_path + "/test"
+        valid_path = base_path + "/valid"
         train_set_raw = PianoRollRep(train_path, args.frame_bar, export=False)
         test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
@@ -152,41 +155,6 @@ def import_dataset(args):
         valid_indices = valid_indices[:256]
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)
-
-    elif args.dataset == "nottingham":
-        train_path = "/fast-1/mathieu/datasets/Nottingham/train"
-        test_path = "/fast-1/mathieu/datasets/Nottingham/test"
-        valid_path = "/fast-1/mathieu/datasets/Nottingham/valid"
-        train_set_raw = PianoRollRep(train_path, args.frame_bar, export=False)
-        test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
-        valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
-        # Normalization
-        # max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
-        train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw
-        # Get sampler
-        train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
-        train_indices = train_indices[:1000]  # TODO: DON'T FORGET TO DELETE THIS
-        valid_indices = valid_indices[:256]
-        train_sampler = SubsetRandomSampler(train_indices)
-        valid_sampler = SubsetRandomSampler(valid_indices)
-
-    elif args.dataset == "bach_chorales":
-        train_path = "/fast-1/mathieu/datasets/JSB_Chorales/train"
-        test_path = "/fast-1/mathieu/datasets/JSB_Chorales/test"
-        valid_path = "/fast-1/mathieu/datasets/JSB_Chorales/valid"
-        train_set_raw = PianoRollRep(train_path, args.frame_bar, export=False)
-        test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
-        valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
-        # Normalization
-        # max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
-        train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw
-        # Get sampler
-        train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
-        train_indices = train_indices[:16000]  # TODO: DON'T FORGET TO DELETE THIS
-        valid_indices = valid_indices[:256]
-        train_sampler = SubsetRandomSampler(train_indices)
-        valid_sampler = SubsetRandomSampler(valid_indices)
-
     elif args.dataset == "midi_folder":  # One folder with all midi files
         data_set = PianoRollRep(args.bar_dir, args.frame_bar, export=False)
         data_set_size = len(data_set)

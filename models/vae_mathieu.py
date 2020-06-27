@@ -3,9 +3,9 @@ from torch import nn
 import random
 
 
-class VAE_pianoroll(nn.Module):
+class VAEPianoroll(nn.Module):
     def __init__(self, encoder, decoder, teacher_forcing=True):
-        super(VAE_pianoroll, self).__init__()
+        super(VAEPianoroll, self).__init__()
         self.tf = teacher_forcing
         self.encoder = encoder
         self.decoder = decoder
@@ -34,16 +34,23 @@ class VAE_pianoroll(nn.Module):
         generated_bar = self.decoder(latent.unsqueeze(0), db_trg, teacher_forcing=False)
         return generated_bar
 
+class Encoder(nn.Module):
+    
+    def __init__(self, input, output):
+        pass
+    
+    def forward(self, latent, target):
+        pass
 
-class Encoder_pianoroll(nn.Module):
-    def __init__(self, input_dim, hidden_size, latent_size, num_layers):
+class EncoderPianoroll(nn.Module):
+    def __init__(self, args):
         """"" This initializes the encoder"""
-        super(Encoder_pianoroll, self).__init__()
-        self.RNN = nn.LSTM(input_dim, hidden_size, batch_first=True, num_layers=num_layers, bidirectional=True,
+        super(EncoderPianoroll, self).__init__()
+        self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers, bidirectional=True,
                            dropout=0.6)
-        self.num_layers = num_layers
-        self.hidden_size = hidden_size
-        self.latent_size = latent_size
+        self.num_layers = args.num_layers
+        self.hidden_size = args.enc_hidden_size
+        self.latent_size = args.latent_size
 
     def forward(self, x, h0, c0):
         batch_size = x.shape[0]
@@ -59,27 +66,25 @@ class Encoder_pianoroll(nn.Module):
         return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
                 torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
 
-
-class Decoder_pianoroll(nn.Module):
-    def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
-               num_subsequences, seq_length):
-        super(Decoder_pianoroll, self).__init__()
+class DecoderPianoroll(nn.Module):
+    def __init__(self, args):
+        super(DecoderPianoroll, self).__init__()
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
-        self.fc_init_cond = nn.Linear(latent_size, cond_hidden_size * num_layers)
-        self.conductor_RNN = nn.LSTM(latent_size // num_subsequences, cond_hidden_size, batch_first=True, num_layers=2,
+        self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
+        self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True, num_layers=2,
                                      bidirectional=False, dropout=0.6)
-        self.conductor_output = nn.Linear(cond_hidden_size, cond_outdim)
-        self.fc_init_dec = nn.Linear(cond_outdim, dec_hidden_size * num_layers)
-        self.decoder_RNN = nn.LSTM(cond_outdim + input_size, dec_hidden_size, batch_first=True, num_layers=2,
+        self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
+        self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
+        self.decoder_RNN = nn.LSTM(args.cond_output_dim + args.input_size, args.dec_hidden_size, batch_first=True, num_layers=2,
                                    bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(dec_hidden_size, input_size)
-        self.num_subsequences = num_subsequences
-        self.input_size = input_size
-        self.cond_hidden_size = cond_hidden_size
-        self.dec_hidden_size = dec_hidden_size
-        self.num_layers = num_layers
-        self.seq_length = seq_length
+        self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size)
+        self.num_subsequences = args.num_subsequences
+        self.input_size = args.input_size
+        self.cond_hidden_size = args.cond_hidden_size
+        self.dec_hidden_size = args.dec_hidden_size
+        self.num_layers = args.num_layers
+        self.seq_length = args.seq_length
         self.teacher_forcing_ratio = 0.5
 
     def forward(self, latent, target, teacher_forcing):
