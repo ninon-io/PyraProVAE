@@ -37,7 +37,7 @@ parser.add_argument('--tensorboard_path', type=str, default='output/', help='pat
 parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
 parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/', help='path to reconstruction figures')
 # Model Parameters
-parser.add_argument("--model", type=str, default="vae_mathieu", help='PyraPro | vae_mathieu | ae')
+parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--input_size', type=int, default=100, help='do not touch if you do not know')
 parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
