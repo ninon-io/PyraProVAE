@@ -62,8 +62,8 @@ class Learn:
             # print("Cheese nan dans sigma ? - %d" % (torch.sum(torch.isnan(sigma))))
             # print("Cheese nan dans latent ? - %d" % (torch.sum(torch.isnan(latent))))
             # print("Cheese nan dans x_recon ? - %d" % (torch.sum(torch.isnan(x_recon))))
-            log_var = torch.log(sigma ** 2 + 1e-9)
-            kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+            log_var = sigma  #torch.log(sigma ** 2 + 1e-9)
+            kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp().sqrt())
             recon_loss = F.mse_loss(x_recon.squeeze(1), x)
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += kl_div.detach()
@@ -76,7 +76,7 @@ class Learn:
             optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.25)
             # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
             # Optimizes weights
             optimizer.step()
