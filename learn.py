@@ -1,13 +1,11 @@
 import torch
 from torch import distributions
 import torch.nn as nn
-from torch import optim
 from torch.nn import functional as F
 from tqdm import tqdm
 import numpy as np
 from guppy import hpy
 import os
-import pretty_midi
 
 from tensorboardX import SummaryWriter
 
@@ -117,8 +115,6 @@ class Learn:
         model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // args.batch_size):
-                if x.max() != 0:
-                    x = x / x.max()
                 x = x.to(args.device)
                 mu, sigma, latent, x_recon = model(x)
                 log_var = torch.log(sigma ** 2 + 1e-9)
@@ -148,37 +144,3 @@ class Learn:
         torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
         model.eval()
 
-    # TODO: dynamic code depending of latent size
-    def piano_roll_recon(self, model, entire_model_saving_path, fs=100, program=0):
-        latent = distributions.normal.Normal(torch.tensor([0, 0]), torch.tensor([1, 0]))
-        generated_bar = model().generate(latent)
-        notes, frames = generated_bar.shape
-        pm = pretty_midi.PrettyMIDI()
-        instrument = pretty_midi.Instrument(program=program)
-        # Pad 1 column of zeros to acknowledge initial and ending events
-        piano_roll = np.pad(generated_bar, [(0, 0), (1, 1)], 'constant')
-        # Use changes in velocities to find note on/note off events
-        velocity_changes = np.nonzero(np.diff(piano_roll).T)
-        # Keep track on velocities and note on times
-        prev_velocities = np.zeros(notes, dtype=int)
-        note_on_time = np.zeros(notes)
-
-        for time, note in zip(*velocity_changes):
-            # Use time + 1 because of padding above
-            velocity = piano_roll[notes, time + 1]
-            time = time / fs
-            if velocity > 0:
-                if prev_velocities[note] == 0:
-                    note_on_time[note] = time
-                    prev_velocities[note] = velocity
-            else:
-                pm_note = pretty_midi.Note(
-                    velocity=prev_velocities[note],
-                    pitch=note,
-                    start=note_on_time[note],
-                    end=time)
-                instrument.notes.append(pm_note)
-                prev_velocities[note] = 0
-            pm.instruments.append(instrument)
-            return pm
-        print('PianoRoll', pm)

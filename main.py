@@ -14,7 +14,7 @@ from reconstruction import reconstruction
 from models.vae_pyrapro import VaeModel, HierarchicalEncoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
 from models.ae import RegressionAE, DisentanglingAE, AE
-from utils import init_classic
+# from utils import init_classic
 
 # %%
 # -----------------------------------------------------------
