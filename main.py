@@ -112,7 +112,7 @@ if args.model == 'PyraPro':
     encoder = HierarchicalEncoder(args)
     decoder = HierarchicalDecoder(args)
     # decoder = Decoder(args)
-    model = VaeModel(encoder=encoder, decoder=decoder).float()
+    model = VaeModel(encoder=encoder, decoder=decoder, args=args).float()
 
 elif args.model == 'vae_mathieu':
     encoder = EncoderPianoroll(args)
