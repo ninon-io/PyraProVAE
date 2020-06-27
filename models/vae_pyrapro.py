@@ -45,7 +45,7 @@ class HierarchicalEncoder(nn.Module):
         self.num_layers = args.num_layers
 
         # Define the LSTM layer
-        self.RNN = nn.LSTM(args.input_dim, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
+        self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
                            bidirectional=True, dropout=0.6)
 
     def init_hidden(self, batch_size=1):
