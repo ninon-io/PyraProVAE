@@ -12,7 +12,7 @@ class VaeModel(nn.Module):
         self.hidden_to_mu = nn.Linear(2 * encoder.enc_hidden_size, encoder.latent_size)
         self.hidden_to_sigma = nn.Linear(2 * encoder.enc_hidden_size, encoder.latent_size)
 
-    def forward(self, args, x):
+    def forward(self, x, args):
         # Encoder pass
         batch_size = x.size(0)
         h_enc, c_enc = self.encoder.init_hidden(args, batch_size)
@@ -86,8 +86,7 @@ class HierarchicalDecoder(nn.Module):
         self.seq_length = args.seq_length
         self.teacher_forcing_ratio = 0.5
 
-    def forward(self, latent, target, teacher_forcing):
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    def forward(self, latent, target, teacher_forcing, args):
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
         # Get the initial state of the conductor
@@ -101,8 +100,8 @@ class HierarchicalDecoder(nn.Module):
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
-        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=device)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=args.device)
+        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=args.device)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
