@@ -136,7 +136,7 @@ def import_dataset(args):
     base_path = args.midi_path
     # Main transform
     # transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=12.476)])  # Rescale?
-    folder_str = {'maestro':'maestro_folders', 'nottingham':'Nottingham', 'bach':'JSB_Chorales'}
+    folder_str = {'maestro': 'maestro_folders', 'nottingham': 'Nottingham', 'bach': 'JSB_Chorales'}
     base_path += '/' + folder_str[args.dataset]
     # Retrieve correct data loader
     if args.dataset in ["maestro", "nottingham", "bach_chorales"]:

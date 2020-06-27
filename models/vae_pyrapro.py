@@ -63,9 +63,9 @@ class HierarchicalEncoder(nn.Module):
         return h
 
 
-class DecoderPianoroll(nn.Module):
+class HierarchicalDecoder(nn.Module):
     def __init__(self, args):
-        super(DecoderPianoroll, self).__init__()
+        super(HierarchicalDecoder, self).__init__()
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
         self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
