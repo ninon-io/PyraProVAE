@@ -54,7 +54,7 @@ class Encoder_pianoroll(nn.Module):
         return h
 
     def init_hidden(self, batch_size=1):
-        device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         # Bidirectional lstm so num_layers*2
         return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
                 torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
@@ -83,7 +83,7 @@ class Decoder_pianoroll(nn.Module):
         self.teacher_forcing_ratio = 0.5
 
     def forward(self, latent, target, teacher_forcing):
-        device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
         # Get the initial state of the conductor
