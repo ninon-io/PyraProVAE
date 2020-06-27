@@ -187,7 +187,7 @@ if args.model in ['PyraPro', 'vae_mathieu']:
         scheduler.step(loss_mean_validate)
         loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, args, epoch)
         learn.save(model, args, epoch)
-        reconstruction(args, model, epoch)
+        reconstruction(args, model, epoch, test_set)
         # Track on stuffs
         print("*******" * 10)
         print('* Useful & incredible tracking:')

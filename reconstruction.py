@@ -5,8 +5,8 @@ import numpy as np
 import os
 
 
-def reconstruction(args, model, epoch):
-    dataset = data_loader.PianoRollRep(args.midi_path)
+def reconstruction(args, model, epoch, dataset):
+    # dataset = data_loader.PianoRollRep(args.midi_path)
 
     # Plot settings
     nrows, ncols = 4, 2  # array of sub-plots
@@ -25,7 +25,7 @@ def reconstruction(args, model, epoch):
             # write row/col indices as axes' title for identification
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
-            dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
+            # dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
             _, _, _, x_reconstruct = model(cur_input)
             x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
