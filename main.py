@@ -131,7 +131,7 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-# model.apply(init_classic) TODO
+# model.apply(init_classic) TODO: missing script :'(
 
 # %%
 # -----------------------------------------------------------
@@ -156,6 +156,7 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
 # Losses functions (to add in models)
 #
 # -----------------------------------------------------------
+print('[Creating criterion]')
 # Losses
 if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
     criterion = nn.L1Loss()
