@@ -109,16 +109,9 @@ print('[Creating encoder and decoder]')
 print('[Creating model]')
 # Then select different models
 if args.model == 'PyraPro':
-    encoder = HierarchicalEncoder(input_dim=args.input_dim, enc_hidden_size=args.enc_hidden_size,
-                                  latent_size=args.latent_size, num_layers=args.num_layers)
-    # decoder = HierarchicalDecoder(input_size=args.input_dim, latent_size=args.latent_size,
-    #                              cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
-    #                              dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
-    #                              num_subsequences=args.num_subsequences, seq_length=args.seq_length)
-    decoder = Decoder(input_size=args.input_dim, latent_size=args.latent_size,
-                      cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
-                      hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
-                      num_subsequences=args.num_subsequences, seq_length=args.seq_length)
+    encoder = HierarchicalEncoder(args)
+    # decoder = HierarchicalDecoder(args)
+    decoder = Decoder(args)
     model = VaeModel(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'vae_mathieu':
@@ -127,12 +120,8 @@ elif args.model == 'vae_mathieu':
     model = VAEPianoroll(encoder=encoder, decoder=decoder).float()
 
 elif args.model == 'ae':
-    encoder = EncoderPianoroll(device=args.device, input_dim=args.input_dim, hidden_size=args.enc_hidden_size,
-                                latent_size=args.latent_size, num_layers=args.num_layers)
-    decoder = DecoderPianoroll(device=args.device, input_size=args.input_dim, latent_size=args.latent_size,
-                                cond_hidden_size=args.cond_hidden_size, cond_outdim=args.cond_output_dim,
-                                dec_hidden_size=args.dec_hidden_size, num_layers=args.num_layers,
-                                num_subsequences=args.num_subsequences, seq_length=args.seq_length)
+    encoder = EncoderPianoroll(args)
+    decoder = DecoderPianoroll(args)
     model = AE(encoder=encoder, decoder=decoder, encoder_dims=args.input_dim, latent_dims=args.latent_size).float()
 
 else:
@@ -142,7 +131,7 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-model.apply(init_classic)
+# model.apply(init_classic) TODO
 
 # %%
 # -----------------------------------------------------------

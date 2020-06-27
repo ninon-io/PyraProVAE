@@ -34,19 +34,22 @@ class VAEPianoroll(nn.Module):
         generated_bar = self.decoder(latent.unsqueeze(0), db_trg, teacher_forcing=False)
         return generated_bar
 
-class Encoder(nn.Module):
-    
-    def __init__(self, input, output):
-        pass
-    
-    def forward(self, latent, target):
-        pass
+
+# class Encoder(nn.Module): TODO
+#
+#    def __init__(self, input, output):
+#        pass
+#
+#    def forward(self, latent, target):
+#        pass
+
 
 class EncoderPianoroll(nn.Module):
     def __init__(self, args):
         """"" This initializes the encoder"""
         super(EncoderPianoroll, self).__init__()
-        self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers, bidirectional=True,
+        self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
+                           bidirectional=True,
                            dropout=0.6)
         self.num_layers = args.num_layers
         self.hidden_size = args.enc_hidden_size
@@ -66,17 +69,20 @@ class EncoderPianoroll(nn.Module):
         return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
                 torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
 
+
 class DecoderPianoroll(nn.Module):
     def __init__(self, args):
         super(DecoderPianoroll, self).__init__()
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
         self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
-        self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True, num_layers=2,
+        self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True,
+                                     num_layers=2,
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.LSTM(args.cond_output_dim + args.input_size, args.dec_hidden_size, batch_first=True, num_layers=2,
+        self.decoder_RNN = nn.LSTM(args.cond_output_dim + args.input_size, args.dec_hidden_size, batch_first=True,
+                                   num_layers=2,
                                    bidirectional=False, dropout=0.6)
         self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size)
         self.num_subsequences = args.num_subsequences

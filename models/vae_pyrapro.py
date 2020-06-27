@@ -41,14 +41,14 @@ class VaeModel(nn.Module):
 
 
 class HierarchicalEncoder(nn.Module):
-    def __init__(self, input_dim, enc_hidden_size, latent_size, num_layers=2):
+    def __init__(self, args):
         super(HierarchicalEncoder, self).__init__()
-        self.enc_hidden_size = enc_hidden_size
-        self.latent_size = latent_size
-        self.num_layers = num_layers
+        self.enc_hidden_size = args.enc_hidden_size
+        self.latent_size = args.latent_size
+        self.num_layers = args.num_layers
 
         # Define the LSTM layer
-        self.RNN = nn.LSTM(input_dim, enc_hidden_size, batch_first=True, num_layers=num_layers,
+        self.RNN = nn.LSTM(args.input_dim, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
                            bidirectional=True, dropout=0.6)
 
     def init_hidden(self, batch_size=1):
@@ -67,15 +67,14 @@ class HierarchicalEncoder(nn.Module):
 
 
 class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
-    def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, dec_hidden_size, num_layers,
-                 num_subsequences, seq_length):
+    def __init__(self, args):
         super(HierarchicalDecoder, self).__init__()
-        self.num_subsequences = num_subsequences
-        self.input_size = input_size
-        self.cond_hidden_size = cond_hidden_size
-        self.dec_hidden_size = dec_hidden_size
-        self.num_layers = num_layers
-        self.seq_length = seq_length
+        self.num_subsequences = args.num_subsequences
+        self.input_size = args.input_size
+        self.cond_hidden_size = args.cond_hidden_size
+        self.dec_hidden_size = args.dec_hidden_size
+        self.num_layers = args.num_layers
+        self.seq_length = args.seq_length
         self.teacher_forcing_ratio = 0  # TFR must be 0: worsen the training except for non piano-roll representation
 
         # Define init for architecture: first conductor then decoder
@@ -84,14 +83,14 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax()
 
-        self.fc_init_cond = nn.Linear(latent_size, cond_hidden_size * num_layers)
-        self.conductor_RNN = nn.LSTM(latent_size // num_subsequences, cond_hidden_size, batch_first=True, num_layers=2,
+        self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
+        self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True, num_layers=2,
                                      bidirectional=False, dropout=0.6)
-        self.conductor_output = nn.Linear(cond_hidden_size, cond_outdim)
-        self.fc_init_dec = nn.Linear(cond_outdim, dec_hidden_size * num_layers)
-        self.decoder_RNN = nn.LSTM(cond_outdim + input_size, dec_hidden_size, batch_first=True, num_layers=2,
+        self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_outdim)
+        self.fc_init_dec = nn.Linear(args.cond_outdim, args.dec_hidden_size * args.num_layers)
+        self.decoder_RNN = nn.LSTM(args.cond_outdim + args.input_size, args.dec_hidden_size, batch_first=True, num_layers=2,
                                    bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(dec_hidden_size, input_size)
+        self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size)
 
     def forward(self, latent, target, teacher_forcing, args):
         batch_size = latent.shape[0]
@@ -147,20 +146,20 @@ class HierarchicalDecoder(nn.Module):  # TODO: Put batch norm + ReLU
 
 class Decoder(nn.Module):
 
-    def __init__(self, input_size, latent_size, cond_hidden_size, cond_outdim, hidden_size, num_layers, num_subsequences, seq_length):
+    def __init__(self, args):
         super(Decoder, self).__init__()
         #self.latent_to_conductor = nn.Linear(latent_size, latent_size)
         self.tanh = nn.Tanh()
-        self.conductor_RNN = nn.LSTM(latent_size, cond_hidden_size, batch_first=True, num_layers=2, bidirectional=False)
-        self.conductor_output = nn.Linear(cond_hidden_size, cond_outdim)
-        self.decoder_RNN = nn.LSTM(cond_outdim + input_size, hidden_size, batch_first=True, num_layers=2, bidirectional=False)
-        self.decoder_output = nn.Linear(hidden_size, input_size)
+        self.conductor_RNN = nn.LSTM(args.latent_size, args.cond_hidden_size, batch_first=True, num_layers=2, bidirectional=False)
+        self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_outdim)
+        self.decoder_RNN = nn.LSTM(args.cond_outdim + args.input_size, args.hidden_size, batch_first=True, num_layers=2, bidirectional=False)
+        self.decoder_output = nn.Linear(args.hidden_size, args.input_size)
         self.softmax = nn.Softmax()
-        self.num_subsequences = num_subsequences
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.seq_length = seq_length
+        self.num_subsequences = args.num_subsequences
+        self.input_size = args.input_size
+        self.hidden_size = args.hidden_size
+        self.num_layers = args.num_layers
+        self.seq_length = args.seq_length
         self.teacher_forcing_ratio = 0.5
 
     def forward(self, latent, target, teacher_forcing, args):
