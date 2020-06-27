@@ -12,10 +12,10 @@ class VaeModel(nn.Module):
         self.hidden_to_mu = nn.Linear(2 * encoder.enc_hidden_size, encoder.latent_size)
         self.hidden_to_sigma = nn.Linear(2 * encoder.enc_hidden_size, encoder.latent_size)
 
-    def forward(self, x):
+    def forward(self, args, x):
         # Encoder pass
         batch_size = x.size(0)
-        h_enc, c_enc = self.encoder.init_hidden(batch_size)
+        h_enc, c_enc = self.encoder.init_hidden(args, batch_size)
         hidden = self.encoder(x, h_enc, c_enc)
         # Reparameterization
         mu = self.hidden_to_mu(hidden)
@@ -49,7 +49,7 @@ class HierarchicalEncoder(nn.Module):
         self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
                            bidirectional=True, dropout=0.6)
 
-    def init_hidden(self, batch_size=1):
+    def init_hidden(self, args, batch_size=1):
         # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
         return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=args.device),
                 torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=args.device))
