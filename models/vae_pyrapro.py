@@ -4,9 +4,10 @@ import random
 
 
 class VaeModel(nn.Module):
-    def __init__(self, encoder, decoder, teacher_forcing=True):
+    def __init__(self, encoder, decoder, args, teacher_forcing=True):
         super(VaeModel, self).__init__()
         self.tf = teacher_forcing
+        self.device = args.device
         self.encoder = encoder
         self.decoder = decoder
         self.hidden_to_mu = nn.Linear(2 * encoder.enc_hidden_size, encoder.latent_size)
