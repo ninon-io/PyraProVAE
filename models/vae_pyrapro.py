@@ -128,6 +128,7 @@ class Decoder(nn.Module):  # from Mathieu, simplified decoder
     def __init__(self, args):
         super(Decoder, self).__init__()
         #self.latent_to_conductor = nn.Linear(latent_size, latent_size)
+        self.device = args.device
         self.tanh = nn.Tanh()
         self.conductor_RNN = nn.LSTM(args.latent_size, args.cond_hidden_size, batch_first=True, num_layers=2, bidirectional=False)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_outdim)
@@ -143,17 +144,16 @@ class Decoder(nn.Module):  # from Mathieu, simplified decoder
 
     def forward(self, latent, target, teacher_forcing, args):
         batch_size = latent.shape[0]
-        device = args.device
         target = torch.nn.functional.one_hot(target.long(), 389).float()
         h0, c0 = self.init_hidden(batch_size)
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
-        prev_note = torch.zeros(batch_size, 1, self.input_size, dtype=torch.float, device=device)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=args.device)
+        prev_note = torch.zeros(batch_size, 1, self.input_size, dtype=torch.float, device=args.device)
         for subseq_idx in range(self.num_subsequences):
             subseq_embedding, (h0, c0) = self.conductor_RNN(latent.unsqueeze(1), (h0, c0))
             subseq_embedding = self.tanh(self.conductor_output(subseq_embedding))
             # Initialize lower decoder hidden state
-            h0_dec = (torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device),
-                      torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device))
+            h0_dec = (torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=args.device),
+                      torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=args.device))
 
             use_teacher_forcing = False #if random.random() < self.teacher_forcing_ratio else False
             for note_idx in range(int(self.seq_length/self.num_subsequences)):
@@ -167,7 +167,6 @@ class Decoder(nn.Module):  # from Mathieu, simplified decoder
                     prev_note = target[:,int(idx),:].unsqueeze(1)
         return out
 
-    def init_hidden(self, args, batch_size=1):
-        device = args.device
-        return (torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device),
-                torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=device))
+    def init_hidden(self, batch_size=1):
+        return (torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=self.device),
+                torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=self.device))

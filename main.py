@@ -85,7 +85,7 @@ print('* Your wonderful model is ' + str(args.model))
 print('* You are using the schwifty ' + str(args.dataset) + ' dataset')
 print(10 * '*******')
 # Handling directories
-# os.system('rm -rf /slow-2/ninon/pyrapro/*')
+os.system('rm -rf /slow-2/ninon/pyrapro/*')
 
 # %%
 # -----------------------------------------------------------

@@ -39,7 +39,7 @@ class Learn:
         self.kl_div_mean_test = torch.zeros(1).to(args.device)
         self.recon_loss_mean_test = torch.zeros(1).to(args.device)
 
-    def train(self, model, optimizer, args, epoch):
+    def train(self, model, optimizer, criterion, args, epoch):
         writer = SummaryWriter(args.tensorboard_path)
         print('train pass on:', args.device)
         model.train()
@@ -48,7 +48,7 @@ class Learn:
             mu, sigma, latent, x_recon = model(x)
             log_var = sigma
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp().sqrt())
-            recon_loss = F.mse_loss(x_recon.squeeze(1), x)
+            recon_loss = criterion(x_recon.squeeze(1), x)
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += kl_div.detach()
             # Training pass
@@ -71,7 +71,7 @@ class Learn:
             writer.close()
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
-    def validate(self, model, args, epoch):
+    def validate(self, model, criterion, args, epoch):
         writer = SummaryWriter(args.tensorboard_path)
         print('validation pass on:', args.device)  # print(f"validation pass on: {args.device}")
         model.eval()
@@ -81,7 +81,7 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-                recon_loss = F.mse_loss(x_recon.squeeze(1), x)
+                recon_loss = criterion(x_recon.squeeze(1), x)
                 self.recon_loss_mean_validate += recon_loss.detach()
                 self.kl_div_mean_validate += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
@@ -93,7 +93,7 @@ class Learn:
             writer.close()
         return self.loss_mean_validate, self.kl_div_mean_validate, self.recon_loss_mean_validate
 
-    def test(self, model, args, epoch):
+    def test(self, model, criterion, args, epoch):
         print('test pass:', args.device)
         writer = SummaryWriter(args.tensorboard_path)
         model.eval()
@@ -103,7 +103,7 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-                recon_loss = F.mse_loss(x_recon.squeeze(1), x)
+                recon_loss = criterion(x_recon.squeeze(1), x)
                 self.recon_loss_mean_test += recon_loss.detach()
                 self.kl_div_mean_test += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
