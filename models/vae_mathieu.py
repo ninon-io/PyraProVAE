@@ -4,9 +4,10 @@ import random
 
 
 class VAEPianoroll(nn.Module):
-    def __init__(self, encoder, decoder, teacher_forcing=True):
+    def __init__(self, encoder, decoder, args, teacher_forcing=True):
         super(VAEPianoroll, self).__init__()
         self.tf = teacher_forcing
+        self.device = args.device
         self.encoder = encoder
         self.decoder = decoder
         self.hidden_to_mu = nn.Linear(2 * encoder.hidden_size, encoder.latent_size)
@@ -64,15 +65,15 @@ class EncoderPianoroll(nn.Module):
         return h
 
     def init_hidden(self, batch_size=1):
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         # Bidirectional lstm so num_layers*2
-        return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device),
-                torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=device))
+        return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=self.device),
+                torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=self.device))
 
 
 class DecoderPianoroll(nn.Module):
     def __init__(self, args):
         super(DecoderPianoroll, self).__init__()
+        self.device = args.device
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
         self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
@@ -94,7 +95,6 @@ class DecoderPianoroll(nn.Module):
         self.teacher_forcing_ratio = 0.5
 
     def forward(self, latent, target, teacher_forcing):
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         batch_size = latent.shape[0]
         subseq_size = self.seq_length // self.num_subsequences
         # Get the initial state of the conductor
@@ -108,8 +108,8 @@ class DecoderPianoroll(nn.Module):
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=device)
-        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=device)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=self.device)
+        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=self.device)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]

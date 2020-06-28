@@ -38,6 +38,14 @@ class VaeModel(nn.Module):
         return generated_bar
 
 
+# class Encoder(nn.Module): TODO
+#
+#    def __init__(self, input, output):
+#        pass
+#
+#    def forward(self, latent, target):
+#        pass
+
 class HierarchicalEncoder(nn.Module):
     def __init__(self, args):
         super(HierarchicalEncoder, self).__init__()
