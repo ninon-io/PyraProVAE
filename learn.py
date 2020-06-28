@@ -52,8 +52,8 @@ class Learn:
             optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.25)
-            # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.25)
+            torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
             # Optimizes weights
             optimizer.step()
         if self.iter_train > 10 and self.beta < 1:

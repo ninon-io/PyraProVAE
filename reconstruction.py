@@ -92,6 +92,9 @@ def sampling(args, fs=100, program=0):
     print('[Writing MIDI from:]', pm)
     pm.write(args.sampling_midi + ".mid")
 
+# def interpolation(args): TODO
+
+
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(description='Reconstruction')
 #     parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')

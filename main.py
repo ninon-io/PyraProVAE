@@ -9,7 +9,7 @@ from texttable import Texttable
 # Personnal imports
 from learn import Learn
 from data_loaders.data_loader import import_dataset
-from reconstruction import reconstruction
+from reconstruction import reconstruction, sampling
 # Import models
 from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
@@ -58,9 +58,9 @@ parser.add_argument('--epochs', type=int, default=30, help='number of epochs to 
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
-#parser.add_argument('--log-interval', type=int, default=10, help='how many batches to wait before logging training status')
-#parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
-#parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
+# parser.add_argument('--log-interval', type=int, default=10, help='how many batches to wait before logging training status')
+# parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
+# parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
 # Parse the arguments
 args = parser.parse_args()
 
@@ -194,11 +194,13 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
     # Save weights
     learn.save(model, args, epoch)
-    #
-    # EVALUATE STUFF
-    #
-    
+# -----------------------------------------------------------
+#
+# Evaluate stuffs
+#
+# -----------------------------------------------------------
     reconstruction(args, model, epoch, test_set)
+    # sampling(args)
     # Track on stuffs
     print("*******" * 10)
     print('* Useful & incredible tracking:')
