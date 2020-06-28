@@ -13,9 +13,6 @@ from guppy import hpy
 import argparse
 from texttable import Texttable
 
-# Memory tracking if needed
-# h = hpy()
-
 
 # Take the folder of midi files and output Piano-roll representation
 class PianoRollRep(Dataset):

@@ -36,6 +36,7 @@ parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/mod
 parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
 parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
 parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/', help='path to reconstruction figures')
+parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi', help='path to MIDI reconstruction from sampling')
 # Model Parameters
 parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
@@ -117,7 +118,7 @@ if args.model == 'PyraPro':
 elif args.model == 'vae_mathieu':
     encoder = EncoderPianoroll(args)
     decoder = DecoderPianoroll(args)
-    model = VAEPianoroll(encoder=encoder, decoder=decoder).float()
+    model = VAEPianoroll(encoder=encoder, decoder=decoder, args=args).float()
 
 elif args.model == 'ae':
     encoder = EncoderPianoroll(args)
@@ -168,7 +169,7 @@ else:
 # %%
 # -----------------------------------------------------------
 #
-# Losses functions
+# Training loop
 #
 # -----------------------------------------------------------
 # Initial training of the model

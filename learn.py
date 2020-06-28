@@ -1,16 +1,11 @@
 import torch
-from torch import distributions
 import torch.nn as nn
 from torch.nn import functional as F
 from tqdm import tqdm
 import numpy as np
-from guppy import hpy
 import os
 
 from tensorboardX import SummaryWriter
-
-# Track the memory usage
-h = hpy()
 
 
 class Learn:
@@ -41,7 +36,7 @@ class Learn:
 
     def train(self, model, optimizer, criterion, args, epoch):
         writer = SummaryWriter(args.tensorboard_path)
-        print('train pass on:', args.device)
+        print(f"train pass on: {args.device}")
         model.train()
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
@@ -73,7 +68,7 @@ class Learn:
 
     def validate(self, model, criterion, args, epoch):
         writer = SummaryWriter(args.tensorboard_path)
-        print('validation pass on:', args.device)  # print(f"validation pass on: {args.device}")
+        print(f"validation pass on: {args.device}")
         model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.validate_loader), total=len(self.validate_set) // args.batch_size):
@@ -94,7 +89,7 @@ class Learn:
         return self.loss_mean_validate, self.kl_div_mean_validate, self.recon_loss_mean_validate
 
     def test(self, model, criterion, args, epoch):
-        print('test pass:', args.device)
+        print(f"test pass on: {args.device}")
         writer = SummaryWriter(args.tensorboard_path)
         model.eval()
         with torch.no_grad():
