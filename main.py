@@ -14,7 +14,7 @@ from reconstruction import reconstruction
 from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
 from models.ae import RegressionAE, DisentanglingAE, AE
-# from utils import init_classic
+from utils import init_classic
 
 # %%
 # -----------------------------------------------------------
@@ -37,6 +37,7 @@ parser.add_argument('--tensorboard_path', type=str, default='output/', help='pat
 parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
 parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/', help='path to reconstruction figures')
 parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi', help='path to MIDI reconstruction from sampling')
+parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure', help='path to visuam reconstruction from sampling')
 # Model Parameters
 parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
@@ -132,7 +133,7 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-# model.apply(init_classic) TODO: missing script :'(
+model.apply(init_classic)
 
 # %%
 # -----------------------------------------------------------

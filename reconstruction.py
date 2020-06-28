@@ -48,40 +48,18 @@ def sampling(args, fs=100, program=0):
     latent = distributions.normal.Normal(torch.tensor([0, 0]), torch.tensor([1, 0]))
     generated_bar = args.model().generate(latent)
     notes, frames = generated_bar.shape
-
-    # Plot settings
-    nrows, ncols = 4, 2  # array of sub-plots
-    figsize = np.array([8, 20])  # figure size, inches
-    # create figure (fig), and array of axes (ax)
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
-
-    # generate random index for testing random data
-    rand_ind = np.array([random.randint(0, len(dataset)) for i in range(nrows)])
-    ind = 0
-
-    for i, axi in enumerate(ax.flat):
-        if i % 2 == 0:
-            piano_roll = dataset[rand_ind[ind]]
-            axi.matshow(piano_roll, alpha=1)
-            # write row/col indices as axes' title for identification
-            axi.set_title("Original number " + str(rand_ind[ind]))
-        else:
-            # dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
-            cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
-            _, _, _, x_reconstruct = model(cur_input)
-            x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
-            axi.matshow(x_reconstruct, alpha=1)
-            # write row/col indices as axes' title for identification
-            axi.set_title("Reconstruction number " + str(rand_ind[ind]))
-            ind += 1
-
-    plt.tight_layout(True)
-    # plt.subplots(constrained_layout=True)
-    if not os.path.exists(args.figure_reconstruction_path):
-        os.makedirs(args.figure_reconstruction_path)
-    plt.savefig(args.figure_reconstruction_path + 'epoch_' + str(epoch))
-    # plt.show()
-
+    # Generate figure from sampling
+    if not os.path.exists(args.sampling_figure):
+        os.makedirs(args.sampling_figure)
+    for i in range(generated_bar.shape[0]):
+        plt.matshow(generated_bar[i].cpu(), alpha=1)
+        plt.title("Sampling from latent space")
+        plt.tight_layout(True)
+        plt.savefig(args.sampling_figure + ".png")
+        plt.close()
+    # Generate MIDI from sampling
+    if not os.path.exists(args.sampling_midi):
+        os.makedirs(args.sampling_midi)
     pm = pretty_midi.PrettyMIDI()
     instrument = pretty_midi.Instrument(program=program)
     # Pad 1 column of zeros to acknowledge initial and ending events
@@ -111,8 +89,8 @@ def sampling(args, fs=100, program=0):
         pm.instruments.append(instrument)
         return pm
     # Write out the MIDI data
-    print('[Writing MIDI from]', pm)
-    pm.write(args.sampling_midi)
+    print('[Writing MIDI from:]', pm)
+    pm.write(args.sampling_midi + ".mid")
 
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(description='Reconstruction')
@@ -128,4 +106,3 @@ def sampling(args, fs=100, program=0):
 #     print("DEBUG BEGIN")
 #     reconstruction(args, model, epoch)
 #     print("DEBUG END")
-
