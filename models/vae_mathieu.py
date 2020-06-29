@@ -36,19 +36,20 @@ class VAEPianoroll(nn.Module):
         return generated_bar
 
 
-# class Encoder(nn.Module): TODO
-#
-#    def __init__(self, input, output):
-#        pass
-#
-#    def forward(self, latent, target):
-#        pass
+class Encoder(nn.Module):
+
+    def __init__(self, input_size, enc_size):
+        self.input_size = input_size
+        pass
+
+    def forward(self, latent, target):
+        pass
 
 
-class EncoderPianoroll(nn.Module):
+class EncoderPianoroll(Encoder):
     def __init__(self, args):
         """"" This initializes the encoder"""
-        super(EncoderPianoroll, self).__init__()
+        super(EncoderPianoroll, self).__init__(input_size)
         self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
                            bidirectional=True,
                            dropout=0.6)
