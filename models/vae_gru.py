@@ -5,6 +5,22 @@ from torch import nn
 from torch.nn import functional as F
 from torch.distributions import Normal
 
+class EncoderGRU(Encoder):
+    
+    def __init__(args):
+
+    def forward(self, x, condition):
+        # self.gru_0.flatten_parameters()
+        x = torch.cat((x, condition), -1)
+        x = self.gru_0(x)[-1]
+        x = x.transpose_(0, 1).contiguous()
+        x = x.view(x.size(0), -1)
+        mu = self.linear_mu(x)
+        var = self.linear_var(x).exp_()
+        distribution_1 = Normal(mu[:, :self.z1_dims], var[:, :self.z1_dims])
+        distribution_2 = Normal(mu[:, self.z1_dims:], var[:, self.z1_dims:])
+        return distribution_1, distribution_2
+        
 
 class VAE(nn.Module):
     def __init__(self,

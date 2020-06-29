@@ -1,39 +1,5 @@
-import torch
-from torch import nn
-import random
+# -*- coding: utf-8 -*-
 
-
-class VAEPianoroll(nn.Module):
-    def __init__(self, encoder, decoder, args, teacher_forcing=True):
-        super(VAEPianoroll, self).__init__()
-        self.tf = teacher_forcing
-        self.device = args.device
-        self.encoder = encoder
-        self.decoder = decoder
-        self.hidden_to_mu = nn.Linear(2 * encoder.hidden_size, encoder.latent_size)
-        self.hidden_to_sig = nn.Linear(2 * encoder.hidden_size, encoder.latent_size)
-
-    def forward(self, x):
-        # Encoder pass
-        batch_size = x.size(0)
-        h_enc, c_enc = self.encoder.init_hidden(batch_size)
-        hidden = self.encoder(x, h_enc, c_enc)
-        # Reparametrization
-        mu = self.hidden_to_mu(hidden)
-        sig = self.hidden_to_sig(hidden)
-        eps = torch.randn_like(mu).detach().to(x.device)
-        latent = (sig.exp().sqrt() * eps) + mu
-        # Decoder pass
-        x_reconst = self.decoder(latent, x, teacher_forcing=self.tf)
-        return mu, sig, latent, x_reconst
-
-    def generate(self, latent):
-        # Create dumb target
-        input_shape = (1, self.decoder.seq_length, self.decoder.input_size)
-        db_trg = torch.zeros(input_shape)
-        # Forward pass in the decoder
-        generated_bar = self.decoder(latent.unsqueeze(0), db_trg, teacher_forcing=False)
-        return generated_bar
     
 class Encoder(nn.Module):
     
@@ -75,6 +41,69 @@ class EncoderPianoroll(Encoder):
         return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=self.device),
                 torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=self.device))
 
+# -----------------------------------------------------------
+#
+# Hierarchical encoder based on MusicVAE
+#
+# -----------------------------------------------------------
+class HierarchicalEncoder(nn.Module):
+    def __init__(self, args):
+        super(HierarchicalEncoder, self).__init__()
+        self.enc_hidden_size = args.enc_hidden_size
+        self.latent_size = args.latent_size
+        self.num_layers = args.num_layers
+        self.device = args.device
+
+        # Define the LSTM layer
+        self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
+                           bidirectional=True, dropout=0.6)
+
+    def init_hidden(self, batch_size=1):
+        # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
+        return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device),
+                torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device))
+
+    def forward(self, x, ctx):
+        batch_size = x.shape[0]
+        _, (h, _) = self.RNN(x, (h0, c0))
+        h = h.view(self.num_layers, 2, batch_size, -1)
+        h = h[-1]
+        h = torch.cat([h[0], h[1]], dim=1)
+        return h
+    
+# -----------------------------------------------------------
+#
+# Very basic MLP encoder
+#
+# -----------------------------------------------------------
+class GatedMLP(Encoder):
+    
+    def __init__(self, in_size, out_size, hidden_size = 512, n_layers = 6, type_mod='gated', **kwargs):
+        super(GatedMLP, self).__init__(**kwargs)
+        dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
+        # Create modules
+        modules = nn.Sequential()
+        for l in range(n_layers):
+            in_s = (l==0) and in_size or hidden_size
+            out_s = (l == n_layers - 1) and out_size or hidden_size
+            modules.add_module('l%i'%l, dense_module(in_s, out_s))
+            if (l < n_layers - 1):
+                modules.add_module('b%i'%l, nn.BatchNorm1d(out_s))
+                modules.add_module('a%i'%l, nn.ReLU())
+                modules.add_module('a%i'%l, nn.Dropout(p=.3))
+        self.net = modules
+    
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for param in self.parameters():
+            param.data.uniform_(-0.01, 0.01)
+        
+    def forward(self, inputs, ctx = None):
+        # Flatten the input
+        out = inputs.view(inputs.shape[0], -1)
+        for m in range(len(self.net)):
+            out = self.net[m](out)
+        return out
 
 class DecoderPianoroll(nn.Module):
     def __init__(self, args):
