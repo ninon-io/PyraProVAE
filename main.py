@@ -52,6 +52,7 @@ parser.add_argument('--num_subsequences', type=int, default=8, help='do not touc
 parser.add_argument('--seq_length', type=int, default=128, help='do not touch if you do not know')
 # Optimization parameters
 parser.add_argument('--batch_size', type=int, default=4, help='input batch size')
+parser.add_argument('--subsample', type=int, default=0, help='train on subset')
 # parser.add_argument('--test-batch-size', type=int, default=1000, help='input batch size for testing')
 parser.add_argument('--frame_bar', type=int, default=100, help='correspond to input dim')
 parser.add_argument('--epochs', type=int, default=30, help='number of epochs to train')
@@ -194,11 +195,11 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
     # Save weights
     learn.save(model, args, epoch)
-# -----------------------------------------------------------
-#
-# Evaluate stuffs
-#
-# -----------------------------------------------------------
+    # -----------------------------------------------------------
+    #
+    # Evaluate stuffs
+    #
+    # -----------------------------------------------------------
     reconstruction(args, model, epoch, test_set)
     # sampling(args)
     # Track on stuffs

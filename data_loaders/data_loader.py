@@ -79,13 +79,11 @@ def maximum(train_set, valid_set, test_set):  # TODO: transfer to np
     t = Texttable()
     # Compute the maximum of the dataset
     global_track = []
-    for x in train_set:
-        global_track.append(x)
-    for y in valid_set:
-        global_track.append(y)
-    for z in test_set:
-        global_track.append(z)
-    max_global = torch.max(torch.stack(global_track))
+    max_v = 0
+    for s in [train_set, valid_set, test_set]: 
+        for x in s:
+            max_v = torch.max((torch.max(x), max_v))
+    max_global = max_v
     track_train = []
     track_valid = []
     track_test = []
@@ -98,33 +96,6 @@ def maximum(train_set, valid_set, test_set):  # TODO: transfer to np
     for z in test_set:
         z_norm = torch.div(z, max_global)
         track_test.append(z_norm)
-    # print(10 * '*******')
-    # print('Casual information on your beautiful dataset with normalization:')
-    # t.add_rows([['', 'Maximum', 'Minimum', 'Mean', 'Std', 'Var', 'NaN', 'Inf'],
-    #             ['Train', torch.max(torch.stack(track_train)),
-    #              torch.min(torch.stack(track_train)),
-    #              torch.mean(torch.stack(track_train)),
-    #              torch.std(torch.stack(track_train)),
-    #              torch.var(torch.stack(track_train)),
-    #              torch.isnan(torch.stack(track_train)).byte().any(),
-    #              torch.isinf(torch.stack(track_train)).byte().any()],
-    #             ['Validate', torch.max(torch.stack(track_valid)),
-    #              torch.min(torch.stack(track_valid)),
-    #              torch.mean(torch.stack(track_valid)),
-    #              torch.std(torch.stack(track_valid)),
-    #              torch.var(torch.stack(track_valid)),
-    #              torch.isnan(torch.stack(track_valid)).byte().any(),
-    #              torch.isinf(torch.stack(track_valid)).byte().any()],
-    #             ['Test', torch.max(torch.stack(track_test)),
-    #              torch.min(torch.stack(track_test)),
-    #              torch.mean(torch.stack(track_test)),
-    #              torch.std(torch.stack(track_test)),
-    #              torch.var(torch.stack(track_test)),
-    #              torch.isnan(torch.stack(track_test)).byte().any(),
-    #              torch.isinf(torch.stack(track_test)).byte().any()]])
-    # print(t.draw())
-    # print('Maximum global before normalization:', max_global)
-    # print(10 * '*******')
     return max_global, track_train, track_valid, track_test
 
 
@@ -147,11 +118,14 @@ def import_dataset(args):
         max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
         # train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw  # No normalization
         # Get sampler
-        train_indices, valid_indices = list(range(len(train_set))), list(range(len(valid_set)))
-        train_indices = train_indices[:1000]  # TODO: DON'T FORGET TO DELETE THIS
-        valid_indices = valid_indices[:256]
+        train_indices, valid_indices, test_indices = list(range(len(train_set))), list(range(len(valid_set))), list(range(len(test_set)))
+        if (args.subsample > 0):
+            train_indices = train_indices[:args.subsample]
+            valid_indices = valid_indices[:args.subsample]
+            test_indices = test_indices[:args.subsample]
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(valid_indices)
+        test_sampler = SubsetRandomSampler(test_indices)
     elif args.dataset == "midi_folder":  # One folder with all midi files
         data_set = PianoRollRep(args.bar_dir, args.frame_bar, export=False)
         data_set_size = len(data_set)
@@ -181,7 +155,7 @@ def import_dataset(args):
     valid_loader = torch.utils.data.DataLoader(valid_set, batch_size=args.batch_size, num_workers=args.nbworkers,
                                                drop_last=True, sampler=valid_sampler, pin_memory=True)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=args.batch_size, num_workers=args.nbworkers,
-                                              drop_last=True, shuffle=False, pin_memory=True)
+                                              drop_last=True, sampler=test_sampler, shuffle=False, pin_memory=True)
     return train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args
 
 

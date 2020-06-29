@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 
+# -----------------------------------------------------------
+# -----------------------------------------------------------
+#
+# Encoder section
+#
+# -----------------------------------------------------------
+# -----------------------------------------------------------
     
 class Encoder(nn.Module):
     
@@ -105,6 +112,33 @@ class GatedMLP(Encoder):
             out = self.net[m](out)
         return out
 
+# -----------------------------------------------------------
+# -----------------------------------------------------------
+#
+# Decoder section
+#
+# -----------------------------------------------------------
+# -----------------------------------------------------------
+
+class Decoder(nn.Module):
+    
+    def __init__(self, input_size, enc_size, args):
+        super(Encoder, self).__init__()
+        self.input_size = input_size
+        self.enc_size = enc_size
+        
+    def forward(self, x, ctx = None):
+        out = []
+        return out
+    
+    def init(self, vals):
+        pass
+    
+# -----------------------------------------------------------
+#
+# Piano-roll based decoder
+#
+# -----------------------------------------------------------
 class DecoderPianoroll(nn.Module):
     def __init__(self, args):
         super(DecoderPianoroll, self).__init__()
