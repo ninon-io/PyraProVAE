@@ -75,14 +75,12 @@ class PianoRollRep(Dataset):
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
 
-def maximum(train_set, valid_set, test_set):  # TODO: transfer to np
-    t = Texttable()
+def maximum(train_set, valid_set, test_set):
     # Compute the maximum of the dataset
-    global_track = []
     max_v = 0
     for s in [train_set, valid_set, test_set]: 
         for x in s:
-            max_v = torch.max((torch.max(x), max_v))
+            max_v = torch.max(torch.max(x), max_v)
     max_global = max_v
     track_train = []
     track_valid = []
@@ -119,7 +117,7 @@ def import_dataset(args):
         # train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw  # No normalization
         # Get sampler
         train_indices, valid_indices, test_indices = list(range(len(train_set))), list(range(len(valid_set))), list(range(len(test_set)))
-        if (args.subsample > 0):
+        if args.subsample > 0:
             train_indices = train_indices[:args.subsample]
             valid_indices = valid_indices[:args.subsample]
             test_indices = test_indices[:args.subsample]
