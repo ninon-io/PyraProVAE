@@ -80,7 +80,7 @@ def maximum(train_set, valid_set, test_set):
     max_v = 0
     for s in [train_set, valid_set, test_set]: 
         for x in s:
-            max_v = torch.max(torch.max(x), max_v)
+            max_v = torch.max(torch.tensor([torch.max(x), max_v]))
     max_global = max_v
     track_train = []
     track_valid = []
