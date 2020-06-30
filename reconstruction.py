@@ -24,11 +24,10 @@ def reconstruction(args, model, epoch, dataset):
     for i, axi in enumerate(ax.flat):
         if i % 2 == 0:
             piano_roll = dataset[rand_ind[ind]]
-            axi.matshow(piano_roll * 128, alpha=1)
+            axi.matshow(piano_roll, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
-            # dataset[rand_ind[ind]][dataset[rand_ind[ind]] > 0] = 1
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
             _, _, _, x_reconstruct = model(cur_input)
             x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
