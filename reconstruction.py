@@ -30,14 +30,13 @@ def reconstruction(args, model, epoch, dataset):
         else:
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
             _, _, _, x_reconstruct = model(cur_input)
-            x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
-            axi.matshow(x_reconstruct * 128, alpha=1)
+            x_reconstruct = x_reconstruct.squeeze(0).detach().cpu()
+            axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Reconstruction number " + str(rand_ind[ind]))
             ind += 1
 
     plt.tight_layout(True)
-    # plt.subplots(constrained_layout=True)
     if not os.path.exists(args.figure_reconstruction_path):
         os.makedirs(args.figure_reconstruction_path)
     plt.savefig(args.figure_reconstruction_path + 'epoch_' + str(epoch))
@@ -93,9 +92,9 @@ def sampling(args, fs=100, program=0):
     pm.write(args.sampling_midi + ".mid")
 
 
-def interpolation(model, X, labels, args, a=None, b=None, x_c=None, alpha=0.):
+def interpolation(model, x, labels, args, a=None, b=None, x_c=None, alpha=0.):
     # Encode samples to the latent space
-    z_a, z_b = model.encode(X[labels == a]), model.encode(X[labels == b])
+    z_a, z_b = model.encode(x[labels == a]), model.encode(x[labels == b])
     # Find the centroids of the classes a, b in the latent space
     z_a_centroid = z_a.mean(axis=0)
     z_b_centroid = z_b.mean(axis=0)
