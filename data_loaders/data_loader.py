@@ -11,7 +11,6 @@ import torchvision.transforms as transforms
 from torchvision.transforms import functional
 from guppy import hpy
 import argparse
-from texttable import Texttable
 
 
 # Take the folder of midi files and output Piano-roll representation

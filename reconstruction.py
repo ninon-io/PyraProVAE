@@ -92,7 +92,19 @@ def sampling(args, fs=100, program=0):
     print('[Writing MIDI from:]', pm)
     pm.write(args.sampling_midi + ".mid")
 
-# def interpolation(args): TODO
+
+def interpolation(model, X, labels, args, a=None, b=None, x_c=None, alpha=0.):
+    # Encode samples to the latent space
+    z_a, z_b = model.encode(X[labels == a]), model.encode(X[labels == b])
+    # Find the centroids of the classes a, b in the latent space
+    z_a_centroid = z_a.mean(axis=0)
+    z_b_centroid = z_b.mean(axis=0)
+    # The interpolation vector pointing from b -> a
+    z_b2a = z_a_centroid - z_b_centroid
+    # Manipulate x_c
+    z_c = model.encode(x_c)
+    z_c_interp = z_c + alpha * z_b2a
+    return model.decode(z_c_interp)
 
 
 # if __name__ == "__main__":
