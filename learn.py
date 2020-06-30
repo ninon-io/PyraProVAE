@@ -82,9 +82,9 @@ class Learn:
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_validate += loss.detach()
         with torch.no_grad():
-            writer.add_scalar('data/loss_mean_VALID', self.loss_mean_validate / self.iter_train, epoch)
-            writer.add_scalar('data/kl_div_mean_VALID', self.kl_div_mean_validate / self.iter_train, epoch)
-            writer.add_scalar('data/reconst_loss_mean_VALID', self.recon_loss_mean_validate / self.iter_train, epoch)
+            writer.add_scalar('data/loss_mean_VALID', self.loss_mean_validate, epoch)
+            writer.add_scalar('data/kl_div_mean_VALID', self.kl_div_mean_validate, epoch)
+            writer.add_scalar('data/reconst_loss_mean_VALID', self.recon_loss_mean_validate, epoch)
             writer.close()
         return self.loss_mean_validate, self.kl_div_mean_validate, self.recon_loss_mean_validate
 
@@ -104,9 +104,9 @@ class Learn:
                 loss = recon_loss + self.beta * kl_div
                 self.loss_mean_test += loss.detach()
         with torch.no_grad():
-            writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
-            writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
-            writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
+            writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test, epoch)
+            writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test, epoch)
+            writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test, epoch)
             writer.close()
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
