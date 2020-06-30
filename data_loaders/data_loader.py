@@ -77,7 +77,7 @@ class PianoRollRep(Dataset):
 def maximum(train_set, valid_set, test_set):
     # Compute the maximum of the dataset
     max_v = 0
-    for s in [train_set, valid_set, test_set]: 
+    for s in [train_set, valid_set, test_set]:
         for x in s:
             max_v = torch.max(torch.tensor([torch.max(x), max_v]))
     max_global = max_v
@@ -112,10 +112,11 @@ def import_dataset(args):
         test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
         # Normalization
-        max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
-        # train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw  # No normalization
+        # max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
+        train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw  # No normalization
         # Get sampler
-        train_indices, valid_indices, test_indices = list(range(len(train_set))), list(range(len(valid_set))), list(range(len(test_set)))
+        train_indices, valid_indices, test_indices = list(range(len(train_set))), list(range(len(valid_set))), \
+                                                     list(range(len(test_set)))
         if args.subsample > 0:
             train_indices = train_indices[:args.subsample]
             valid_indices = valid_indices[:args.subsample]
