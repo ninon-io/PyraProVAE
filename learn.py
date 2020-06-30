@@ -89,8 +89,8 @@ class Learn:
         return self.loss_mean_validate, self.kl_div_mean_validate, self.recon_loss_mean_validate
 
     def test(self, model, criterion, args, epoch):
-        print(f"test pass on: {args.device}")
         writer = SummaryWriter(args.tensorboard_path)
+        print(f"test pass on: {args.device}")
         model.eval()
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // args.batch_size):
@@ -107,6 +107,7 @@ class Learn:
             writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test / self.iter_test, epoch)
             writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test / self.iter_test, epoch)
+            writer.close()
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
     def save(self, model, args, epoch):
