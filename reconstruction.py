@@ -7,9 +7,11 @@ import numpy as np
 import os
 import torch
 from torch import distributions
+from data_loaders.data_loader import maximum
 
 
 def reconstruction(args, model, epoch, dataset):
+    max_global = 128
     # Plot settings
     nrows, ncols = 4, 2  # array of sub-plots
     figsize = np.array([8, 20])  # figure size, inches
@@ -19,11 +21,10 @@ def reconstruction(args, model, epoch, dataset):
     # generate random index for testing random data
     rand_ind = np.array([random.randint(0, len(dataset)) for i in range(nrows)])
     ind = 0
-
     for i, axi in enumerate(ax.flat):
         if i % 2 == 0:
             piano_roll = dataset[rand_ind[ind]]
-            axi.matshow(piano_roll, alpha=1)
+            axi.matshow(piano_roll * 128, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
@@ -31,7 +32,7 @@ def reconstruction(args, model, epoch, dataset):
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
             _, _, _, x_reconstruct = model(cur_input)
             x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
-            axi.matshow(x_reconstruct, alpha=1)
+            axi.matshow(x_reconstruct * 128, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Reconstruction number " + str(rand_ind[ind]))
             ind += 1
@@ -99,7 +100,7 @@ def interpolation(model, X, labels, args, a=None, b=None, x_c=None, alpha=0.):
     # Find the centroids of the classes a, b in the latent space
     z_a_centroid = z_a.mean(axis=0)
     z_b_centroid = z_b.mean(axis=0)
-    # The interpolation vector pointing from b -> a
+    # The interpolation vector pointing from b to a
     z_b2a = z_a_centroid - z_b_centroid
     # Manipulate x_c
     z_c = model.encode(x_c)
