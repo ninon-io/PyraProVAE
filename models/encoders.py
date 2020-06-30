@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import torch
+from torch import nn
+import random
 
 # -----------------------------------------------------------
 # -----------------------------------------------------------
@@ -7,7 +10,8 @@
 #
 # -----------------------------------------------------------
 # -----------------------------------------------------------
-    
+
+
 class Encoder(nn.Module):
     
     def __init__(self, input_size, enc_size, args):
@@ -15,62 +19,40 @@ class Encoder(nn.Module):
         self.input_size = input_size
         self.enc_size = enc_size
         
-    def forward(self, x, ctx = None):
+    def forward(self, x, ctx=None):
         out = []
         return out
     
     def init(self, vals):
         pass
 
-
-class EncoderPianoroll(Encoder):
-    def __init__(self, input_size, enc_size, args):
-        """"" This initializes the encoder"""
-        super(EncoderPianoroll, self).__init__(input_size, enc_size, args)
-        self.RNN = nn.LSTM(self.input_size, self.enc_size, batch_first=True, num_layers=args.num_layers,
-                           bidirectional=True,
-                           dropout=0.6)
-        self.num_layers = args.num_layers
-        self.hidden_size = args.enc_hidden_size
-        self.latent_size = args.latent_size
-
-    def forward(self, x, ctx = None):
-        h0, c0 = ctx 
-        batch_size = x.shape[0]
-        _, (h, _) = self.RNN(x, (h0, c0))
-        h = h.view(self.num_layers, 2, batch_size, -1)
-        h = h[-1]
-        h = torch.cat([h[0], h[1]], dim=1)
-        return h
-
-    def init_hidden(self, batch_size=1):
-        # Bidirectional lstm so num_layers*2
-        return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=self.device),
-                torch.zeros(self.num_layers * 2, batch_size, self.hidden_size, dtype=torch.float, device=self.device))
-
 # -----------------------------------------------------------
 #
 # Hierarchical encoder based on MusicVAE
 #
 # -----------------------------------------------------------
-class HierarchicalEncoder(nn.Module):
-    def __init__(self, args):
-        super(HierarchicalEncoder, self).__init__()
+
+
+class HierarchicalEncoder(Encoder):
+    def __init__(self, input_size, enc_size, args):
+        # Initialize the encoder
+        super(HierarchicalEncoder, self).__init__(input_size, enc_size, args)
         self.enc_hidden_size = args.enc_hidden_size
         self.latent_size = args.latent_size
         self.num_layers = args.num_layers
         self.device = args.device
 
         # Define the LSTM layer
-        self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
+        self.RNN = nn.LSTM(self.input_size, self.enc_size, batch_first=True, num_layers=args.num_layers,
                            bidirectional=True, dropout=0.6)
 
     def init_hidden(self, batch_size=1):
-        # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
+        # Initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
         return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device),
                 torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device))
 
-    def forward(self, x, ctx):
+    def forward(self, x, ctx=None):
+        h0, c0 = ctx
         batch_size = x.shape[0]
         _, (h, _) = self.RNN(x, (h0, c0))
         h = h.view(self.num_layers, 2, batch_size, -1)
@@ -83,6 +65,8 @@ class HierarchicalEncoder(nn.Module):
 # Very basic MLP encoder
 #
 # -----------------------------------------------------------
+
+
 class GatedMLP(Encoder):
     
     def __init__(self, in_size, out_size, hidden_size = 512, n_layers = 6, type_mod='gated', **kwargs):
@@ -91,10 +75,10 @@ class GatedMLP(Encoder):
         # Create modules
         modules = nn.Sequential()
         for l in range(n_layers):
-            in_s = (l==0) and in_size or hidden_size
+            in_s = (l == 0) and in_size or hidden_size
             out_s = (l == n_layers - 1) and out_size or hidden_size
-            modules.add_module('l%i'%l, dense_module(in_s, out_s))
-            if (l < n_layers - 1):
+            modules.add_module('l%i' % l, dense_module(in_s, out_s))
+            if l < n_layers - 1:
                 modules.add_module('b%i'%l, nn.BatchNorm1d(out_s))
                 modules.add_module('a%i'%l, nn.ReLU())
                 modules.add_module('a%i'%l, nn.Dropout(p=.3))
@@ -120,28 +104,32 @@ class GatedMLP(Encoder):
 # -----------------------------------------------------------
 # -----------------------------------------------------------
 
+
 class Decoder(nn.Module):
     
-    def __init__(self, input_size, enc_size, args):
-        super(Encoder, self).__init__()
-        self.input_size = input_size
-        self.enc_size = enc_size
+    def __init__(self, dec_size, output_size, args):
+        super(Decoder, self).__init__()
+        self.dec_size = dec_size
+        self.output_size = output_size
         
-    def forward(self, x, ctx = None):
+    def forward(self, x, ctx=None):
         out = []
         return out
     
     def init(self, vals):
         pass
-    
+
+
 # -----------------------------------------------------------
 #
-# Piano-roll based decoder
+# Hierarchical encoder based on MusicVAE
 #
 # -----------------------------------------------------------
-class DecoderPianoroll(nn.Module):
-    def __init__(self, args):
-        super(DecoderPianoroll, self).__init__()
+
+
+class HierarchicalDecoder(Decoder):
+    def __init__(self, dec_size, output_size, args):
+        super(HierarchicalDecoder, self).__init__(dec_size, output_size, args)
         self.device = args.device
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
@@ -196,3 +184,57 @@ class DecoderPianoroll(nn.Module):
                 if random.random() <= self.teacher_forcing_ratio:
                     token = target[:, sub * subseq_size:((sub + 1) * subseq_size), :]
         return out
+
+# -----------------------------------------------------------
+#
+# Simplified decoder for piano-roll
+#
+# -----------------------------------------------------------
+
+
+class PianoRollDecoder(nn.Module):  # from Mathieu, simplified decoder
+    def __init__(self, args):
+        super(Decoder, self).__init__()
+        #self.latent_to_conductor = nn.Linear(latent_size, latent_size)
+        self.device = args.device
+        self.tanh = nn.Tanh()
+        self.conductor_RNN = nn.LSTM(args.latent_size, args.cond_hidden_size, batch_first=True, num_layers=2, bidirectional=False)
+        self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_outdim)
+        self.decoder_RNN = nn.LSTM(args.cond_outdim + args.input_size, args.hidden_size, batch_first=True, num_layers=2, bidirectional=False)
+        self.decoder_output = nn.Linear(args.hidden_size, args.input_size)
+        self.softmax = nn.Softmax()
+        self.num_subsequences = args.num_subsequences
+        self.input_size = args.input_size
+        self.hidden_size = args.hidden_size
+        self.num_layers = args.num_layers
+        self.seq_length = args.seq_length
+        self.teacher_forcing_ratio = 0.5
+
+    def forward(self, latent, target, teacher_forcing, args):
+        batch_size = latent.shape[0]
+        target = torch.nn.functional.one_hot(target.long(), 389).float()
+        h0, c0 = self.init_hidden(batch_size)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=args.device)
+        prev_note = torch.zeros(batch_size, 1, self.input_size, dtype=torch.float, device=args.device)
+        for subseq_idx in range(self.num_subsequences):
+            subseq_embedding, (h0, c0) = self.conductor_RNN(latent.unsqueeze(1), (h0, c0))
+            subseq_embedding = self.tanh(self.conductor_output(subseq_embedding))
+            # Initialize lower decoder hidden state
+            h0_dec = (torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=args.device),
+                      torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=args.device))
+
+            use_teacher_forcing = False #if random.random() < self.teacher_forcing_ratio else False
+            for note_idx in range(int(self.seq_length/self.num_subsequences)):
+                e = torch.cat((prev_note, subseq_embedding), -1)
+                prev_note, h0_dec = self.decoder_RNN(e, h0_dec)
+                prev_note = self.tanh(self.decoder_output(prev_note))
+
+                idx = subseq_idx * self.seq_length/self.num_subsequences + note_idx
+                out[:, int(idx), :] = prev_note.squeeze()
+                if use_teacher_forcing :
+                    prev_note = target[:,int(idx),:].unsqueeze(1)
+        return out
+
+    def init_hidden(self, batch_size=1):
+        return (torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=self.device),
+                torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=self.device))
