@@ -92,7 +92,7 @@ def sampling(args, fs=100, program=0):
     pm.write(args.sampling_midi + ".mid")
 
 
-def interpolation(model, x, labels, args, a=None, b=None, x_c=None, alpha=0.):
+def interpolation(model, x, labels, args, a=None, b=None, x_c=None):
     # Encode samples to the latent space
     z_a, z_b = model.encode(x[labels == a]), model.encode(x[labels == b])
     # Find the centroids of the classes a, b in the latent space
@@ -102,8 +102,17 @@ def interpolation(model, x, labels, args, a=None, b=None, x_c=None, alpha=0.):
     z_b2a = z_a_centroid - z_b_centroid
     # Manipulate x_c
     z_c = model.encode(x_c)
-    z_c_interp = z_c + alpha * z_b2a
-    return model.decode(z_c_interp)
+    interp = []
+    for alpha in range[0:1:0.1]:
+        z_c_interp = z_c + alpha * z_b2a
+        interp.append(model.decode(z_c_interp))
+    for v in interp:
+        for i in range(v.shape[0]):
+            plt.matshow(interp[i].cpu(), alpha=1)
+            plt.title("Interpolation")
+            plt.tight_layout(True)
+            plt.savefig(args.interp_figure + ".png")
+            plt.close()
 
 
 # if __name__ == "__main__":
