@@ -30,7 +30,7 @@ def reconstruction(args, model, epoch, dataset):
         else:
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
             _, _, _, x_reconstruct = model(cur_input)
-            x_reconstruct = 128 * x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
+            x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
             axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Reconstruction number " + str(rand_ind[ind]))
@@ -102,10 +102,12 @@ def interpolation(model, x, labels, args, a=None, b=None, x_c=None):
     z_b2a = z_a_centroid - z_b_centroid
     # Manipulate x_c
     z_c = model.encode(x_c)
+    # Run through alpha values
     interp = []
     for alpha in range[0:1:0.1]:
         z_c_interp = z_c + alpha * z_b2a
         interp.append(model.decode(z_c_interp))
+    # Draw interpolation
     for v in interp:
         for i in range(v.shape[0]):
             plt.matshow(interp[i].cpu(), alpha=1)
