@@ -159,7 +159,7 @@ class Decoder(nn.Module):
 # -----------------------------------------------------------
 
 
-class DecodeMLP(GatedMLP):
+class DecodeMLP(Decoder):
 
     def __init__(self, in_size, out_size, hidden_size=512, n_layers=6, type_mod='gated', **kwargs):
         super(DecodeMLP, self).__init__(in_size, np.prod(out_size), hidden_size, n_layers, type_mod, **kwargs)
