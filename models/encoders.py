@@ -15,18 +15,26 @@ from models.layers import GatedDense
 # -----------------------------------------------------------
 
 
-def construct_encoder_decoder(in_size, enc_size, latent_size, hidden_size=512, channels=32, n_layers=6, n_mlp=2,
-                              type_ae='ae', type_mod='gated_cnn', args=None):
+def construct_encoder_decoder(args):
     # Construct encoder and decoder layers for AE models
+    input_size = args.input_size
+    enc_size = args.enc_size
+    latent_size = args.latent_size
+    hidden_size = args.n_hidden
+    channels = 1
+    n_layers = args.n_layers
+    n_mlp = 2
+    type_mod = args.type_mod
+
     # MLP layers
     if type_mod in ['mlp', 'gated_mlp']:
         type_ed = (type_mod == 'mlp') and 'normal' or 'gated'
-        encoder = GatedMLP(np.prod(in_size), enc_size, hidden_size, n_layers, type_ed)
-        decoder = DecodeMLP(latent_size, in_size, hidden_size, n_layers, type_ed)
+        encoder = GatedMLP(np.prod(input_size), enc_size, hidden_size, n_layers, type_ed)
+        decoder = DecodeMLP(latent_size, input_size, hidden_size, n_layers, type_ed)
     elif type_mod in ['cnn', 'gated_cnn', 'res_cnn']:
         type_ed = (type_mod == 'cnn') and 'normal' or ((type_mod == 'res_cnn') and 'residual' or 'gated')
-        encoder = GatedCNN(in_size, enc_size, channels, n_layers, hidden_size, n_mlp, type_ed, args)
-        decoder = DecodeCNN(latent_size, encoder.cnn_size, in_size, channels, n_layers, hidden_size, n_mlp, type_ed,
+        encoder = GatedCNN(input_size, enc_size, channels, n_layers, hidden_size, n_mlp, type_ed, args)
+        decoder = DecodeCNN(latent_size, encoder.cnn_size, input_size, channels, n_layers, hidden_size, n_mlp, type_ed,
                             args)
     return encoder, decoder
 
@@ -161,12 +169,12 @@ class Decoder(nn.Module):
 
 class DecodeMLP(Decoder):
 
-    def __init__(self, in_size, out_size, hidden_size=512, n_layers=6, type_mod='gated', **kwargs):
-        super(DecodeMLP, self).__init__(in_size, np.prod(out_size), hidden_size, n_layers, type_mod, **kwargs)
+    def __init__(self, in_size, out_size, args):
+        super(DecodeMLP, self).__init__(in_size, out_size, args)
         # Record final size
         self.out_size = out_size
 
-    def forward(self, x):
+    def forward(self, x, ctx=None):
         # Use super function
         out = GatedMLP.forward(self, x)
         # Reshape output
@@ -295,3 +303,5 @@ class PianoRollDecoder(Decoder):
     def init_hidden(self, batch_size=1):
         return (torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=self.device),
                 torch.zeros(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=self.device))
+
+

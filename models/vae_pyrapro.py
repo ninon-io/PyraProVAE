@@ -15,7 +15,8 @@ class VaeModel(nn.Module):
 
     def forward(self, x):
         # Encoder pass
-        batch_size = x.size(0)
+        m = nn.ReLU()
+        batch_size = m(x).size(0)
         h_enc, c_enc = self.encoder.init_hidden(batch_size)
         hidden = self.encoder(x, h_enc, c_enc)
         # Reparameterization
@@ -37,14 +38,6 @@ class VaeModel(nn.Module):
 
         return generated_bar
 
-
-# class Encoder(nn.Module): TODO
-#
-#    def __init__(self, input, output):
-#        pass
-#
-#    def forward(self, latent, target):
-#        pass
 
 class HierarchicalEncoder(nn.Module):
     def __init__(self, args):

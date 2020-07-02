@@ -1,7 +1,42 @@
 # https://github.com/acids-ircam/flow_synthesizer/blob/master/code/models/vae/ae.py
-
 import torch
 import torch.nn as nn
+from models.encoders import construct_encoder_decoder
+
+
+class AE(nn.Module):
+
+    def __init__(self, encoder_size, latent_size, args):
+        super(AE, self).__init__()
+        self.encoder, self.decoder = construct_encoder_decoder(args)
+        self.latent_dims = latent_size
+        self.map_latent = nn.Linear(encoder_size, latent_size)
+        self.apply(self.init_parameters)
+
+    def init_parameters(self, m):
+        if type(m) == nn.Linear or type(m) == nn.Conv2d:
+            torch.nn.init.xavier_uniform_(m.weight)
+            m.bias.data.fill_(0.01)
+
+    def encode(self, x):
+        x = self.encoder(x)
+        return x
+
+    def decode(self, z):
+        return self.decoder(z)
+
+    def regularize(self, z):
+        z = self.map_latent(z)
+        return z, torch.zeros(z.shape[0]).to(z.device).mean()
+
+    def forward(self, x):
+        # Encode the inputs
+        z = self.encode(x)
+        # Potential regularization
+        z_tilde, z_loss = self.regularize(z)
+        # Decode the samples
+        x_tilde = self.decode(z_tilde)
+        return x_tilde, z_tilde, z_loss
 
 
 class RegressionAE(nn.Module):
@@ -16,7 +51,7 @@ class RegressionAE(nn.Module):
         self.recons_loss = recons_loss
         self.latent_dims = latent_dims
         self.regression_dims = regression_dims
-        if (regressor is None):
+        if regressor is None:
             self.regression_model = nn.Sequential(
                 nn.Linear(latent_dims, latent_dims * 2),
                 nn.ReLU(), nn.BatchNorm1d(latent_dims * 2),
@@ -47,7 +82,7 @@ class RegressionAE(nn.Module):
             x_tilde, z_tilde, z_loss = self.ae_model(x)
             # Reconstruction loss
             rec_loss = self.recons_loss(x_tilde, x) / (x.shape[1] * x.shape[2])
-            if (self.regressor == 'mlp'):
+            if self.regressor == 'mlp':
                 # Perform regression on params
                 p_tilde = self.regression_model(z_tilde)
                 # Regression loss
@@ -195,39 +230,3 @@ class DisentanglingAE(RegressionAE):
                 full_loss += reg_loss
             full_loss /= len(loader)
         return full_loss
-
-
-class AE(nn.Module):
-
-    def __init__(self, encoder, decoder, encoder_dims, latent_dims):
-        super(AE, self).__init__()
-        self.encoder = encoder
-        self.decoder = decoder
-        self.latent_dims = latent_dims
-        self.map_latent = nn.Linear(encoder_dims, latent_dims)
-        self.apply(self.init_parameters)
-
-    def init_parameters(self, m):
-        if type(m) == nn.Linear or type(m) == nn.Conv2d:
-            torch.nn.init.xavier_uniform_(m.weight)
-            m.bias.data.fill_(0.01)
-
-    def encode(self, x):
-        x = self.encoder(x)
-        return x
-
-    def decode(self, z):
-        return self.decoder(z)
-
-    def regularize(self, z):
-        z = self.map_latent(z)
-        return z, torch.zeros(z.shape[0]).to(z.device).mean()
-
-    def forward(self, x):
-        # Encode the inputs
-        z = self.encode(x)
-        # Potential regularization
-        z_tilde, z_loss = self.regularize(z)
-        # Decode the samples
-        x_tilde = self.decode(z_tilde)
-        return x_tilde, z_tilde, z_loss

@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data.dataset import Dataset
+from torch import nn
 import os
 import numpy as np
 import math
@@ -112,8 +113,8 @@ def import_dataset(args):
         test_set_raw = PianoRollRep(test_path, args.frame_bar, export=False)
         valid_set_raw = PianoRollRep(valid_path, args.frame_bar, export=False)
         # Normalization
-        max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
-        # train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw  # No normalization
+        # max_global, train_set, valid_set, test_set = maximum(train_set_raw, valid_set_raw, test_set_raw)
+        train_set, valid_set, test_set = train_set_raw, valid_set_raw, test_set_raw  # No normalization
         # Get sampler
         train_indices, valid_indices, test_indices = list(range(len(train_set))), list(range(len(valid_set))), \
                                                      list(range(len(test_set)))
