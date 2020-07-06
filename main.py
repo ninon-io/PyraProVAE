@@ -45,7 +45,7 @@ parser.add_argument('--data_augment',   type=int, default=0,        help='use da
 parser.add_argument('--model_path',     type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
 parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
 parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
-parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/', help='path to reconstruction figures')
+parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction_withoutTF/', help='path to reconstruction figures')
 parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi/', help='path to MIDI reconstruction from sampling')
 parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
 # Model Parameters
@@ -95,7 +95,7 @@ print('* Your wonderful model is ' + str(args.model))
 print('* You are using the schwifty ' + str(args.dataset) + ' dataset')
 print(10 * '*******')
 # Handling directories
-os.system('rm -rf /slow-2/ninon/pyrapro/*')
+# os.system('rm -rf /slow-2/ninon/pyrapro/*')
 
 # %%
 # -----------------------------------------------------------
