@@ -38,14 +38,14 @@ class Learn:
         writer = SummaryWriter(args.tensorboard_path)
         print(f"train pass on: {args.device}")
         model.train()
+        self.loss_mean = torch.zeros(1).to(args.device)
+        self.recon_loss_mean = torch.zeros(1).to(args.device)
+        self.kl_div_mean = torch.zeros(1).to(args.device)
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
             log_var = sigma
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp().sqrt())
-            #import matplotlib.pyplot as plt
-            #plt.matshow(x_recon[0].detach())
-            #plt.show()
             recon_loss = criterion(x_recon, x)
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += kl_div.detach()
