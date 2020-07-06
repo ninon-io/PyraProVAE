@@ -59,11 +59,11 @@ parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not to
 parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
 parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
 # Optimization parameters
-parser.add_argument('--batch_size', type=int, default=4, help='input batch size')
+parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
 parser.add_argument('--epochs', type=int, default=30, help='number of epochs to train')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
-parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
+parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
 # parser.add_argument('--log-interval', type=int, default=10, help='how many batches to wait before logging training status')
 # parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')

@@ -43,9 +43,9 @@ class Learn:
             mu, sigma, latent, x_recon = model(x)
             log_var = sigma
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp().sqrt())
-            import matplotlib.pyplot as plt
-            plt.matshow(x_recon[0].detach())
-            plt.show()
+            #import matplotlib.pyplot as plt
+            #plt.matshow(x_recon[0].detach())
+            #plt.show()
             recon_loss = criterion(x_recon, x)
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += kl_div.detach()
