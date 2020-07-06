@@ -1,5 +1,6 @@
 
 #%%
+
 import torch
 from torch.utils.data.dataset import Dataset
 from torch import nn
@@ -15,6 +16,10 @@ from torchvision.transforms import functional
 from .transforms import Transpose, MaskColumns, MaskRows, PitchFlip, TimeFlip
 from guppy import hpy
 import argparse
+from idlelib.pyparse import trans
+import random
+import matplotlib.pyplot as plt
+
 
 def maximum(train_set, valid_set, test_set):
     # Compute the maximum of the dataset
@@ -105,9 +110,6 @@ def import_dataset(args):
     batch = next(iter(train_loader))
     args.input_size = batch[0].shape
     return train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args
-
-import random
-import matplotlib.pyplot as plt
 
 
 # Take the folder of midi files and output Piano-roll representation
