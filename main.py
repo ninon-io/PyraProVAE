@@ -140,7 +140,7 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-#model.apply(init_classic)
+model.apply(init_classic)
 
 # %%
 # -----------------------------------------------------------
