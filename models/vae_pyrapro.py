@@ -158,7 +158,7 @@ class Decoder(nn.Module):  # from Mathieu, simplified decoder
             h0_dec = (torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=args.device),
                       torch.randn(self.num_layers, batch_size, self.hidden_size, dtype=torch.float, device=args.device))
 
-            use_teacher_forcing = False #if random.random() < self.teacher_forcing_ratio else False
+            use_teacher_forcing = False  # if random.random() < self.teacher_forcing_ratio else False
             for note_idx in range(int(self.seq_length/self.num_subsequences)):
                 e = torch.cat((prev_note, subseq_embedding), -1)
                 prev_note, h0_dec = self.decoder_RNN(e, h0_dec)

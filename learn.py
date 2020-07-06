@@ -58,8 +58,8 @@ class Learn:
             # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
             # Optimizes weights
             optimizer.step()
-        if self.iter_train > 10 and self.beta < 1:
-            self.beta += 0.0025
+        # if self.iter_train > 10 and self.beta < 1:
+        #     self.beta += 0.0025
         self.iter_train += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
