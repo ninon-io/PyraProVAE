@@ -24,7 +24,7 @@ from utils import init_classic
 # -----------------------------------------------------------
 parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
-parser.add_argument('--device', type=str, default='cuda:2', help='device cuda or cpu')
+parser.add_argument('--device', type=str, default='cuda:1', help='device cuda or cpu')
 # Data Parameters
 parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/', help='path to midi folder')
 parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
