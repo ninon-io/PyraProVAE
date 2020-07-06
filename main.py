@@ -24,15 +24,25 @@ from utils import init_classic
 # -----------------------------------------------------------
 parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
-parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
+parser.add_argument('--device', type=str, default='cpu', help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets', help='path to midi folder')
+parser.add_argument('--midi_path', type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
 parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
 parser.add_argument("--shuffle_data_set", type=int, default=1, help='')
+# Novel arguments
+parser.add_argument('--frame_bar',      type=int, default=64,       help='put a power of 2 here')
+parser.add_argument('--score_type',     type=str, default='mono',   help='use mono measures or poly ones')
+parser.add_argument('--score_sig',      type=str, default='4_4',    help='rhythmic signature to use (use "all" to bypass)')
+#parser.add_argument('--data_keys',      type=str, default='C',      help='transpose all tracks to a given key')
+parser.add_argument('--data_normalize', type=int, default=1,        help='normalize the data')
+parser.add_argument('--data_binarize',  type=int, default=1,        help='binarize the data')
+parser.add_argument('--data_pitch',     type=int, default=1,        help='constrain pitches in the data')
+parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
+parser.add_argument('--data_augment',   type=int, default=0,        help='use data augmentation')
 # Model Saving and reconstruction
-parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model_nonorm/', help='path to the saved model')
+parser.add_argument('--model_path',     type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model_nonorm/', help='path to the saved model')
 parser.add_argument('--tensorboard_path', type=str, default='output_nonorm/', help='path to the saved model')
 parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights_nonorm/', help='path to the saved model')
 parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction_nonorm/', help='path to reconstruction figures')
@@ -41,7 +51,6 @@ parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapr
 # Model Parameters
 parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
-parser.add_argument('--input_size', type=int, default=100, help='do not touch if you do not know')
 parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
 parser.add_argument('--latent_size', type=int, default=512, help='do not touch if you do not know')
 parser.add_argument('--cond_hidden_size', type=int, default=1024, help='do not touch if you do not know')
@@ -49,11 +58,9 @@ parser.add_argument('--cond_output_dim', type=int, default=512, help='do not tou
 parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not touch if you do not know')
 parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
 parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
-parser.add_argument('--seq_length', type=int, default=128, help='do not touch if you do not know')
 # Optimization parameters
 parser.add_argument('--batch_size', type=int, default=4, help='input batch size')
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
-parser.add_argument('--frame_bar', type=int, default=100, help='correspond to input dim')
 parser.add_argument('--epochs', type=int, default=30, help='number of epochs to train')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
@@ -133,7 +140,7 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-model.apply(init_classic)
+#model.apply(init_classic)
 
 # %%
 # -----------------------------------------------------------
@@ -164,8 +171,8 @@ if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
     criterion = nn.L1Loss()
 elif args.model in ['PyraPro', 'vae_mathieu']:
     criterion = nn.MSELoss()
-else:
-    criterion = nn.CrossEntropyLoss()
+#if (args.data_binarize):
+#    criterion = nn.CrossEntropyLoss()
 
 # %%
 # -----------------------------------------------------------

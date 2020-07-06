@@ -48,7 +48,7 @@ class HierarchicalEncoder(nn.Module):
         self.device = args.device
 
         # Define the LSTM layer
-        self.RNN = nn.LSTM(args.input_size, args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
+        self.RNN = nn.LSTM(args.input_size[0], args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
                            bidirectional=True, dropout=0.6)
 
     def init_hidden(self, batch_size=1):
@@ -58,6 +58,7 @@ class HierarchicalEncoder(nn.Module):
 
     def forward(self, x, h0, c0):
         batch_size = x.shape[0]
+        x = x.transpose(1, 2)
         _, (h, _) = self.RNN(x, (h0, c0))
         h = h.view(self.num_layers, 2, batch_size, -1)
         h = h[-1]
@@ -69,6 +70,14 @@ class HierarchicalDecoder(nn.Module):
     def __init__(self, args):
         super(HierarchicalDecoder, self).__init__()
         self.device = args.device
+        self.num_subsequences = args.num_subsequences
+        self.input_size = args.input_size[0]
+        self.cond_hidden_size = args.cond_hidden_size
+        self.dec_hidden_size = args.dec_hidden_size
+        self.num_layers = args.num_layers
+        self.seq_length = args.input_size[1]
+        self.subseq_size = self.seq_length // self.num_subsequences
+        self.teacher_forcing_ratio = 0.5
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
         self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
@@ -77,21 +86,13 @@ class HierarchicalDecoder(nn.Module):
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.LSTM(args.cond_output_dim + args.input_size, args.dec_hidden_size, batch_first=True,
+        self.decoder_RNN = nn.LSTM(args.cond_output_dim + self.input_size, args.dec_hidden_size, batch_first=True,
                                    num_layers=2,
                                    bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size)
-        self.num_subsequences = args.num_subsequences
-        self.input_size = args.input_size
-        self.cond_hidden_size = args.cond_hidden_size
-        self.dec_hidden_size = args.dec_hidden_size
-        self.num_layers = args.num_layers
-        self.seq_length = args.seq_length
-        self.teacher_forcing_ratio = 0.5
+        self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size)
 
     def forward(self, latent, target, teacher_forcing):
         batch_size = latent.shape[0]
-        subseq_size = self.seq_length // self.num_subsequences
         # Get the initial state of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
         # Divide the latent code in subsequences
@@ -104,23 +105,24 @@ class HierarchicalDecoder(nn.Module):
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=self.device)
-        token = torch.zeros(batch_size, subseq_size, self.input_size, dtype=torch.float, device=self.device)
+        token = torch.zeros(batch_size, self.subseq_size, self.input_size, dtype=torch.float, device=self.device)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
             h0_dec = h0s_dec[:, :, sub, :].contiguous()
             c0_dec = h0s_dec[:, :, sub, :].contiguous()
             # Concat the previous token and the current sub embedding as input
-            dec_input = torch.cat((token, subseq_embedding.unsqueeze(1).expand(-1, subseq_size, -1)), -1)
+            dec_input = torch.cat((token, subseq_embedding.unsqueeze(1).expand(-1, self.subseq_size, -1)), -1)
             # Pass through the decoder
             token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
             token = self.decoder_output(token)
             # Fill the out tensor with the token
-            out[:, sub * subseq_size:((sub + 1) * subseq_size), :] = token
+            out[:, sub * self.subseq_size:((sub + 1) * self.subseq_size), :] = token
             # If teacher_forcing replace the output token by the real one sometimes
             if teacher_forcing:
                 if random.random() <= self.teacher_forcing_ratio:
-                    token = target[:, sub * subseq_size:((sub + 1) * subseq_size), :]
+                    token = target[:, :, sub * self.subseq_size:((sub + 1) * self.subseq_size)].transpose(1, 2)
+        out = out.transpose(1, 2)
         return out
 
 

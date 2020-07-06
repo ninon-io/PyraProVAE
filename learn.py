@@ -43,7 +43,10 @@ class Learn:
             mu, sigma, latent, x_recon = model(x)
             log_var = sigma
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp().sqrt())
-            recon_loss = criterion(x_recon.squeeze(1), x)
+            import matplotlib.pyplot as plt
+            plt.matshow(x_recon[0].detach())
+            plt.show()
+            recon_loss = criterion(x_recon, x)
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += kl_div.detach()
             # Training pass
@@ -52,7 +55,7 @@ class Learn:
             optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.25)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.75)
             # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
             # Optimizes weights
             optimizer.step()
@@ -76,7 +79,7 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-                recon_loss = criterion(x_recon.squeeze(1), x)
+                recon_loss = criterion(x_recon, x)
                 self.recon_loss_mean_validate += recon_loss.detach()
                 self.kl_div_mean_validate += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
@@ -98,7 +101,7 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-                recon_loss = criterion(x_recon.squeeze(1), x)
+                recon_loss = criterion(x_recon, x)
                 self.recon_loss_mean_test += recon_loss.detach()
                 self.kl_div_mean_test += kl_div.detach()
                 loss = recon_loss + self.beta * kl_div
