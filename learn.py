@@ -28,7 +28,6 @@ class Learn:
         self.loss_mean_validate = torch.zeros(1).to(args.device)
         self.recon_loss_mean_validate = torch.zeros(1).to(args.device)
         self.kl_div_mean_validate = torch.zeros(1).to(args.device)
-        self.beta_validate = torch.zeros(1).to(args.device)
 
         self.loss_mean_test = torch.zeros(1).to(args.device)
         self.kl_div_mean_test = torch.zeros(1).to(args.device)
@@ -73,6 +72,9 @@ class Learn:
         writer = SummaryWriter(args.tensorboard_path)
         print(f"validation pass on: {args.device}")
         model.eval()
+        self.loss_mean_validate = torch.zeros(1).to(args.device)
+        self.recon_loss_mean_validate = torch.zeros(1).to(args.device)
+        self.kl_div_mean_validate = torch.zeros(1).to(args.device)
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.validate_loader), total=len(self.validate_set) // args.batch_size):
                 x = x.to(args.device)
@@ -95,6 +97,9 @@ class Learn:
         writer = SummaryWriter(args.tensorboard_path)
         print(f"test pass on: {args.device}")
         model.eval()
+        self.loss_mean_test = torch.zeros(1).to(args.device)
+        self.kl_div_mean_test = torch.zeros(1).to(args.device)
+        self.recon_loss_mean_test = torch.zeros(1).to(args.device)
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // args.batch_size):
                 x = x.to(args.device)
