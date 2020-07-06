@@ -24,9 +24,9 @@ from utils import init_classic
 # -----------------------------------------------------------
 parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
-parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
+parser.add_argument('--device', type=str, default='cpu', help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/', help='path to midi folder')
+parser.add_argument('--midi_path', type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
 parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
@@ -58,6 +58,7 @@ parser.add_argument('--cond_output_dim', type=int, default=512, help='do not tou
 parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not touch if you do not know')
 parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
 parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
+parser.add_argument('--num_classes', type=int, default=8, help='number of velocity classes')
 # Optimization parameters
 parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
@@ -172,6 +173,7 @@ if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
 elif args.model in ['PyraPro', 'vae_mathieu']:
     criterion = nn.MSELoss()
 #if (args.data_binarize):
+#    args.num_classes = 2
 #    criterion = nn.CrossEntropyLoss()
 
 # %%

@@ -4,7 +4,7 @@ import random
 
 
 class VAEPianoroll(nn.Module):
-    def __init__(self, encoder, decoder, args, teacher_forcing=True):
+    def __init__(self, encoder, decoder, args, teacher_forcing=False):
         super(VAEPianoroll, self).__init__()
         self.tf = teacher_forcing
         self.device = args.device
@@ -51,19 +51,20 @@ class Encoder(nn.Module):
 
 
 class EncoderPianoroll(Encoder):
-    def __init__(self, input_size, enc_size, args):
+    def __init__(self, args):
         """"" This initializes the encoder"""
-        super(EncoderPianoroll, self).__init__(input_size, enc_size, args)
-        self.RNN = nn.LSTM(self.input_size, self.enc_size, batch_first=True, num_layers=args.num_layers,
+        super(EncoderPianoroll, self).__init__(args.input_size, args.enc_hidden_size, args)
+        self.RNN = nn.LSTM(self.input_size[0], self.enc_size, batch_first=True, num_layers=args.num_layers,
                            bidirectional=True,
                            dropout=0.6)
         self.num_layers = args.num_layers
         self.hidden_size = args.enc_hidden_size
         self.latent_size = args.latent_size
+        self.device = args.device
 
-    def forward(self, x, ctx = None):
-        h0, c0 = ctx 
+    def forward(self, x, h0, c0):
         batch_size = x.shape[0]
+        x = x.transpose(1, 2)
         _, (h, _) = self.RNN(x, (h0, c0))
         h = h.view(self.num_layers, 2, batch_size, -1)
         h = h[-1]
@@ -88,16 +89,16 @@ class DecoderPianoroll(nn.Module):
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.LSTM(args.cond_output_dim + args.input_size, args.dec_hidden_size, batch_first=True,
+        self.decoder_RNN = nn.LSTM(args.cond_output_dim + args.input_size[0], args.dec_hidden_size, batch_first=True,
                                    num_layers=2,
                                    bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size)
+        self.decoder_output = nn.Linear(args.dec_hidden_size, args.input_size[0])
         self.num_subsequences = args.num_subsequences
-        self.input_size = args.input_size
+        self.input_size = args.input_size[0]
         self.cond_hidden_size = args.cond_hidden_size
         self.dec_hidden_size = args.dec_hidden_size
         self.num_layers = args.num_layers
-        self.seq_length = args.seq_length
+        self.seq_length = args.input_size[1]
         self.teacher_forcing_ratio = 0.5
 
     def forward(self, latent, target, teacher_forcing):
@@ -132,4 +133,5 @@ class DecoderPianoroll(nn.Module):
             if teacher_forcing:
                 if random.random() <= self.teacher_forcing_ratio:
                     token = target[:, sub * subseq_size:((sub + 1) * subseq_size), :]
+        out = out.transpose(1, 2)
         return out

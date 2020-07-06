@@ -43,6 +43,10 @@ class Learn:
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
+            #import matplotlib.pyplot as plt
+            #plt.figure()
+            #plt.matshow(x_recon[0].detach())
+            #plt.show()
             log_var = sigma
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = criterion(x_recon, x)

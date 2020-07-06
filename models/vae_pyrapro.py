@@ -4,7 +4,7 @@ import random
 
 
 class VaeModel(nn.Module):
-    def __init__(self, encoder, decoder, args, teacher_forcing=True):
+    def __init__(self, encoder, decoder, args, teacher_forcing=False):
         super(VaeModel, self).__init__()
         self.tf = teacher_forcing
         self.device = args.device
