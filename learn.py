@@ -43,13 +43,19 @@ class Learn:
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
+            #print(x.shape)
             #import matplotlib.pyplot as plt
+            #plt.figure()
+            #plt.matshow(x[0])
+            #plt.show()
             #plt.figure()
             #plt.matshow(x_recon[0].detach())
             #plt.show()
             log_var = sigma
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
             recon_loss = criterion(x_recon, x)
+            #if (args.model == 'vae_kawai'):
+            #    recon_loss = F.nll_loss(torch.softmax(x_recon, dim=1), torch.argmax(x, dim=1))
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += kl_div.detach()
             # Training pass
@@ -58,7 +64,7 @@ class Learn:
             optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.75)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.)
             # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
             # Optimizes weights
             optimizer.step()

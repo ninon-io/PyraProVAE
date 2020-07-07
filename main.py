@@ -13,7 +13,9 @@ from reconstruction import reconstruction, sampling
 # Import models
 from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
+from models.vae_gru import VAEKawai
 from models.ae import RegressionAE, DisentanglingAE, AE
+from torch.nn import functional as F
 from utils import init_classic
 
 # %%
@@ -24,9 +26,9 @@ from utils import init_classic
 # -----------------------------------------------------------
 parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
-parser.add_argument('--device', type=str, default='cuda:1', help='device cuda or cpu')
+parser.add_argument('--device', type=str, default='cpu', help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/', help='path to midi folder')
+parser.add_argument('--midi_path', type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
 parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
@@ -49,7 +51,7 @@ parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/n
 parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi/', help='path to MIDI reconstruction from sampling')
 parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
 # Model Parameters
-parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
+parser.add_argument("--model", type=str, default="vae_kawai", help='PyraPro | vae_mathieu | ae')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
 parser.add_argument('--latent_size', type=int, default=512, help='do not touch if you do not know')
@@ -129,6 +131,9 @@ elif args.model == 'vae_mathieu':
     decoder = DecoderPianoroll(args)
     model = VAEPianoroll(encoder=encoder, decoder=decoder, args=args).float()
 
+elif args.model == 'vae_kawai':
+    model = VAEKawai(args.input_size[0], 512, 128, args.input_size[1], args.device, args.num_classes)
+
 elif args.model == 'ae':
     encoder = EncoderPianoroll(args)
     decoder = DecoderPianoroll(args)
@@ -171,6 +176,8 @@ print('[Creating criterion]')
 if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
     criterion = nn.L1Loss()
 elif args.model in ['PyraPro', 'vae_mathieu']:
+    criterion = nn.MSELoss()
+elif args.model in ['vae_kawai']:
     criterion = nn.MSELoss()
 #if (args.data_binarize):
 #    args.num_classes = 2

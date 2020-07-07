@@ -78,18 +78,20 @@ class HierarchicalDecoder(nn.Module):
         self.seq_length = args.input_size[1]
         self.subseq_size = self.seq_length // self.num_subsequences
         self.teacher_forcing_ratio = 0.5
+        self.num_classes = args.num_classes
         self.tanh = nn.Tanh()
         self.sigmoid = torch.nn.Sigmoid()
+        self.relu = nn.ReLU()
         self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
         self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True,
                                      num_layers=2,
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.LSTM(args.cond_output_dim + self.input_size, args.dec_hidden_size, batch_first=True,
+        self.decoder_RNN = nn.LSTM(args.cond_output_dim + (self.input_size * self.num_classes), args.dec_hidden_size, batch_first=True,
                                    num_layers=2,
                                    bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size)
+        self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size * self.num_classes)
 
     def forward(self, latent, target, teacher_forcing):
         batch_size = latent.shape[0]
@@ -104,8 +106,8 @@ class HierarchicalDecoder(nn.Module):
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=self.device)
-        token = torch.zeros(batch_size, self.subseq_size, self.input_size, dtype=torch.float, device=self.device)
+        out = torch.zeros(batch_size, self.seq_length, self.input_size * self.num_classes, dtype=torch.float, device=self.device)
+        token = torch.zeros(batch_size, self.subseq_size, self.input_size * self.num_classes, dtype=torch.float, device=self.device)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
@@ -116,6 +118,7 @@ class HierarchicalDecoder(nn.Module):
             # Pass through the decoder
             token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
             token = self.decoder_output(token)
+            token = self.relu(token)
             # Fill the out tensor with the token
             out[:, sub * self.subseq_size:((sub + 1) * self.subseq_size), :] = token
             # If teacher_forcing replace the output token by the real one sometimes
@@ -123,6 +126,7 @@ class HierarchicalDecoder(nn.Module):
                 if random.random() <= self.teacher_forcing_ratio:
                     token = target[:, :, sub * self.subseq_size:((sub + 1) * self.subseq_size)].transpose(1, 2)
         out = out.transpose(1, 2)
+        out = out.view(batch_size, self.num_classes, self.input_size, -1)
         return out
 
 
