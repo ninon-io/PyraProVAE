@@ -131,7 +131,7 @@ class PianoRollRep(Dataset):
         self.training = training
         # Data augmentation
         self.augment = augment
-        self.transform = transform.RandomApply([transform.RandomChoice([Transpose(6), MaskColumns(), MaskRows(), TimeFlip(), PitchFlip()])], p=.5)
+        self.transform = transform.RandomApply([transform.RandomChoice([Transpose(6), MaskRows(), TimeFlip(), PitchFlip()])], p=.5)
         # Base values for eventual normalization
         self.min_p = 0
         self.max_p = 128

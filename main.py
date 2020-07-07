@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
 parser.add_argument('--device', type=str, default='cuda:1', help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/', help='path to midi folder')
+parser.add_argument('--midi_path', type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
 parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
@@ -42,7 +42,7 @@ parser.add_argument('--data_normalize', type=int, default=1,        help='normal
 parser.add_argument('--data_binarize',  type=int, default=1,        help='binarize the data')
 parser.add_argument('--data_pitch',     type=int, default=1,        help='constrain pitches in the data')
 parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
-parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
+parser.add_argument('--data_augment',   type=int, default=0,        help='use data augmentation')
 # Model Saving and reconstruction
 parser.add_argument('--model_path',     type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
 parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
@@ -51,7 +51,7 @@ parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/n
 parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi/', help='path to MIDI reconstruction from sampling')
 parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
 # Model Parameters
-parser.add_argument("--model", type=str, default="PyraPro", help='PyraPro | vae_mathieu | ae')
+parser.add_argument("--model", type=str, default="vae_kawai", help='PyraPro | vae_mathieu | ae')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
 parser.add_argument('--latent_size', type=int, default=512, help='do not touch if you do not know')
@@ -148,7 +148,7 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-model.apply(init_classic)
+#model.apply(init_classic)
 
 # %%
 # -----------------------------------------------------------
