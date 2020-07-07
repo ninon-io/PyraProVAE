@@ -30,7 +30,9 @@ def reconstruction(args, model, epoch, dataset):
         else:
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
             _, _, _, x_reconstruct = model(cur_input)
-            x_reconstruct = x_reconstruct.squeeze(0).squeeze(0).detach().cpu()
+            x_reconstruct = x_reconstruct[0].detach().cpu()
+            if (args.num_classes > 1):
+                x_reconstruct = torch.argmax(x_reconstruct, dim=0)
             axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
             axi.set_title("Reconstruction number " + str(rand_ind[ind]))

@@ -46,13 +46,18 @@ class Learn:
             #print(x.shape)
             #import matplotlib.pyplot as plt
             #plt.figure()
-            #plt.matshow(x[0])
+            #if (args.num_classes > 1):
+            #    plt.matshow(torch.argmax(x_recon[0], dim=0).detach())
+            #else:
+            #    plt.matshow(x_recon[0].detach())
             #plt.show()
             #plt.figure()
-            #plt.matshow(x_recon[0].detach())
+            #plt.matshow(x[0].detach())
             #plt.show()
             log_var = sigma
             kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+            if (args.num_classes > 1):
+                x = x.long()
             recon_loss = criterion(x_recon, x)
             #if (args.model == 'vae_kawai'):
             #    recon_loss = F.nll_loss(torch.softmax(x_recon, dim=1), torch.argmax(x, dim=1))
@@ -91,6 +96,8 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                if (args.num_classes > 1):
+                    x = x.long()
                 recon_loss = criterion(x_recon, x)
                 self.recon_loss_mean_validate += recon_loss.detach()
                 self.kl_div_mean_validate += kl_div.detach()
@@ -116,6 +123,8 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                if (args.num_classes > 1):
+                    x = x.long()
                 recon_loss = criterion(x_recon, x)
                 self.recon_loss_mean_test += recon_loss.detach()
                 self.kl_div_mean_test += kl_div.detach()

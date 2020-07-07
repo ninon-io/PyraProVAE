@@ -144,7 +144,7 @@ class VAEKawai(nn.Module):
                  z_dims,
                  n_step,
                  device,
-                 n_classes,
+                 num_classes,
                  k=1000):
         super(VAEKawai, self).__init__()
         self.gru_0 = nn.GRU(
@@ -155,14 +155,15 @@ class VAEKawai(nn.Module):
         self.linear_mu = nn.Linear(hidden_dims * 2, z_dims)
         self.linear_var = nn.Linear(hidden_dims * 2, z_dims)
         self.grucell_1 = nn.GRUCell(
-            z_dims + vocab_size,
+            z_dims + (vocab_size * num_classes),
             hidden_dims)
         self.grucell_2 = nn.GRUCell(hidden_dims, hidden_dims)
         self.linear_init_1 = nn.Linear(z_dims, hidden_dims)
-        self.linear_out_1 = nn.Linear(hidden_dims, vocab_size)
+        self.linear_out_1 = nn.Linear(hidden_dims, vocab_size * num_classes)
         self.n_step = n_step
         self.vocab_size = vocab_size
         self.hidden_dims = hidden_dims
+        self.num_classes = num_classes
         self.eps = 1
         self.sample = None
         self.iteration = 0
@@ -199,7 +200,7 @@ class VAEKawai(nn.Module):
         return z, mu, var
 
     def decoder(self, z):
-        out = torch.zeros((z.size(0), self.vocab_size))
+        out = torch.zeros((z.size(0), (self.vocab_size * self.num_classes)))
         out[:, -1] = 1.
         x, hx = [], [None, None]
         t = torch.tanh(self.linear_init_1(z))
@@ -233,7 +234,11 @@ class VAEKawai(nn.Module):
         x_indices = x
         #x = torch.eye(self.vocab_size)[x].to(self.device)
         if self.training:
-            self.sample = x
+            if (self.num_classes > 1):
+                self.sample = torch.nn.functional.one_hot(x.long())
+                self.sample = self.sample.view(b, s, -1)
+            else:
+                self.sample = x
             self.iteration += 1
         dis, mu, var = self.encoder(x)
         z = dis.rsample()
@@ -241,4 +246,6 @@ class VAEKawai(nn.Module):
         #preds = torch.argmax(recon, dim=-1)
         #loss = F.nll_loss(recon.reshape(-1, recon.size(-1)), x_indices.reshape(-1))
         recon = recon.transpose(1, 2)
+        if (self.num_classes > 1):
+            recon = recon.view(b, self.num_classes, self.vocab_size, -1)
         return mu, var, z, recon

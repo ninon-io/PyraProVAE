@@ -126,7 +126,8 @@ class HierarchicalDecoder(nn.Module):
                 if random.random() <= self.teacher_forcing_ratio:
                     token = target[:, :, sub * self.subseq_size:((sub + 1) * self.subseq_size)].transpose(1, 2)
         out = out.transpose(1, 2)
-        out = out.view(batch_size, self.num_classes, self.input_size, -1)
+        if (self.num_classes > 1):
+            out = out.view(batch_size, self.num_classes, self.input_size, -1)
         return out
 
 

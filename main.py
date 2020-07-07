@@ -42,12 +42,12 @@ parser.add_argument('--data_normalize', type=int, default=1,        help='normal
 parser.add_argument('--data_binarize',  type=int, default=1,        help='binarize the data')
 parser.add_argument('--data_pitch',     type=int, default=1,        help='constrain pitches in the data')
 parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
-parser.add_argument('--data_augment',   type=int, default=0,        help='use data augmentation')
+parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
 # Model Saving and reconstruction
 parser.add_argument('--model_path',     type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
 parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
-parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
-parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction_mathieu/', help='path to reconstruction figures')
+parser.add_argument('--weights_path', type=str, default='slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
+parser.add_argument('--figure_reconstruction_path', type=str, default='slow-2/ninon/pyrapro/reconstruction_mathieu/', help='path to reconstruction figures')
 parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi/', help='path to MIDI reconstruction from sampling')
 parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
 # Model Parameters
@@ -60,9 +60,9 @@ parser.add_argument('--cond_output_dim', type=int, default=512, help='do not tou
 parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not touch if you do not know')
 parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
 parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
-parser.add_argument('--num_classes', type=int, default=8, help='number of velocity classes')
+parser.add_argument('--num_classes', type=int, default=2, help='number of velocity classes')
 # Optimization parameters
-parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
+parser.add_argument('--batch_size', type=int, default=16, help='input batch size')
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
 parser.add_argument('--epochs', type=int, default=150, help='number of epochs to train')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
@@ -98,6 +98,8 @@ print('* You are using the schwifty ' + str(args.dataset) + ' dataset')
 print(10 * '*******')
 # Handling directories
 # os.system('rm -rf /slow-2/ninon/pyrapro/*')
+if (args.data_binarize and args.num_classes > 1):
+    args.num_classes = 2
 
 # %%
 # -----------------------------------------------------------
@@ -175,13 +177,10 @@ print('[Creating criterion]')
 # Losses
 if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
     criterion = nn.L1Loss()
-elif args.model in ['PyraPro', 'vae_mathieu']:
+elif args.model in ['PyraPro', 'vae_mathieu', 'vae_kawai']:
     criterion = nn.MSELoss()
-elif args.model in ['vae_kawai']:
-    criterion = nn.MSELoss()
-#if (args.data_binarize):
-#    args.num_classes = 2
-#    criterion = nn.CrossEntropyLoss()
+if args.num_classes > 1:
+    criterion = nn.NLLLoss()
 
 # %%
 # -----------------------------------------------------------

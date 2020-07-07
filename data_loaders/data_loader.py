@@ -57,8 +57,8 @@ def import_dataset(args):
         valid_path = base_path + "/valid"
         # Import each of the set
         train_set = PianoRollRep(train_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export)
-        test_set = PianoRollRep(test_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export)
-        valid_set = PianoRollRep(valid_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export)
+        test_set = PianoRollRep(test_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export, False)
+        valid_set = PianoRollRep(valid_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export, False)
         # Normalization
         if (args.data_normalize):
             min_v, max_v, min_p, max_p, vals = stats_dataset([train_set, valid_set, test_set])
@@ -114,7 +114,7 @@ def import_dataset(args):
 
 # Take the folder of midi files and output Piano-roll representation
 class PianoRollRep(Dataset):
-    def __init__(self, root_dir, frame_bar=64, score_type='all', score_sig='all', binarize=False, augment=False, export=False):
+    def __init__(self, root_dir, frame_bar=64, score_type='all', score_sig='all', binarize=False, augment=False, export=False, training=True):
         # path directory with midi files
         self.root_dir = root_dir
         # files names .mid
@@ -127,6 +127,8 @@ class PianoRollRep(Dataset):
         self.score_sig = score_sig
         # Binarize the data or not
         self.binarize = binarize
+        # Check if this is a train set
+        self.training = training
         # Data augmentation
         self.augment = augment
         self.transform = transform.RandomApply([transform.RandomChoice([Transpose(6), MaskColumns(), MaskRows(), TimeFlip(), PitchFlip()])], p=.5)
@@ -159,7 +161,7 @@ class PianoRollRep(Dataset):
         if (self.binarize):
             cur_track[cur_track > 0] = 1
         output = cur_track[self.min_p:(self.max_p + 1), :]
-        if (self.augment):
+        if (self.augment and self.training):
             output = self.transform(output)
         return output
 
