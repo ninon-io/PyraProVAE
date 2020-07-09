@@ -42,7 +42,7 @@ parser.add_argument('--data_normalize', type=int, default=1,        help='normal
 parser.add_argument('--data_binarize',  type=int, default=1,        help='binarize the data')
 parser.add_argument('--data_pitch',     type=int, default=1,        help='constrain pitches in the data')
 parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
-parser.add_argument('--data_augment',   type=int, default=0,        help='use data augmentation')
+parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
 # Model Saving and reconstruction
 parser.add_argument('--model_path',     type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
 parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
@@ -62,7 +62,7 @@ parser.add_argument('--num_layers', type=int, default=2, help='do not touch if y
 parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
 parser.add_argument('--num_classes', type=int, default=2, help='number of velocity classes')
 # Optimization parameters
-parser.add_argument('--batch_size', type=int, default=16, help='input batch size')
+parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
 parser.add_argument('--epochs', type=int, default=150, help='number of epochs to train')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
@@ -180,7 +180,7 @@ if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
 elif args.model in ['PyraPro', 'vae_mathieu', 'vae_kawai']:
     criterion = nn.MSELoss()
 if args.num_classes > 1:
-    criterion = nn.NLLLoss()
+    criterion = nn.NLLLoss(reduction='sum')
 
 # %%
 # -----------------------------------------------------------

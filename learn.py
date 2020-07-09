@@ -55,7 +55,7 @@ class Learn:
             #plt.matshow(x[0].detach())
             #plt.show()
             log_var = sigma
-            kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+            kl_div = torch.mean(- 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp(), 1))
             if (args.num_classes > 1):
                 x = x.long()
             recon_loss = criterion(x_recon, x)
@@ -73,8 +73,10 @@ class Learn:
             # torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=0.5)
             # Optimizes weights
             optimizer.step()
-        # if self.iter_train > 10 and self.beta < 1:
-        #     self.beta += 0.0025
+        if self.iter_train > 10 and self.beta < 1:
+             self.beta += 0.005
+        print(model.eps)
+        print(model.k)
         self.iter_train += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
@@ -95,7 +97,7 @@ class Learn:
                 x = x.to(args.device)
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
-                kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                kl_div = torch.sum(- 1 / 2 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp(), 1))
                 if (args.num_classes > 1):
                     x = x.long()
                 recon_loss = criterion(x_recon, x)
@@ -122,7 +124,7 @@ class Learn:
                 x = x.to(args.device)
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
-                kl_div = - 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                kl_div = torch.sum(- 1 / 2 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp(), 1))
                 if (args.num_classes > 1):
                     x = x.long()
                 recon_loss = criterion(x_recon, x)

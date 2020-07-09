@@ -81,6 +81,7 @@ class VAE(nn.Module):
             x.append(out)
             if self.training:
                 p = torch.rand(1).item()
+                print(self.eps)
                 if p < self.eps:
                     out = self.rhythm_sample[:, i, :]
                 else:
@@ -145,7 +146,7 @@ class VAEKawai(nn.Module):
                  n_step,
                  device,
                  num_classes,
-                 k=1000):
+                 k=400):
         super(VAEKawai, self).__init__()
         self.gru_0 = nn.GRU(
             vocab_size,
@@ -213,7 +214,7 @@ class VAEKawai(nn.Module):
             if i == 0:
                 hx[1] = hx[0]
             hx[1] = self.grucell_2(hx[0], hx[1])
-            out = F.log_softmax(self.linear_out_1(hx[1]), 1)
+            out = F.log_softmax(self.linear_out_1(hx[1]).view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
             if self.training:
                 p = torch.rand(1).item()
@@ -222,7 +223,7 @@ class VAEKawai(nn.Module):
                 else:
                     out = self._sampling(out)
                 self.eps = self.k / \
-                    (self.k + torch.exp(self.iteration / self.k))
+                    (self.k + torch.exp(float(self.iteration) / self.k))
             else:
                 out = self._sampling(out)
         return torch.stack(x, 1)
