@@ -8,6 +8,7 @@ import os
 import torch
 from torch import distributions
 from data_loaders.data_loader import maximum
+import argparse
 
 
 def reconstruction(args, model, epoch, dataset):
@@ -19,7 +20,7 @@ def reconstruction(args, model, epoch, dataset):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
 
     # generate random index for testing random data
-    rand_ind = np.array([random.randint(0, len(dataset)) for i in range(nrows)])
+    rand_ind = np.array([random.randint(0, len(dataset-1)) for i in range(nrows)])
     ind = 0
     for i, axi in enumerate(ax.flat):
         if i % 2 == 0:
@@ -31,7 +32,7 @@ def reconstruction(args, model, epoch, dataset):
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
             _, _, _, x_reconstruct = model(cur_input)
             x_reconstruct = x_reconstruct[0].detach().cpu()
-            if (args.num_classes > 1):
+            if args.num_classes > 1:
                 x_reconstruct = torch.argmax(x_reconstruct, dim=0)
             axi.matshow(x_reconstruct, alpha=1)
             # write row/col indices as axes' title for identification
@@ -119,17 +120,16 @@ def interpolation(model, x, labels, args, a=None, b=None, x_c=None):
             plt.close()
 
 
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser(description='Reconstruction')
-#     parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
-#     parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
-#                         help='path to midi folder')
-#     parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/',
-#                         help='path to the saved model')
-#     parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
-#                         help='path to reconstruction figures')
-#     args = parser.parse_args()
-#     epoch = 0
-#     print("DEBUG BEGIN")
-#     reconstruction(args, model, epoch)
-#     print("DEBUG END")
+ if __name__ == "__main__":
+     parser = argparse.ArgumentParser(description='Reconstruction')
+     parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
+     parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/maestro_folders/train',
+                         help='path to midi folder')
+     parser.add_argument('--model_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/',
+                         help='path to the saved model')
+     parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction/',
+                         help='path to reconstruction figures')
+     args = parser.parse_args()
+     print("DEBUG BEGIN")
+     sampling(args)
+     print("DEBUG END")

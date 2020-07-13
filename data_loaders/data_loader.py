@@ -1,5 +1,4 @@
-
-#%%
+# %%
 
 import torch
 from torch.utils.data.dataset import Dataset
@@ -56,15 +55,18 @@ def import_dataset(args):
         test_path = base_path + "/test"
         valid_path = base_path + "/valid"
         # Import each of the set
-        train_set = PianoRollRep(train_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export)
-        test_set = PianoRollRep(test_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export, False)
-        valid_set = PianoRollRep(valid_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize, args.data_augment, args.data_export, False)
+        train_set = PianoRollRep(train_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize,
+                                 args.data_augment, args.data_export)
+        test_set = PianoRollRep(test_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize,
+                                args.data_augment, args.data_export, False)
+        valid_set = PianoRollRep(valid_path, args.frame_bar, args.score_type, args.score_sig, args.data_binarize,
+                                 args.data_augment, args.data_export, False)
         # Normalization
-        if (args.data_normalize):
+        if args.data_normalize:
             min_v, max_v, min_p, max_p, vals = stats_dataset([train_set, valid_set, test_set])
             for sampler in [train_set, valid_set, test_set]:
                 sampler.max_v = max_v
-                if (args.data_pitch):
+                if args.data_pitch:
                     sampler.min_p = min_p
                     sampler.max_p = max_p
         # Get sampler
@@ -114,11 +116,13 @@ def import_dataset(args):
 
 # Take the folder of midi files and output Piano-roll representation
 class PianoRollRep(Dataset):
-    def __init__(self, root_dir, frame_bar=64, score_type='all', score_sig='all', binarize=False, augment=False, export=False, training=True):
+    def __init__(self, root_dir, frame_bar=64, score_type='all', score_sig='all', binarize=False, augment=False,
+                 export=False, training=True):
         # path directory with midi files
         self.root_dir = root_dir
         # files names .mid
-        self.midi_files = np.array([files_names for files_names in os.listdir(root_dir) if (files_names.endswith('.midi') or files_names.endswith('.mid'))])
+        self.midi_files = np.array([files_names for files_names in os.listdir(root_dir) if
+                                    (files_names.endswith('.midi') or files_names.endswith('.mid'))])
         # number of frame per bar
         self.frame_bar = frame_bar
         # Type of score (mono or all)
@@ -131,13 +135,15 @@ class PianoRollRep(Dataset):
         self.training = training
         # Data augmentation
         self.augment = augment
-        self.transform = transform.RandomApply([transform.RandomChoice([Transpose(6), MaskRows(), TimeFlip(), PitchFlip()])], p=.3)
+        self.transform = transform.RandomApply(
+            [transform.RandomChoice([Transpose(6), MaskRows(), TimeFlip(), PitchFlip()])], p=.3)
         # Base values for eventual normalization
         self.min_p = 0
         self.max_p = 128
         self.max_v = 1.
         # path to the sliced piano-roll
-        self.bar_dir = root_dir + "/piano_roll_bar_" + str(self.frame_bar) + '_' + self.score_type + '_' + self.score_sig
+        self.bar_dir = root_dir + "/piano_roll_bar_" + str(
+            self.frame_bar) + '_' + self.score_type + '_' + self.score_sig
         if not os.path.exists(self.bar_dir):
             os.mkdir(self.bar_dir)
             self.bar_export()
@@ -158,10 +164,10 @@ class PianoRollRep(Dataset):
     def __getitem__(self, index):
         cur_track = torch.load(self.bar_dir + '/' + self.bar_files[index])
         cur_track /= self.max_v
-        if (self.binarize):
+        if self.binarize:
             cur_track[cur_track > 0] = 1
         output = cur_track[self.min_p:(self.max_p + 1), :]
-        if (self.augment and self.training):
+        if self.augment and self.training:
             output = self.transform(output)
         return output
 
@@ -174,7 +180,7 @@ class PianoRollRep(Dataset):
 
     # Pre-processing of the data: loading in a sliced piano roll
     def bar_export(self):
-        if (self.score_sig != 'all'):
+        if self.score_sig != 'all':
             sig_split = self.score_sig.split('_')
             target_sig_n = int(sig_split[0])
             target_sig_d = int(sig_split[1])
@@ -184,23 +190,23 @@ class PianoRollRep(Dataset):
             ts_n = midi_data.time_signature_changes[0].numerator
             ts_d = midi_data.time_signature_changes[0].denominator
             # Eventually check for time signature
-            if (self.score_sig != 'all' and (ts_n != target_sig_n or ts_d != target_sig_d)):
-                print('Signature is [%d/%d] - skipped as not a 4/4 track'%(ts_n, ts_d))
+            if self.score_sig != 'all' and (ts_n != target_sig_n or ts_d != target_sig_d):
+                print('Signature is [%d/%d] - skipped as not a 4/4 track' % (ts_n, ts_d))
                 continue
             downbeats = midi_data.get_downbeats()
             bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
             fs = int(self.frame_bar / round(bar_time))
             # Find a mono track if we only want a mono dataset
-            if (self.score_type == 'mono'):
+            if self.score_type == 'mono':
                 found_track = 0
                 for i in range(len(midi_data.instruments)):
                     piano_roll = midi_data.instruments[i].get_piano_roll(fs=fs)
                     piano_roll_bin = piano_roll.copy()
                     piano_roll_bin[piano_roll_bin > 0] = 1
-                    if (np.sum(np.sum(piano_roll_bin, axis=0) > 1) == 0):
+                    if np.sum(np.sum(piano_roll_bin, axis=0) > 1) == 0:
                         found_track = 1
                         break
-                if (found_track == 0):
+                if found_track == 0:
                     continue
             else:
                 # Otherwise take all tracks at once
@@ -217,6 +223,7 @@ class PianoRollRep(Dataset):
                 sliced_piano_roll = torch.from_numpy(sliced_piano_roll).float()
                 torch.save(sliced_piano_roll, self.bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
 
+
 def test_data(args, batch):
     # Plot settings
     nrows, ncols = 2, 2  # array of sub-plots
@@ -228,63 +235,66 @@ def test_data(args, batch):
         axi.matshow(piano_roll, alpha=1)
     fig.show()
 
+
 def stats_dataset(loaders):
     max_v, min_v, val, pitch_on, count_mono, count_poly = 0, 3000, {}, [], 0, 0
-    for cur_loader in loaders: 
+    for cur_loader in loaders:
         for x in cur_loader:
             max_v = max((torch.max(x), max_v))
             min_v = min((torch.min(x), min_v))
-            val_t, counts = torch.unique(x, return_counts = True)
+            val_t, counts = torch.unique(x, return_counts=True)
             for i, v in enumerate(val_t):
                 v_c = int(v.item())
-                if (val.get(v_c) is None):
+                if val.get(v_c) is None:
                     val[v_c] = 0
                 val[v_c] += counts[i]
-            x_sum = torch.sum(x, dim = 1)
+            x_sum = torch.sum(x, dim=1)
             pitch_on.append(torch.nonzero(x_sum))
             x[x > 0] = 1
-            if (torch.sum(torch.sum(x, dim=0) > 1)):
+            if torch.sum(torch.sum(x, dim=0) > 1):
                 count_poly += 1
             else:
                 count_mono += 1
     pitch_on = torch.unique(torch.cat(pitch_on))
     print('*' * 32)
     print('Dataset summary')
-    print('Min : %d'%(min_v))
-    print('Max : %d'%(max_v))
+    print('Min : %d' % min_v)
+    print('Max : %d' % max_v)
     print('Velocity values')
     print(val)
     print('Pitch ons')
     print(pitch_on)
-    print('Poly : %d'%(count_poly))
-    print('Mono : %d'%(count_mono))
+    print('Poly : %d' % count_poly)
+    print('Mono : %d' % count_mono)
     return float(min_v), float(max_v), int(min(pitch_on)), int(max(pitch_on)), val
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Dataloader')
     # Data Parameters
-    parser.add_argument('--midi_path',  type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
+    parser.add_argument('--midi_path', type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
     parser.add_argument('--batch_size', type=int, default=4, help='input batch size')
-    parser.add_argument('--subsample',  type=int, default=0, help='train on subset')
-    parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
+    parser.add_argument('--subsample', type=int, default=0, help='train on subset')
+    parser.add_argument("--test_size", type=float, default=0.2, help="% of data used in test set")
     parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
-    parser.add_argument("--dataset",    type=str, default="nottingham", help="maestro | midi_folder")
+    parser.add_argument("--dataset", type=str, default="nottingham", help="maestro | midi_folder")
     parser.add_argument("--shuffle_data_set", type=str, default=True, help='')
-    parser.add_argument('--nbworkers',  type=int, default=3, help='')
+    parser.add_argument('--nbworkers', type=int, default=3, help='')
     # Novel arguments
-    parser.add_argument('--frame_bar',      type=int, default=64,       help='put a power of 2 here')
-    parser.add_argument('--score_type',     type=str, default='all',   help='use mono measures or poly ones')
-    parser.add_argument('--score_sig',      type=str, default='all',    help='rhythmic signature to use (use "all" to bypass)')
-    #parser.add_argument('--data_keys',      type=str, default='C',      help='transpose all tracks to a given key')
-    parser.add_argument('--data_normalize', type=int, default=1,        help='normalize the data')
-    parser.add_argument('--data_binarize',  type=int, default=1,        help='binarize the data')
-    parser.add_argument('--data_pitch',     type=int, default=1,        help='constrain pitches in the data')
-    parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
-    parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
+    parser.add_argument('--frame_bar', type=int, default=64, help='put a power of 2 here')
+    parser.add_argument('--score_type', type=str, default='all', help='use mono measures or poly ones')
+    parser.add_argument('--score_sig', type=str, default='all', help='rhythmic signature to use (use "all" to bypass)')
+    # parser.add_argument('--data_keys',      type=str, default='C',      help='transpose all tracks to a given key')
+    parser.add_argument('--data_normalize', type=int, default=1, help='normalize the data')
+    parser.add_argument('--data_binarize', type=int, default=1, help='binarize the data')
+    parser.add_argument('--data_pitch', type=int, default=1, help='constrain pitches in the data')
+    parser.add_argument('--data_export', type=int, default=0, help='recompute the dataset (for debug purposes)')
+    parser.add_argument('--data_augment', type=int, default=1, help='use data augmentation')
     # Parse the arguments
     args = parser.parse_args()
     # Data importing
     train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
-    #%%
-    final_tr = trans.RandomApply([trans.RandomChoice([Transpose(6), MaskColumns(), MaskRows(), TimeFlip(), PitchFlip()])], p=.5)
+    # %%
+    final_tr = trans.RandomApply(
+        [trans.RandomChoice([Transpose(6), MaskColumns(), MaskRows(), TimeFlip(), PitchFlip()])], p=.5)
     batch = next(iter(train_loader))

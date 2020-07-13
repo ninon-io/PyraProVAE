@@ -43,23 +43,23 @@ class Learn:
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
             x = x.to(args.device, non_blocking=True)
             mu, sigma, latent, x_recon = model(x)
-            #print(x.shape)
-            #import matplotlib.pyplot as plt
-            #plt.figure()
-            #if (args.num_classes > 1):
+            # print(x.shape)
+            # import matplotlib.pyplot as plt
+            # plt.figure()
+            # if (args.num_classes > 1):
             #    plt.matshow(torch.argmax(x_recon[0], dim=0).detach())
-            #else:
+            # else:
             #    plt.matshow(x_recon[0].detach())
-            #plt.show()
-            #plt.figure()
-            #plt.matshow(x[0].detach())
-            #plt.show()
+            # plt.show()
+            # plt.figure()
+            # plt.matshow(x[0].detach())
+            # plt.show()
             log_var = sigma
             kl_div = torch.mean(- 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp(), 1))
-            if (args.num_classes > 1):
+            if args.num_classes > 1:
                 x = x.long()
             recon_loss = criterion(x_recon, x)
-            #if (args.model == 'vae_kawai'):
+            # if (args.model == 'vae_kawai'):
             #    recon_loss = F.nll_loss(torch.softmax(x_recon, dim=1), torch.argmax(x, dim=1))
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += kl_div.detach()
@@ -74,7 +74,7 @@ class Learn:
             # Optimizes weights
             optimizer.step()
         if self.iter_train > 10 and self.beta < 1:
-             self.beta += 0.005
+            self.beta += 0.005
         print(model.eps)
         print(model.k)
         self.iter_train += 1
@@ -98,7 +98,7 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = torch.sum(- 1 / 2 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp(), 1))
-                if (args.num_classes > 1):
+                if args.num_classes > 1:
                     x = x.long()
                 recon_loss = criterion(x_recon, x)
                 self.recon_loss_mean_validate += recon_loss.detach()
@@ -125,7 +125,7 @@ class Learn:
                 mu, sigma, latent, x_recon = model(x)
                 log_var = sigma
                 kl_div = torch.sum(- 1 / 2 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp(), 1))
-                if (args.num_classes > 1):
+                if args.num_classes > 1:
                     x = x.long()
                 recon_loss = criterion(x_recon, x)
                 self.recon_loss_mean_test += recon_loss.detach()
@@ -152,4 +152,3 @@ class Learn:
     def resume_training(self, args, model, epoch):  # Specify the wishing epoch resuming here
         torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
         model.eval()
-

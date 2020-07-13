@@ -182,6 +182,12 @@ class VAEKawai(nn.Module):
         x[arange, idx] = 1
         return x
 
+    # Generate bar from latent space
+    def generate(self, z):
+        # Forward pass in the decoder
+        generated_bar = self.decoder(z.unsqueeze(0))
+        return generated_bar
+
     def encoder(self, x):
         self.gru_0.flatten_parameters()
         x = self.gru_0(x)
@@ -236,7 +242,7 @@ class VAEKawai(nn.Module):
         x_indices = x
         #x = torch.eye(self.vocab_size)[x].to(self.device)
         if self.training:
-            if (self.num_classes > 1):
+            if self.num_classes > 1:
                 self.sample = torch.nn.functional.one_hot(x.long())
                 self.sample = self.sample.view(b, s, -1)
             else:
@@ -248,6 +254,6 @@ class VAEKawai(nn.Module):
         #preds = torch.argmax(recon, dim=-1)
         #loss = F.nll_loss(recon.reshape(-1, recon.size(-1)), x_indices.reshape(-1))
         recon = recon.transpose(1, 2)
-        if (self.num_classes > 1):
+        if self.num_classes > 1:
             recon = recon.view(b, self.num_classes, self.vocab_size, -1)
         return mu, var, z, recon
