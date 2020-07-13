@@ -26,9 +26,9 @@ from utils import init_classic
 # -----------------------------------------------------------
 parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
-parser.add_argument('--device', type=str, default='cuda:1', help='device cuda or cpu')
+parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path', type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
+parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/Nottingham', help='path to midi folder')
 parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
@@ -37,7 +37,7 @@ parser.add_argument("--shuffle_data_set", type=int, default=1, help='')
 parser.add_argument('--frame_bar',      type=int, default=64,       help='put a power of 2 here')
 parser.add_argument('--score_type',     type=str, default='mono',   help='use mono measures or poly ones')
 parser.add_argument('--score_sig',      type=str, default='4_4',    help='rhythmic signature to use (use "all" to bypass)')
-#parser.add_argument('--data_keys',      type=str, default='C',      help='transpose all tracks to a given key')
+# parser.add_argument('--data_keys',      type=str, default='C',      help='transpose all tracks to a given key')
 parser.add_argument('--data_normalize', type=int, default=1,        help='normalize the data')
 parser.add_argument('--data_binarize',  type=int, default=1,        help='binarize the data')
 parser.add_argument('--data_pitch',     type=int, default=1,        help='constrain pitches in the data')
@@ -97,8 +97,8 @@ print('* Your wonderful model is ' + str(args.model))
 print('* You are using the schwifty ' + str(args.dataset) + ' dataset')
 print(10 * '*******')
 # Handling directories
-# os.system('rm -rf /slow-2/ninon/pyrapro/*')
-if (args.data_binarize and args.num_classes > 1):
+os.system('rm -rf /slow-2/ninon/pyrapro/*')
+if args.data_binarize and args.num_classes > 1:
     args.num_classes = 2
 
 # %%

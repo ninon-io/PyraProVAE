@@ -138,6 +138,7 @@ class VAE(nn.Module):
                   dis2.stddev)
         return output
 
+
 class VAEKawai(nn.Module):
     def __init__(self,
                  vocab_size,
