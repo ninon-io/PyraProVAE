@@ -127,6 +127,8 @@ class EncoderCNN(nn.Module):
     def forward(self, inputs):
         out = inputs.unsqueeze(1) if len(inputs.shape) < 4 else inputs # force to (batch, C, H, W)
         for m in range(len(self.net)):
+            print(m)
+            print(out.shape)
             out = self.net[m](out)
         out = out.view(inputs.shape[0], -1)
         for m in range(len(self.mlp)):
@@ -352,6 +354,8 @@ class DecoderCNN(nn.Module):
             out = self.mlp[m](out)
         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
         for m in range(len(self.net)):
+            print(m)
+            print(out.shape)
             out = self.net[m](out)
         print(out.shape)
         if len(self.out_size) < 3 or self.num_classes < 2:
