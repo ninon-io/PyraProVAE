@@ -2,6 +2,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+import torch.nn.init as init
 import random
 import numpy as np
 from models.layers import GatedDense, ResConv2d, ResConvTranspose2d
@@ -60,8 +61,13 @@ class EncoderMLP(nn.Module):
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for param in self.parameters():
-            torch.nn.init.xavier_uniform_(param)
+        for m in self.net:
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
 
     def forward(self, x, ctx=None):
         # Flatten the input
@@ -276,8 +282,13 @@ class DecoderMLP(nn.Module):
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for param in self.parameters():
-            torch.nn.init.xavier_uniform_(param)
+        for m in self.net:
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
 
     def forward(self, z, ctx=None):
         # Flatten the input
