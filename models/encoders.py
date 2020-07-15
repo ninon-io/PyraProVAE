@@ -78,7 +78,7 @@ class EncoderMLP(nn.Module):
 # -----------------------------------------------------------
 
 
-class EncoderCNN(Encoder):
+class EncoderCNN(nn.Module):
     
     def __init__(self, args, channels = 64, n_layers = 5, n_mlp = 3):
         super(EncoderCNN, self).__init__()
@@ -297,7 +297,7 @@ class DecoderMLP(nn.Module):
 # -----------------------------------------------------------
 
     
-class DecoderCNN(Decoder):
+class DecoderCNN(nn.Module):
     
     def __init__(self, args, channels = 64, n_layers = 5, n_mlp = 2):
         super(DecoderCNN, self).__init__()
