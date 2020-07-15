@@ -64,7 +64,7 @@ class EncoderMLP(nn.Module):
 
     def forward(self, x, ctx=None):
         # Flatten the input
-        out = x.view(x.shape[0], -1)
+        out = x.contiguous().view(x.shape[0], -1)
         for m in range(len(self.net)):
             out = self.net[m](out)
         return out
