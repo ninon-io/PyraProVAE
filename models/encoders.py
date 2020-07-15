@@ -156,11 +156,38 @@ class EncoderGRU(nn.Module):
 
 # -----------------------------------------------------------
 #
+# CNN-GRU Encoder
+#
+# -----------------------------------------------------------
+
+class EncoderGRU(nn.Module):
+    
+    def __init__(self, args):
+        super(EncoderGRU, self).__init__()
+        self.gru_0 = nn.GRU(
+            args.input_size[0],
+            args.enc_hidden_size,
+            batch_first=True,
+            bidirectional=True)
+        self.linear_enc = nn.Linear(args.enc_hidden_size * 2, args.enc_hidden_size)
+        self.bn_enc = nn.BatchNorm1d(args.enc_hidden_size)
+        
+    def forward(self, x, ctx=None):
+        self.gru_0.flatten_parameters()
+        x = self.gru_0(x)
+        x = x[-1]
+        x = x.transpose_(0, 1).contiguous()
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.bn_enc(self.linear_enc(x)))
+        return x
+
+# -----------------------------------------------------------
+#
 # Hierarchical encoder based on MusicVAE
 #
 # -----------------------------------------------------------
 
-class HierarchicalEncoder(Encoder):
+class EncoderHierarchical(Encoder):
     def __init__(self, input_size, enc_size, args):
         super(HierarchicalEncoder, self).__init__(input_size, enc_size, args)
         self.enc_hidden_size = args.enc_hidden_size
@@ -263,7 +290,7 @@ class DecoderMLP(Encoder):
 # -----------------------------------------------------------
 
     
-class DecodeCNN(Decoder):
+class DecoderCNN(Decoder):
     
     def __init__(self, in_size, cnn_size, out_size, channels = 32, n_layers = 5, hidden_size = 512, n_mlp = 2, type_mod='gated', args=None):
         super(DecodeCNN, self).__init__()
@@ -380,6 +407,65 @@ class DecoderGRU(nn.Module):
                 out = self._sampling(out)
         return torch.stack(x, 1)
     
+
+# -----------------------------------------------------------
+#
+# CNN-GRU decoder
+#
+# -----------------------------------------------------------
+
+class DecoderCNNGRU(nn.Module):
+    
+    def __init__(self, args, k=500):
+        super(DecoderGRU, self).__init__()
+        self.grucell_1 = nn.GRUCell(
+            args.latent_size + (args.input_size[0] * args.num_classes),
+            args.dec_hidden_size)
+        self.grucell_2 = nn.GRUCell(args.dec_hidden_size, args.dec_hidden_size)
+        self.linear_init_1 = nn.Linear(args.latent_size, args.dec_hidden_size)
+        self.linear_out_1 = nn.Linear(args.dec_hidden_size, args.input_size[0] * args.num_classes)
+        self.k = torch.FloatTensor([k])
+        self.eps = 1
+        self.iteration = 0
+        self.n_step = args.input_size[1]
+        self.input_size = args.input_size[0]
+        self.num_classes = args.num_classes
+    
+    def _sampling(self, x):
+        if (self.num_classes > 1):
+            idx = x.view(x.shape[0], self.num_classes, -1).max(1)[1]
+            x = F.one_hot(idx, num_classes = self.num_classes)
+        return x.view(x.shape[0], -1)
+    
+    def forward(self, z):
+        out = torch.zeros((z.size(0), (self.input_size * self.num_classes)))
+        out[:, -1] = 1.
+        x, hx = [], [None, None]
+        t = torch.tanh(self.linear_init_1(z))
+        hx[0] = t
+        out = out.to(z.device)
+        for i in range(self.n_step):
+            out = torch.cat([out.float(), z], 1)
+            hx[0] = self.grucell_1(out, hx[0])
+            if i == 0:
+                hx[1] = hx[0]
+            hx[1] = self.grucell_2(hx[0], hx[1])
+            tmp_out = self.linear_out_1(hx[1])
+            if (self.num_classes > 1):
+                out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
+            x.append(out)
+            if self.training:
+                p = torch.rand(1).item()
+                if p < self.eps:
+                    out = self.sample[:, i, :]
+                else:
+                    out = self._sampling(out)
+                self.eps = self.k / \
+                    (self.k + torch.exp(float(self.iteration) / self.k))
+            else:
+                out = self._sampling(out)
+        return torch.stack(x, 1)
+    
 # -----------------------------------------------------------
 #
 # Hierarchical encoder based on MusicVAE
@@ -387,7 +473,7 @@ class DecoderGRU(nn.Module):
 # -----------------------------------------------------------
 
 
-class HierarchicalDecoder(Decoder):
+class DecoderHierarchical(Decoder):
     def __init__(self, in_size, out_size, args):
         super(HierarchicalDecoder, self).__init__(in_size, out_size, args)
         self.device = args.device
