@@ -75,8 +75,6 @@ class Learn:
             optimizer.step()
         if self.iter_train > 10 and self.beta < 1:
             self.beta += 0.005
-        print(model.eps)
-        print(model.k)
         self.iter_train += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)

@@ -13,8 +13,9 @@ from reconstruction import reconstruction, sampling
 # Import models
 from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
-from models.vae_gru import VAEKawai
-from models.ae import RegressionAE, DisentanglingAE, AE
+from models.vae_gru import VAE
+from models.encoders import EncoderGRU, DecoderGRU
+from models.ae import AE
 from torch.nn import functional as F
 from utils import init_classic
 
@@ -44,23 +45,25 @@ parser.add_argument('--data_pitch',     type=int, default=1,        help='constr
 parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
 parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
 # Model Saving and reconstruction
-parser.add_argument('--model_path',     type=str, default='/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
+parser.add_argument('--model_path',     type=str, default='output/')#'/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
 parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
-parser.add_argument('--weights_path', type=str, default='/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
-parser.add_argument('--figure_reconstruction_path', type=str, default='/slow-2/ninon/pyrapro/reconstruction_withoutTF/', help='path to reconstruction figures')
+parser.add_argument('--weights_path', type=str, default='output/')#'/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
+parser.add_argument('--figure_reconstruction_path', type=str, default='output/')#'slow-2/ninon/pyrapro/reconstruction_withoutTF/', help='path to reconstruction figures')
 parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi/', help='path to MIDI reconstruction from sampling')
 parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
 # Model Parameters
-parser.add_argument("--model", type=str, default="vae_kawai", help='PyraPro | vae_mathieu | ae')
+parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae_flow | wae')
+parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res_cnn | gru | cnn_gru | hierarchical')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
-parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
-parser.add_argument('--latent_size', type=int, default=512, help='do not touch if you do not know')
+parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
+parser.add_argument('--latent_size', type=int, default=128, help='do not touch if you do not know')
 parser.add_argument('--cond_hidden_size', type=int, default=1024, help='do not touch if you do not know')
 parser.add_argument('--cond_output_dim', type=int, default=512, help='do not touch if you do not know')
-parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not touch if you do not know')
+parser.add_argument('--dec_hidden_size', type=int, default=512, help='do not touch if you do not know')
 parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
 parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
 parser.add_argument('--num_classes', type=int, default=2, help='number of velocity classes')
+parser.add_argument('--initialize', type=int, default=0, help='use initialization on the model')
 # Optimization parameters
 parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
@@ -120,27 +123,34 @@ train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = 
 # Model creation
 print('[Creating encoder and decoder]')
 # Here select between different encoders and decoders
-print('[Creating model]')
-# Then select different models
-if args.model == 'PyraPro':
+if (args.encoder_type == 'mlp'):
+    encoder = EncoderMLP(args)
+    decoder = DecoderMLP(args)
+elif (args.encoder_type == 'cnn'):
+    args.type_mod = 'normal'
+    encoder = EncoderCNN(args)
+    decoder = DecoderCNN(args)
+elif (args.encoder_type == 'res_cnn'):
+    args.type_mod = 'residual'
+    encoder = EncoderCNN(args)
+    decoder = DecoderCNN(args)
+elif (args.encoder_type == 'gru'):
+    encoder = EncoderGRU(args)
+    decoder = DecoderGRU(args)
+elif (args.encoder_type == 'cnn_gru'):
+    encoder = EncoderCNNGRU(args)
+    decoder = DecoderCNNGRU(args)
+elif (args.encoder_type == 'hierarchical'):
     encoder = HierarchicalEncoder(args)
     decoder = HierarchicalDecoder(args)
-    # decoder = Decoder(args)
-    model = VaeModel(encoder=encoder, decoder=decoder, args=args).float()
-
+print('[Creating model]')
+# Then select different models
+if args.model == 'ae':
+    model = AE(encoder, decoder, args).float()
+elif args.model == 'vae':
+    model = VAE(encoder, decoder, args).float()
 elif args.model == 'vae_mathieu':
-    encoder = EncoderPianoroll(args)
-    decoder = DecoderPianoroll(args)
     model = VAEPianoroll(encoder=encoder, decoder=decoder, args=args).float()
-
-elif args.model == 'vae_kawai':
-    model = VAEKawai(args.input_size[0], 512, 128, args.input_size[1], args.device, args.num_classes)
-
-elif args.model == 'ae':
-    encoder = EncoderPianoroll(args)
-    decoder = DecoderPianoroll(args)
-    model = AE(encoder=encoder, decoder=decoder, encoder_dims=args.input_dim, latent_dims=args.latent_size).float()
-
 else:
     print("Oh no, unknown model " + args.model + ".\n")
     exit()
@@ -148,7 +158,8 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-#model.apply(init_classic)
+if (args.initialize):
+    model.apply(init_classic)
 
 # %%
 # -----------------------------------------------------------
