@@ -117,7 +117,7 @@ class EncoderCNN(nn.Module):
                 self.mlp.add_module('a%i'%l, nn.LeakyReLU())
                 self.mlp.add_module('d%i'%l, nn.Dropout(p=.25))
         self.cnn_size = size
-        self.init_parameters()
+        #self.init_parameters()
     
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -127,9 +127,6 @@ class EncoderCNN(nn.Module):
     def forward(self, inputs):
         out = inputs.unsqueeze(1) if len(inputs.shape) < 4 else inputs # force to (batch, C, H, W)
         for m in range(len(self.net)):
-            print('Encoder')
-            print(m)
-            print(out.shape)
             out = self.net[m](out)
         out = out.view(inputs.shape[0], -1)
         for m in range(len(self.mlp)):
@@ -355,17 +352,11 @@ class DecoderCNN(nn.Module):
             out = self.mlp[m](out)
         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
         for m in range(len(self.net)):
-            print('Decoder')
-            print(m)
-            print(out.shape)
             out = self.net[m](out)
-        print(out.shape)
         if len(self.out_size) < 3 or self.num_classes < 2:
             out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
         else:
             out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
-            print(out.shape)
-            print(self.out_size)
             out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
