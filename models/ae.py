@@ -89,5 +89,5 @@ class VAE(nn.Module):
         recon = self.decoder(z)
         recon = recon.transpose(1, 2)
         if self.num_classes > 1:
-            recon = recon.contiguous().view(b, self.num_classes, self.input_size, -1)
+            recon = recon.view(b, self.num_classes, self.input_size, -1)
         return mu, var, z, recon
