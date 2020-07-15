@@ -282,8 +282,13 @@ class DecoderMLP(nn.Module):
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for param in self.parameters():
-            param.data.uniform_(-0.01, 0.01)
+        for m in self.net:
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.uniform_(m.weight.data, -0.01, 0.01)
+                init.uniform_(m.bias.data, -0.01, 0.01)
 
     def forward(self, z, ctx=None):
         # Flatten the input
