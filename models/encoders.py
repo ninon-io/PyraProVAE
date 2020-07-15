@@ -171,7 +171,7 @@ class EncoderGRU(nn.Module):
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for m in self.net:
+        for m in self.modules():
             if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
                 init.normal_(m.weight.data, mean=1, std=0.02)
                 init.constant_(m.bias.data, 0)
@@ -439,7 +439,7 @@ class DecoderGRU(nn.Module):
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for m in self.net:
+        for m in self.modules():
             if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
                 init.normal_(m.weight.data, mean=1, std=0.02)
                 init.constant_(m.bias.data, 0)
