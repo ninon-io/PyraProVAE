@@ -345,7 +345,7 @@ class DecoderGRU(nn.Module):
             x.append(out)
             if self.training:
                 p = torch.rand(1).item()
-                if p > self.eps:
+                if p < self.eps:
                     out = self.sample[:, i, :]
                 else:
                     out = self._sampling(out)
