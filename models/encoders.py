@@ -357,7 +357,7 @@ class DecoderCNN(nn.Module):
             out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
         else:
             out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
-        return out.continuous()
+        return out.contiguous()
 
 # -----------------------------------------------------------
 #
