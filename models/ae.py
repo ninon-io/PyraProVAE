@@ -75,7 +75,7 @@ class VAE(nn.Module):
     def forward(self, x):
         b, c, s = x.size()
         # Re-arrange to put time first
-        x = x.transpose(1, 2)
+        x = x.transpose(1, 2).contiguous()
         if self.training:
             if self.num_classes > 1:
                 self.sample = torch.nn.functional.one_hot(x.long())
@@ -87,7 +87,7 @@ class VAE(nn.Module):
         dis, mu, var = self.encode(x)
         z = dis.rsample()
         recon = self.decoder(z)
-        recon = recon.transpose(1, 2)
+        recon = recon.transpose(1, 2).contiguous()
         if self.num_classes > 1:
             recon = recon.view(b, self.num_classes, self.input_size, -1)
         return mu, var, z, recon
