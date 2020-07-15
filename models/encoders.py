@@ -160,7 +160,7 @@ class EncoderGRU(nn.Module):
 #
 # -----------------------------------------------------------
 
-class EncoderGRU(nn.Module):
+class EncoderCNNGRU(nn.Module):
     
     def __init__(self, args):
         super(EncoderGRU, self).__init__()
