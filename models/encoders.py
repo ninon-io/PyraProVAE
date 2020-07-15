@@ -36,7 +36,7 @@ class Encoder(nn.Module):
 #
 # -----------------------------------------------------------
 
-class EncoderMLP(Encoder):
+class EncoderMLP(nn.Module):
 
     def __init__(self, args, n_layers=5, **kwargs):
         super(EncoderMLP, self).__init__(**kwargs)
