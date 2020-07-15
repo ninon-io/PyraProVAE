@@ -42,7 +42,7 @@ class EncoderMLP(nn.Module):
         super(EncoderMLP, self).__init__(**kwargs)
         type_mod = 'normal'
         in_size = args.input_size[0] * args.input_size[1]
-        hidden_size = args.enc_hidden_size * 2
+        hidden_size = args.enc_hidden_size * 4
         out_size = args.enc_hidden_size
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
         # Create modules
@@ -248,11 +248,11 @@ class Decoder(nn.Module):
 
 class DecoderMLP(nn.Module):
 
-    def __init__(self, args, n_layers=5, **kwargs):
+    def __init__(self, args, n_layers=6, **kwargs):
         super(DecoderMLP, self).__init__(**kwargs)
         type_mod = 'normal'
         in_size = args.latent_size
-        hidden_size = args.enc_hidden_size * 4
+        hidden_size = args.enc_hidden_size * 2
         out_size = args.input_size[0] * args.input_size[1] * args.num_classes
         self.output_size = args.input_size
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
