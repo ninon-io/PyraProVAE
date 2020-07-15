@@ -8,8 +8,7 @@ class AE(nn.Module):
         super(AE, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
-        self.latent_dims = latent_size
-        self.map_latent = nn.Linear(encoder_size, latent_size)
+        self.decoder.iteration = 0
         self.apply(self.init_parameters)
 
     def init_parameters(self, m):
@@ -54,6 +53,7 @@ class VAE(nn.Module):
         self.sample = None
         self.encoder = encoder
         self.decoder = decoder
+        self.decoder.iteration = 0
         self.num_classes = args.num_classes
         self.input_size = args.input_size[0]
         self.linear_mu = nn.Linear(args.enc_hidden_size, args.latent_size)
