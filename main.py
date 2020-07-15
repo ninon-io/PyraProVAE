@@ -131,10 +131,12 @@ if (args.encoder_type == 'mlp'):
 elif (args.encoder_type == 'cnn'):
     args.type_mod = 'normal'
     encoder = EncoderCNN(args)
+    args.cnn_size = encoder.cnn_size
     decoder = DecoderCNN(args)
 elif (args.encoder_type == 'res_cnn'):
     args.type_mod = 'residual'
     encoder = EncoderCNN(args)
+    args.cnn_size = encoder.cnn_size
     decoder = DecoderCNN(args)
 elif (args.encoder_type == 'gru'):
     encoder = EncoderGRU(args)

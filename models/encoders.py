@@ -2,6 +2,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+import torch.nn.init as init
 import random
 import numpy as np
 from models.layers import GatedDense, ResConv2d, ResConvTranspose2d
@@ -60,8 +61,13 @@ class EncoderMLP(nn.Module):
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for param in self.parameters():
-            param.data.uniform_(-0.05, 0.05)
+        for m in self.net:
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_uniform_(m.weight.data, -0.01, 0.01)
+                init.uniform_(m.bias.data, -0.01, 0.01)
 
     def forward(self, x, ctx=None):
         # Flatten the input
@@ -298,12 +304,12 @@ class DecoderMLP(nn.Module):
     
 class DecoderCNN(Decoder):
     
-    def __init__(self, in_size, cnn_size, out_size, channels = 32, n_layers = 5, hidden_size = 512, n_mlp = 2, type_mod='gated', args=None):
-        super(DecodeCNN, self).__init__()
+    def __init__(self, args, channels = 32, n_layers = 5, n_mlp = 2):
+        super(DecoderCNN, self).__init__()
         conv_module = (type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
         # Create modules
-        self.cnn_size = [cnn_size[0], cnn_size[1]]
+        self.cnn_size = [args.cnn_size[0], args.cnn_size[1]]
         size = cnn_size
         kernel = args.kernel
         stride = 2
