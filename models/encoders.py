@@ -69,7 +69,7 @@ class EncoderMLP(nn.Module):
         out = x.contiguous().view(x.shape[0], -1)
         for m in range(len(self.net)):
             out = self.net[m](out)
-        return out
+        return F.tanh(out)
 
 # -----------------------------------------------------------
 #
@@ -285,7 +285,6 @@ class DecoderMLP(nn.Module):
         out = z.view(z.shape[0], -1)
         for m in range(len(self.net)):
             out = self.net[m](out)
-        out = torch.tanh(out)
         if (self.num_classes > 1):
             out = F.log_softmax(out.view(z.size(0), self.output_size[1], self.num_classes, -1), 2)
         out = out.view(z.size(0), self.output_size[1], -1)
