@@ -56,6 +56,7 @@ class EncoderMLP(nn.Module):
                 modules.add_module('a%i' % l, nn.ReLU())
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
+        self.init_parameters()
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -267,6 +268,7 @@ class DecoderMLP(nn.Module):
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
         self.num_classes = args.num_classes
+        self.init_parameters()
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
