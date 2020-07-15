@@ -148,7 +148,7 @@ class EncoderCNN(nn.Module):
         out = out.view(inputs.shape[0], -1)
         for m in range(len(self.mlp)):
             out = self.mlp[m](out)
-        return out
+        return torch.tanh(out)
 
 # -----------------------------------------------------------
 #
