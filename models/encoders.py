@@ -85,7 +85,7 @@ class EncoderMLP(nn.Module):
 
 class EncoderCNN(Encoder):
     
-    def __init__(self, args, channels = 32, n_layers = 5, n_mlp = 3):
+    def __init__(self, args, channels = 64, n_layers = 5, n_mlp = 3):
         super(EncoderCNN, self).__init__()
         conv_module = (args.type_mod == 'residual') and ResConv2d or nn.Conv2d
         dense_module = (args.type_mod == 'residual') and GatedDense or nn.Linear
@@ -304,16 +304,21 @@ class DecoderMLP(nn.Module):
     
 class DecoderCNN(Decoder):
     
-    def __init__(self, args, channels = 32, n_layers = 5, n_mlp = 2):
+    def __init__(self, args, channels = 64, n_layers = 5, n_mlp = 2):
         super(DecoderCNN, self).__init__()
-        conv_module = (type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
-        dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
+        conv_module = (args.type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
+        dense_module = (args.type_mod == 'residual') and GatedDense or nn.Linear
         # Create modules
-        self.cnn_size = [args.cnn_size[0], args.cnn_size[1]]
-        size = cnn_size
+        cnn_size = [args.cnn_size[0], args.cnn_size[1]]
+        self.cnn_size = cnn_size
+        size = args.cnn_size
         kernel = args.kernel
-        stride = 2
+        kernel = [4, 12]
+        stride = [2, 1]
+        in_size = args.latent_size
+        hidden_size = args.dec_hidden_size
         self.mlp = nn.Sequential()
+        out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
         """ First go through MLP """
         for l in range(n_mlp):
             in_s = (l==0) and (in_size) or hidden_size
@@ -342,6 +347,7 @@ class DecoderCNN(Decoder):
             size[1] = int((size[1] - 1) * stride - (2 * pad) + dil * (kernel - 1) + out_pad + 1)
         self.net = modules
         self.out_size = out_size #(H,W) or (C,H,W)
+        self.num_classes = args.num_classes
     
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -355,10 +361,10 @@ class DecoderCNN(Decoder):
         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
         for m in range(len(self.net)):
             out = self.net[m](out)
-        if len(self.out_size) < 3:
+        if len(self.out_size) < 3 or self.num_classes < 2:
             out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
         else:
-            out = out[:, :, :self.out_size[1], :self.out_size[2]]
+            out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
         return out
 
 # -----------------------------------------------------------
