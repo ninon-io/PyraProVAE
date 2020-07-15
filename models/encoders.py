@@ -195,7 +195,7 @@ class EncoderCNNGRU(nn.Module):
 
 class EncoderHierarchical(Encoder):
     def __init__(self, input_size, enc_size, args):
-        super(HierarchicalEncoder, self).__init__(input_size, enc_size, args)
+        super(EncoderHierarchical, self).__init__(input_size, enc_size, args)
         self.enc_hidden_size = args.enc_hidden_size
         self.latent_size = args.latent_size
         self.num_layers = args.num_layers
@@ -357,7 +357,7 @@ class DecoderCNN(nn.Module):
             out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
         else:
             out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
-        return out
+        return out.continuous()
 
 # -----------------------------------------------------------
 #
@@ -485,7 +485,7 @@ class DecoderCNNGRU(nn.Module):
 
 class DecoderHierarchical(Decoder):
     def __init__(self, in_size, out_size, args):
-        super(HierarchicalDecoder, self).__init__(in_size, out_size, args)
+        super(DecoderHierarchical, self).__init__(in_size, out_size, args)
         self.device = args.device
         self.num_subsequences = args.num_subsequences
         self.input_size = args.input_size[0]
