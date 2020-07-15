@@ -307,7 +307,6 @@ class DecoderCNN(nn.Module):
         cnn_size = [args.cnn_size[0], args.cnn_size[1]]
         self.cnn_size = cnn_size
         size = args.cnn_size
-        kernel = args.kernel
         kernel = [4, 12]
         stride = [2, 1]
         in_size = args.latent_size
