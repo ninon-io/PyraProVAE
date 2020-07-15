@@ -75,7 +75,7 @@ class Learn:
             #    torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=1.)
             # Optimizes weights
             optimizer.step()
-        if self.iter_train > 10 and self.beta < 1:
+        if self.iter_train > 0 and self.beta < 1:
             self.beta += 0.01
         self.iter_train += 1
         with torch.no_grad():
