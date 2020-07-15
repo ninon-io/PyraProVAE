@@ -57,7 +57,7 @@ class EncoderMLP(nn.Module):
                 modules.add_module('a%i' % l, nn.LeakyReLU())
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
-        self.init_parameters()
+        #self.init_parameters()
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -273,7 +273,7 @@ class DecoderMLP(nn.Module):
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
         self.num_classes = args.num_classes
-        self.init_parameters()
+        #self.init_parameters()
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -335,8 +335,8 @@ class DecoderCNN(nn.Module):
                 modules.add_module('b2%i'%l, nn.BatchNorm2d(out_s))
                 modules.add_module('a2%i'%l, nn.ReLU())
                 modules.add_module('a2%i'%l, nn.Dropout2d(p=.25))
-            size[0] = int((size[0] - 1) * stride - (2 * pad) + dil * (kernel - 1) + out_pad + 1)
-            size[1] = int((size[1] - 1) * stride - (2 * pad) + dil * (kernel - 1) + out_pad + 1)
+            size[0] = int((size[0] - 1) * stride[0] - (2 * pad) + dil * (kernel[0] - 1) + out_pad + 1)
+            size[1] = int((size[1] - 1) * stride[1] - (2 * pad) + dil * (kernel[1] - 1) + out_pad + 1)
         self.net = modules
         self.out_size = out_size #(H,W) or (C,H,W)
         self.num_classes = args.num_classes

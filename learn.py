@@ -72,7 +72,7 @@ class Learn:
             if (args.encoder_type in ['gru', 'cnn_gru', 'hierarchical']):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.)
             else:
-                torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=2.)
+                torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=1.)
             # Optimizes weights
             optimizer.step()
         if self.iter_train > 10 and self.beta < 1:
