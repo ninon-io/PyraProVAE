@@ -353,10 +353,13 @@ class DecoderCNN(nn.Module):
         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
         for m in range(len(self.net)):
             out = self.net[m](out)
+        print(out.shape)
         if len(self.out_size) < 3 or self.num_classes < 2:
             out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
         else:
             out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
+            print(out.shape)
+            print(self.out_size)
             out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
