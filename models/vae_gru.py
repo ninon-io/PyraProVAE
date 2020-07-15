@@ -36,69 +36,8 @@ class EncoderCNNGRU(nn.Module):
         x = x.transpose_(0, 1).contiguous()
         x = x.view(x.size(0), -1)
         return x
-    
 
-class Decoder(nn.Module):
-
-    def __init__(self, in_size, out_size, args):
-        super(Decoder, self).__init__()
-        self.dec_size = in_size
-        self.output_size = out_size
-
-    def forward(self, x, ctx=None):
-        out = []
-        return out
-
-    def init(self, vals):
-        pass
-
-
-class VAE(nn.Module):
-    def __init__(self, encoder, decoder, args):
-        super(VAE, self).__init__()
-        self.sample = None
-        self.encoder = encoder
-        self.decoder = decoder
-        self.num_classes = args.num_classes
-        self.input_size = args.input_size[0]
-        self.linear_mu = nn.Linear(args.enc_hidden_size, args.latent_size)
-        self.linear_var = nn.Linear(args.enc_hidden_size, args.latent_size)
-
-    # Generate bar from latent space
-    def generate(self, z):
-        # Forward pass in the decoder
-        generated_bar = self.decoder(z.unsqueeze(0))
-        return generated_bar
-
-    def encode(self, x):
-        out = self.encoder(x)
-        mu = self.linear_mu(out)
-        var = self.linear_var(out).exp_()
-        distribution = Normal(mu, var)
-        return distribution, mu, var
-
-    def forward(self, x):
-        b, c, s = x.size()
-        # Re-arrange to put time first
-        x = x.transpose(1, 2)
-        if self.training:
-            if self.num_classes > 1:
-                self.sample = torch.nn.functional.one_hot(x.long())
-                self.sample = self.sample.view(b, s, -1)
-            else:
-                self.sample = x
-            self.decoder.sample = self.sample
-            self.decoder.iteration += 1
-        dis, mu, var = self.encode(x)
-        z = dis.rsample()
-        recon = self.decoder(z)
-        recon = recon.transpose(1, 2)
-        if self.num_classes > 1:
-            recon = recon.view(b, self.num_classes, self.input_size, -1)
-        return mu, var, z, recon
-    
-
-class VAEKawaiSave(nn.Module):
+class VAEKawai(nn.Module):
     def __init__(self,
                  vocab_size,
                  hidden_dims,

@@ -4,9 +4,10 @@ import torch.nn as nn
 
 class AE(nn.Module):
 
-    def __init__(self, encoder_size, latent_size, args):
+    def __init__(self, encoder, decoder, args):
         super(AE, self).__init__()
-        self.encoder, self.decoder = construct_encoder_decoder(args)
+        self.encoder = encoder
+        self.decoder = decoder
         self.latent_dims = latent_size
         self.map_latent = nn.Linear(encoder_size, latent_size)
         self.apply(self.init_parameters)
@@ -28,10 +29,65 @@ class AE(nn.Module):
         return z, torch.zeros(z.shape[0]).to(z.device).mean()
 
     def forward(self, x):
-        # Encode the inputs
-        z = self.encode(x)
-        # Potential regularization
-        z_tilde, z_loss = self.regularize(z)
-        # Decode the samples
-        x_tilde = self.decode(z_tilde)
-        return x_tilde, z_tilde, z_loss
+        b, c, s = x.size()
+        # Re-arrange to put time first
+        x = x.transpose(1, 2)
+        if self.training:
+            if self.num_classes > 1:
+                self.sample = torch.nn.functional.one_hot(x.long())
+                self.sample = self.sample.view(b, s, -1)
+            else:
+                self.sample = x
+            self.decoder.sample = self.sample
+            self.decoder.iteration += 1
+        z = self.encoder(x)
+        recon = self.decoder(z)
+        recon = recon.transpose(1, 2)
+        if self.num_classes > 1:
+            recon = recon.view(b, self.num_classes, self.input_size, -1)
+        return z, z, z, recon
+
+
+class VAE(nn.Module):
+    def __init__(self, encoder, decoder, args):
+        super(VAE, self).__init__()
+        self.sample = None
+        self.encoder = encoder
+        self.decoder = decoder
+        self.num_classes = args.num_classes
+        self.input_size = args.input_size[0]
+        self.linear_mu = nn.Linear(args.enc_hidden_size, args.latent_size)
+        self.linear_var = nn.Linear(args.enc_hidden_size, args.latent_size)
+
+    # Generate bar from latent space
+    def generate(self, z):
+        # Forward pass in the decoder
+        generated_bar = self.decoder(z.unsqueeze(0))
+        return generated_bar
+
+    def encode(self, x):
+        out = self.encoder(x)
+        mu = self.linear_mu(out)
+        var = self.linear_var(out).exp_()
+        distribution = Normal(mu, var)
+        return distribution, mu, var
+
+    def forward(self, x):
+        b, c, s = x.size()
+        # Re-arrange to put time first
+        x = x.transpose(1, 2)
+        if self.training:
+            if self.num_classes > 1:
+                self.sample = torch.nn.functional.one_hot(x.long())
+                self.sample = self.sample.view(b, s, -1)
+            else:
+                self.sample = x
+            self.decoder.sample = self.sample
+            self.decoder.iteration += 1
+        dis, mu, var = self.encode(x)
+        z = dis.rsample()
+        recon = self.decoder(z)
+        recon = recon.transpose(1, 2)
+        if self.num_classes > 1:
+            recon = recon.view(b, self.num_classes, self.input_size, -1)
+        return mu, var, z, recon

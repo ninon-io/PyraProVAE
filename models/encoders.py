@@ -36,10 +36,10 @@ class Encoder(nn.Module):
 #
 # -----------------------------------------------------------
 
-class GatedMLP(Encoder):
+class EncoderMLP(Encoder):
 
     def __init__(self, args, n_layers=5, **kwargs):
-        super(GatedMLP, self).__init__(**kwargs)
+        super(EncoderMLP, self).__init__(**kwargs)
         type_mod = 'normal'
         in_size = torch.cumprod(args.input_size)
         hidden_size = args.enc_hidden_size
@@ -76,11 +76,11 @@ class GatedMLP(Encoder):
 # -----------------------------------------------------------
 
 
-class GatedCNN(Encoder):
+class EncoderCNN(Encoder):
     
     def __init__(self, args, channels = 32, n_layers = 5, hidden_size = 512, n_mlp = 3):
-        super(GatedCNN, self).__init__()
-        conv_module = (type_mod == 'residual') and ResConv2d or nn.Conv2d
+        super(EncoderCNN, self).__init__()
+        conv_module = (args.type_mod == 'residual') and ResConv2d or nn.Conv2d
         # Create modules
         modules = nn.Sequential()
         size = [in_size[-2], in_size[-1]]
@@ -218,18 +218,40 @@ class Decoder(nn.Module):
 #
 # -----------------------------------------------------------
 
-class DecodeMLP(Decoder):
+class DecoderMLP(Encoder):
 
-    def __init__(self, in_size, out_size, args):
-        super(DecodeMLP, self).__init__(in_size, out_size, args)
-        # Record final size
-        self.out_size = out_size
+    def __init__(self, args, n_layers=5, **kwargs):
+        super(EncoderMLP, self).__init__(**kwargs)
+        type_mod = 'normal'
+        in_size = torch.cumprod(args.latent_size)
+        hidden_size = args.enc_hidden_size
+        out_size = np.prod(args.input_size) * args.num_classes
+        dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
+        # Create modules
+        modules = nn.Sequential()
+        for l in range(n_layers):
+            in_s = (l == 0) and in_size or hidden_size
+            out_s = (l == n_layers - 1) and out_size or hidden_size
+            modules.add_module('l%i' % l, dense_module(in_s, out_s))
+            if l < n_layers - 1:
+                modules.add_module('b%i' % l, nn.BatchNorm1d(out_s))
+                modules.add_module('a%i' % l, nn.ReLU())
+                modules.add_module('a%i' % l, nn.Dropout(p=.3))
+        self.net = modules
+        self.num_classes = args.num_classes
 
-    def forward(self, x, ctx=None):
-        # Use super function
-        out = GatedMLP.forward(self, x)
-        # Reshape output
-        out = out.view(x.shape[0], *self.out_size)
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for param in self.parameters():
+            param.data.uniform_(-0.01, 0.01)
+
+    def forward(self, z, ctx=None):
+        # Flatten the input
+        out = z.view(z.shape[0], -1)
+        for m in range(len(self.net)):
+            out = self.net[m](out)
+        if (self.num_classes > 1):
+            out = F.log_softmax(out.view(z.size(0), self.num_classes, -1), 1)
         return out
 
 # -----------------------------------------------------------
@@ -333,15 +355,16 @@ class DecoderGRU(nn.Module):
         x, hx = [], [None, None]
         t = torch.tanh(self.linear_init_1(z))
         hx[0] = t
-        if torch.cuda.is_available():
-            out = out.cuda()
+        out = out.to(z.device)
         for i in range(self.n_step):
             out = torch.cat([out.float(), z], 1)
             hx[0] = self.grucell_1(out, hx[0])
             if i == 0:
                 hx[1] = hx[0]
             hx[1] = self.grucell_2(hx[0], hx[1])
-            out = F.log_softmax(self.linear_out_1(hx[1]).view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
+            tmp_out = self.linear_out_1(hx[1])
+            if (self.num_classes > 1):
+                out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
             if self.training:
                 p = torch.rand(1).item()

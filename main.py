@@ -13,10 +13,12 @@ from reconstruction import reconstruction, sampling
 # Import models
 from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
-from models.vae_gru import VAE
-from models.encoders import EncoderGRU, DecoderGRU
-from models.ae import AE
-from torch.nn import functional as F
+# Import encoders
+from models.encoders import EncoderMLP, DecoderMLP, EncoderCNN, DecoderCNN
+from models.encoders import EncoderGRU, DecoderGRU, EncoderCNNGRU, DecoderCNNGRU
+from models.encoders import EncoderHierarchical, DecoderHierarchical
+# Import model variants
+from models.ae import AE, VAE
 from utils import init_classic
 
 # %%
