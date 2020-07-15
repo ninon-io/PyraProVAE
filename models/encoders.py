@@ -68,8 +68,8 @@ class EncoderMLP(nn.Module):
             elif m.__class__ in [nn.Linear]:
                 init.xavier_normal_(m.weight.data)
                 init.normal_(m.bias.data)
-        self.net[-1].weight.data.uniform_(-0.001, 0.001)
-        self.net[-1].bias.data.uniform_(-0.001, 0.001)
+        #self.net[-1].weight.data.uniform_(-0.001, 0.001)
+        #self.net[-1].bias.data.uniform_(-0.001, 0.001)
 
     def forward(self, x, ctx=None):
         # Flatten the input
@@ -128,8 +128,18 @@ class EncoderCNN(nn.Module):
     
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for param in self.parameters():
-            param.data.uniform_(-0.001, 0.001)
+        for net in [self.net, self.mlp]:
+            for m in net:
+                if m.__class__ in [nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d, nn.ConvTranspose3d]:
+                    init.xavier_normal_(m.weight.data)
+                    if m.bias is not None:
+                        init.normal_(m.bias.data)
+                elif m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                    init.normal_(m.weight.data, mean=1, std=0.02)
+                    init.constant_(m.bias.data, 0)
+                elif m.__class__ in [nn.Linear]:
+                    init.xavier_normal_(m.weight.data)
+                    init.normal_(m.bias.data)
         
     def forward(self, inputs):
         out = inputs.unsqueeze(1) if len(inputs.shape) < 4 else inputs # force to (batch, C, H, W)
@@ -359,8 +369,18 @@ class DecoderCNN(nn.Module):
     
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
-        for param in self.parameters():
-            param.data.uniform_(-0.001, 0.001)
+        for net in [self.net, self.mlp]:
+            for m in net:
+                if m.__class__ in [nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d, nn.ConvTranspose3d]:
+                    init.xavier_normal_(m.weight.data)
+                    if m.bias is not None:
+                        init.normal_(m.bias.data)
+                elif m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                    init.normal_(m.weight.data, mean=1, std=0.02)
+                    init.constant_(m.bias.data, 0)
+                elif m.__class__ in [nn.Linear]:
+                    init.xavier_normal_(m.weight.data)
+                    init.normal_(m.bias.data)
         
     def forward(self, inputs):
         out = inputs
