@@ -66,7 +66,7 @@ class EncoderMLP(nn.Module):
                 init.normal_(m.weight.data, mean=1, std=0.02)
                 init.constant_(m.bias.data, 0)
             elif m.__class__ in [nn.Linear]:
-                init.xavier_uniform_(m.weight.data, -0.01, 0.01)
+                init.uniform_(m.weight.data, -0.01, 0.01)
                 init.uniform_(m.bias.data, -0.01, 0.01)
 
     def forward(self, x, ctx=None):
