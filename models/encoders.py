@@ -91,7 +91,7 @@ class EncoderCNN(nn.Module):
         hidden_size = args.enc_hidden_size
         in_channel = 1 if len(args.input_size) < 3 else args.input_size[0] #in_size is (C,H,W) or (H,W)
         kernel = [3, 13]
-        stride = [2, 1]
+        stride = [1, 1]
         """ First do a CNN """
         for l in range(n_layers):
             dil = 1
