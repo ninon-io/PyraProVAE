@@ -95,7 +95,7 @@ class EncoderCNN(nn.Module):
         """ First do a CNN """
         for l in range(n_layers):
             dil = 1
-            pad = 1
+            pad = 2
             in_s = (l==0) and in_channel or channels
             out_s = (l == n_layers - 1) and 1 or channels
             modules.add_module('c2%i'%l, conv_module(in_s, out_s, kernel, stride, pad, dilation = dil))
