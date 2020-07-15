@@ -94,7 +94,7 @@ class EncoderCNN(nn.Module):
         stride = [2, 1]
         """ First do a CNN """
         for l in range(n_layers):
-            dil = (2 ** l)
+            dil = 1
             pad = 3 * (dil + 1)
             in_s = (l==0) and in_channel or channels
             out_s = (l == n_layers - 1) and 1 or channels
@@ -326,7 +326,7 @@ class DecoderCNN(nn.Module):
         modules = nn.Sequential()
         """ Then do a CNN """
         for l in range(n_layers):
-            dil = ((args.dilation == 3) and (2 ** ((n_layers - 1) - l)) or args.dilation)
+            dil = 1
             pad = 3 * (dil + 1)
             if (args.dilation == 1):
                 pad = 2
