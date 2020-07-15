@@ -226,6 +226,7 @@ class DecoderMLP(Encoder):
         in_size = torch.cumprod(args.latent_size)
         hidden_size = args.enc_hidden_size
         out_size = np.prod(args.input_size) * args.num_classes
+        output_size = args.input_size
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
         # Create modules
         modules = nn.Sequential()
@@ -251,7 +252,8 @@ class DecoderMLP(Encoder):
         for m in range(len(self.net)):
             out = self.net[m](out)
         if (self.num_classes > 1):
-            out = F.log_softmax(out.view(z.size(0), self.num_classes, -1), 1)
+            out = F.log_softmax(out.view(z.size(0), self.output_size[1], self.num_classes, -1), 2)
+        out = out.view(z.size(0), self.output_size[1], -1)
         return out
 
 # -----------------------------------------------------------
