@@ -277,7 +277,7 @@ class DecoderMLP(nn.Module):
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for param in self.parameters():
-            param.data.uniform_(-0.05, 0.05)
+            param.data.uniform_(-0.01, 0.01)
 
     def forward(self, z, ctx=None):
         # Flatten the input
