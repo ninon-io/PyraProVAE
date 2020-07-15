@@ -57,12 +57,12 @@ class EncoderMLP(nn.Module):
                 modules.add_module('a%i' % l, nn.LeakyReLU())
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
-        #self.init_parameters()
+        self.init_parameters()
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for param in self.parameters():
-            param.data.uniform_(-0.01, 0.01)
+            param.data.uniform_(-0.001, 0.001)
 
     def forward(self, x, ctx=None):
         # Flatten the input
@@ -117,12 +117,12 @@ class EncoderCNN(nn.Module):
                 self.mlp.add_module('a%i'%l, nn.LeakyReLU())
                 self.mlp.add_module('d%i'%l, nn.Dropout(p=.25))
         self.cnn_size = size
-        #self.init_parameters()
+        self.init_parameters()
     
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for param in self.parameters():
-            param.data.uniform_(-0.01, 0.01)
+            param.data.uniform_(-0.001, 0.001)
         
     def forward(self, inputs):
         out = inputs.unsqueeze(1) if len(inputs.shape) < 4 else inputs # force to (batch, C, H, W)
@@ -273,12 +273,12 @@ class DecoderMLP(nn.Module):
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
         self.num_classes = args.num_classes
-        #self.init_parameters()
+        self.init_parameters()
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for param in self.parameters():
-            param.data.uniform_(-0.01, 0.01)
+            param.data.uniform_(-0.001, 0.001)
 
     def forward(self, z, ctx=None):
         # Flatten the input
@@ -340,11 +340,12 @@ class DecoderCNN(nn.Module):
         self.net = modules
         self.out_size = out_size #(H,W) or (C,H,W)
         self.num_classes = args.num_classes
+        self.init_parameters()
     
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for param in self.parameters():
-            param.data.uniform_(-0.01, 0.01)
+            param.data.uniform_(-0.001, 0.001)
         
     def forward(self, inputs):
         out = inputs

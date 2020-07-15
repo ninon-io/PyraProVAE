@@ -191,7 +191,7 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
 print('[Creating criterion]')
 # Losses
 if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
-    criterion = nn.L1Loss()
+    criterion = nn.MSELoss()
 elif args.model in ['PyraPro', 'vae_mathieu', 'vae_kawai']:
     criterion = nn.MSELoss()
 if args.num_classes > 1:
