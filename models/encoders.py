@@ -167,6 +167,23 @@ class EncoderGRU(nn.Module):
             bidirectional=True)
         self.linear_enc = nn.Linear(args.enc_hidden_size * 2, args.enc_hidden_size)
         self.bn_enc = nn.BatchNorm1d(args.enc_hidden_size)
+        self.init_parameters()
+
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for m in self.net:
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
+            elif m.__class__ in [nn.LSTM, nn.LSTMCell, nn.GRU, nn.GRUCell]:
+                for param in m.parameters():
+                    if len(param.shape) >= 2:
+                        init.orthogonal_(param.data)
+                    else:
+                        init.normal_(param.data)
         
     def forward(self, x, ctx=None):
         self.gru_0.flatten_parameters()
@@ -174,7 +191,7 @@ class EncoderGRU(nn.Module):
         x = x[-1]
         x = x.transpose_(0, 1).contiguous()
         x = x.view(x.size(0), -1)
-        x = F.relu(self.bn_enc(self.linear_enc(x)))
+        x = torch.tanh(self.bn_enc(self.linear_enc(x)))
         return x
 
 # -----------------------------------------------------------
@@ -418,6 +435,23 @@ class DecoderGRU(nn.Module):
         self.n_step = args.input_size[1]
         self.input_size = args.input_size[0]
         self.num_classes = args.num_classes
+        self.init_parameters()
+
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for m in self.net:
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
+            elif m.__class__ in [nn.LSTM, nn.LSTMCell, nn.GRU, nn.GRUCell]:
+                for param in m.parameters():
+                    if len(param.shape) >= 2:
+                        init.orthogonal_(param.data)
+                    else:
+                        init.normal_(param.data)
     
     def _sampling(self, x):
         if (self.num_classes > 1):
