@@ -252,7 +252,7 @@ class DecoderMLP(nn.Module):
         super(DecoderMLP, self).__init__(**kwargs)
         type_mod = 'normal'
         in_size = args.latent_size
-        hidden_size = args.enc_hidden_size * 2
+        hidden_size = args.enc_hidden_size * 4
         out_size = args.input_size[0] * args.input_size[1] * args.num_classes
         self.output_size = args.input_size
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
