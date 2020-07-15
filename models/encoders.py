@@ -291,6 +291,9 @@ class DecoderMLP(nn.Module):
             elif m.__class__ in [nn.Linear]:
                 init.xavier_normal_(m.weight.data)
                 init.normal_(m.bias.data)
+        self.net[-1].weight.data.uniform_(-0.001, 0.001)
+        self.net[-1].bias.data.uniform_(-0.001, 0.001)
+        
 
     def forward(self, z, ctx=None):
         # Flatten the input
