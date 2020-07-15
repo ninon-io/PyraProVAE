@@ -253,7 +253,7 @@ class DecoderMLP(nn.Module):
         in_size = args.latent_size
         hidden_size = args.enc_hidden_size
         out_size = args.input_size[0] * args.input_size[1] * args.num_classes
-        output_size = args.input_size
+        self.output_size = args.input_size
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
         # Create modules
         modules = nn.Sequential()
