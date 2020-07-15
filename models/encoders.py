@@ -67,7 +67,7 @@ class EncoderMLP(nn.Module):
                 init.constant_(m.bias.data, 0)
             elif m.__class__ in [nn.Linear]:
                 init.uniform_(m.weight.data, -0.05, 0.05)
-                init.normal_(m.bias.data)
+                init.uniform_(m.bias.data, -0.05, 0.05)
 
     def forward(self, x, ctx=None):
         # Flatten the input
@@ -288,7 +288,7 @@ class DecoderMLP(nn.Module):
                 init.constant_(m.bias.data, 0)
             elif m.__class__ in [nn.Linear]:
                 init.uniform_(m.weight.data, -0.05, 0.05)
-                init.normal_(m.bias.data)
+                init.uniform_(m.bias.data, -0.05, 0.05)
 
     def forward(self, z, ctx=None):
         # Flatten the input
