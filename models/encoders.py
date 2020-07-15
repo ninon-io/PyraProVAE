@@ -53,7 +53,7 @@ class EncoderMLP(nn.Module):
             modules.add_module('l%i' % l, dense_module(in_s, out_s))
             if l < n_layers - 1:
                 modules.add_module('b%i' % l, nn.BatchNorm1d(out_s))
-                modules.add_module('a%i' % l, nn.ReLU())
+                modules.add_module('a%i' % l, nn.LeakyReLU())
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
         self.init_parameters()
@@ -61,7 +61,7 @@ class EncoderMLP(nn.Module):
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for param in self.parameters():
-            param.data.uniform_(-0.01, 0.01)
+            torch.nn.init.xavier_uniform_(param)
 
     def forward(self, x, ctx=None):
         # Flatten the input
@@ -79,18 +79,21 @@ class EncoderMLP(nn.Module):
 
 class EncoderCNN(Encoder):
     
-    def __init__(self, args, channels = 32, n_layers = 5, hidden_size = 512, n_mlp = 3):
+    def __init__(self, args, channels = 32, n_layers = 5, n_mlp = 3):
         super(EncoderCNN, self).__init__()
         conv_module = (args.type_mod == 'residual') and ResConv2d or nn.Conv2d
+        dense_module = (args.type_mod == 'residual') and GatedDense or nn.Linear
         # Create modules
         modules = nn.Sequential()
-        size = [in_size[-2], in_size[-1]]
-        in_channel = 1 if len(in_size)<3 else in_size[0] #in_size is (C,H,W) or (H,W)
-        kernel = args.kernel
-        stride = 2
+        size = [args.input_size[1], args.input_size[0]]
+        out_size = args.enc_hidden_size
+        hidden_size = args.enc_hidden_size
+        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0] #in_size is (C,H,W) or (H,W)
+        kernel = [4, 12]
+        stride = [2, 1]
         """ First do a CNN """
         for l in range(n_layers):
-            dil = ((args.dilation == 3) and (2 ** l) or args.dilation)
+            dil = (2 ** l)
             pad = 3 * (dil + 1)
             in_s = (l==0) and in_channel or channels
             out_s = (l == n_layers - 1) and 1 or channels
@@ -99,8 +102,8 @@ class EncoderCNN(Encoder):
                 modules.add_module('b2%i'%l, nn.BatchNorm2d(out_s))
                 modules.add_module('a2%i'%l, nn.ReLU())
                 modules.add_module('d2%i'%l, nn.Dropout2d(p=.25))
-            size[0] = int((size[0]+2*pad-(dil*(kernel-1)+1))/stride+1)
-            size[1] = int((size[1]+2*pad-(dil*(kernel-1)+1))/stride+1)
+            size[0] = int((size[0]+2*pad-(dil*(kernel[0]-1)+1))/stride[0]+1)
+            size[1] = int((size[1]+2*pad-(dil*(kernel[1]-1)+1))/stride[1]+1)
         self.net = modules
         self.mlp = nn.Sequential()
         """ Then go through MLP """
@@ -110,9 +113,10 @@ class EncoderCNN(Encoder):
             self.mlp.add_module('h%i'%l, dense_module(in_s, out_s))
             if (l < n_layers - 1):
                 self.mlp.add_module('b%i'%l, nn.BatchNorm1d(out_s))
-                self.mlp.add_module('a%i'%l, nn.ReLU())
+                self.mlp.add_module('a%i'%l, nn.LeakyReLU())
                 self.mlp.add_module('d%i'%l, nn.Dropout(p=.25))
         self.cnn_size = size
+        self.init_parameters()
     
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -264,7 +268,7 @@ class DecoderMLP(nn.Module):
             modules.add_module('l%i' % l, dense_module(in_s, out_s))
             if l < n_layers - 1:
                 modules.add_module('b%i' % l, nn.BatchNorm1d(out_s))
-                modules.add_module('a%i' % l, nn.ReLU())
+                modules.add_module('a%i' % l, nn.LeakyReLU())
                 modules.add_module('a%i' % l, nn.Dropout(p=.3))
         self.net = modules
         self.num_classes = args.num_classes
@@ -273,7 +277,7 @@ class DecoderMLP(nn.Module):
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for param in self.parameters():
-            param.data.uniform_(-0.01, 0.01)
+            torch.nn.init.xavier_uniform_(param)
 
     def forward(self, z, ctx=None):
         # Flatten the input
