@@ -41,7 +41,7 @@ class EncoderMLP(nn.Module):
     def __init__(self, args, n_layers=5, **kwargs):
         super(EncoderMLP, self).__init__(**kwargs)
         type_mod = 'normal'
-        in_size = torch.cumprod(args.input_size)
+        in_size = args.input_size[0] * args.input_size[1]
         hidden_size = args.enc_hidden_size
         out_size = args.enc_hidden_size
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
@@ -245,14 +245,14 @@ class Decoder(nn.Module):
 #
 # -----------------------------------------------------------
 
-class DecoderMLP(Encoder):
+class DecoderMLP(nn.Module):
 
     def __init__(self, args, n_layers=5, **kwargs):
-        super(EncoderMLP, self).__init__(**kwargs)
+        super(DecoderMLP, self).__init__(**kwargs)
         type_mod = 'normal'
-        in_size = torch.cumprod(args.latent_size)
+        in_size = args.latent_size
         hidden_size = args.enc_hidden_size
-        out_size = np.prod(args.input_size) * args.num_classes
+        out_size = args.input_size[0] * args.input_size[1] * args.num_classes
         output_size = args.input_size
         dense_module = (type_mod == 'gated') and GatedDense or nn.Linear
         # Create modules
