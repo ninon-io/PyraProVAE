@@ -58,13 +58,6 @@ class VAE(nn.Module):
         self.input_size = args.input_size[0]
         self.linear_mu = nn.Linear(args.enc_hidden_size, args.latent_size)
         self.linear_var = nn.Linear(args.enc_hidden_size, args.latent_size)
-        self.init_parameters()
-    
-    def init_parameters(self):
-        self.linear_mu.weight.data.uniform_(-0.01, 0.01)
-        self.linear_var.weight.data.uniform_(-0.01, 0.01)
-        self.linear_mu.bias.data.normal_()
-        self.linear_var.bias.data.normal_()
 
     # Generate bar from latent space
     def generate(self, z):
