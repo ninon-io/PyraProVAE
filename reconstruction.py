@@ -107,7 +107,6 @@ def sampling(args, fs=100, program=0):
 
 
 def interpolation(x, labels, args, a=None, b=None, x_c=None):
-    x_a, x_b =
     # Encode samples to the latent space
     z_a, z_b = model.encode(x[labels == a]), model.encode(x[labels == b])
     # Find the centroids of the classes a, b in the latent space
