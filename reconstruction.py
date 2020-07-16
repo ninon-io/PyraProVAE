@@ -21,7 +21,7 @@ def reconstruction(args, model, epoch, dataset):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
 
     # generate random index for testing random data
-    rand_ind = np.array([random.randint(0, len(dataset)) for i in range(nrows)])
+    rand_ind = np.array([random.randint(0, len(dataset) - 1) for i in range(nrows)])
     ind = 0
     for i, axi in enumerate(ax.flat):
         if i % 2 == 0:

@@ -26,21 +26,11 @@ datasets = ['nottingham', 'maestro', 'bach_chorales', 'fashion_mnist']
 model = ['ae', 'vae', 'vae_mathieu']
 # Types of sub-layers in the *AE architectures
 type_mod = ['mlp', 'cnn', 'res_cnn', 'gru', 'cnn_gru', 'hierarchical']
-# Pruning process arguments
-# initialize = ['classic', 'uniform', 'normal', 'xavier','kaiming']
-# Type of pruning operations
-# prune = ['trimming', 'masking', 'hybrid']
-# Type of reset / rewind
-# prune_reset = ['reinit', 'rewind']
-# Scope of pruning (local / global)
-# prune_scope = ['local', 'global']
-# Selection criterion
-# prune_selection = ['magnitude', 'information', 'gradient_min', 'activation', 'info_target']
 
 # Using list comprehension to compute all possible permutations
 res = [[i, j, k, l] for i in [args.model]
-                    for j in prune_reset
-                    for k in prune_scope
+                    for j in [type_mod]
+                    for k in [args.latent_size]
                     for l in prune_selection]
 
 
