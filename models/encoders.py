@@ -310,11 +310,9 @@ class EncoderHierarchical(nn.Module):
 
     def forward(self, x, ctx=None):
         self.RNN.flatten_parameters()
-        x = self.RNN(x)
+        x, _ = self.RNN(x)
         print(x)
         x = x[-1]
-        print(x[0].shape)
-        print(x[1].shape)
         x = x.transpose_(0, 1).contiguous()
         x = x.view(x.size(0), -1)
         x = torch.tanh(self.bn_enc(self.linear_enc(x)))
