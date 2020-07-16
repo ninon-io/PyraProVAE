@@ -201,7 +201,7 @@ class EncoderGRU(nn.Module):
 class EncoderCNNGRU(nn.Module):
     
     def __init__(self, args, channels = 64, n_layers = 5):
-        super(EncoderGRU, self).__init__()
+        super(EncoderCNNGRU, self).__init__()
         conv_module = (args.type_mod == 'residual') and ResConv2d or nn.Conv2d
         # First go through a CNN
         modules = nn.Sequential()
