@@ -17,14 +17,10 @@ class AE(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.decoder.iteration = 0
-        self.apply(self.init_parameters)
+        self.num_classes = args.num_classes
+        self.input_size = args.input_size[0]
         self.map_latent = nn.Linear(args.enc_hidden_size, args.latent_size)
         self.loss = torch.Tensor(1).zero_().to(args.device)
-
-    def init_parameters(self, m):
-        if type(m) == nn.Linear or type(m) == nn.Conv2d:
-            torch.nn.init.xavier_uniform_(m.weight)
-            m.bias.data.fill_(0.01)
 
     def encode(self, x):
         # Re-arrange to put time first
