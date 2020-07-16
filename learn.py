@@ -64,7 +64,7 @@ class Learn:
             # Optimizes weights
             optimizer.step()
         if self.iter_train > args.beta_delay and self.beta < args.beta:
-            self.beta += (args.beta / 100.0)
+            self.beta += (args.beta / args.epochs)
         self.iter_train += 1
         with torch.no_grad():
             writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
