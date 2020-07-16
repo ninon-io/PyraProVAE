@@ -31,7 +31,7 @@ def reconstruction(args, model, epoch, dataset):
             axi.set_title("Original number " + str(rand_ind[ind]))
         else:
             cur_input = dataset[rand_ind[ind]].unsqueeze(0).to(args.device)
-            _, _, _, x_reconstruct = model(cur_input)
+            x_reconstruct, _, _ = model(cur_input)
             x_reconstruct = x_reconstruct[0].detach().cpu()
             if args.num_classes > 1:
                 x_reconstruct = torch.argmax(x_reconstruct, dim=0)

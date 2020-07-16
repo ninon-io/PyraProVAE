@@ -87,7 +87,22 @@ class VAE(nn.Module):
         var = self.linear_var(out).exp_()
         distribution = Normal(mu, var)
         z = distribution.rsample()
-        return z
+        return z, mu, var
+    
+    def regularize(self, z, mu, var):
+        n_batch = z.shape[0]
+        # Compute KL divergence
+        kl_div = -0.5 * torch.sum(1 + torch.log(var) - mu.pow(2) - var)
+        # Normalize by size of batch
+        kl_div = kl_div / n_batch
+        return kl_div
+    
+    def decode(self, z):
+        recon = self.decoder(z)
+        recon = recon.transpose(1, 2)
+        if self.num_classes > 1:
+            recon = recon.view(z.shape[0], self.num_classes, self.input_size, -1)
+        return recon
 
     def forward(self, x):
         b, c, s = x.size()
@@ -101,12 +116,12 @@ class VAE(nn.Module):
                 self.sample = x
             self.decoder.sample = self.sample
             self.decoder.iteration += 1
-        dis, mu, var = self.encode(x)
-        z = dis.rsample()
-        recon = self.decoder(z)
-        recon = recon.transpose(1, 2)
-        if self.num_classes > 1:
-            recon = recon.view(b, self.num_classes, self.input_size, -1)
+        # Encode the inut
+        z, mu, var = self.encode(x)
+        # Regularize the latent
+        loss = self.regularize(z, mu, var)
+        # Perform decoding
+        recon = self.decode(z)
         return recon, z, loss
 
 # -----------------------------------------------------------

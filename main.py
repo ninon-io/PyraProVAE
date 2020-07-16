@@ -55,6 +55,7 @@ parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/
 parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae_flow | wae')
+parser.add_argument("--beta", type=int, default=1, help='ae | vae | vae_flow | wae')
 parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res_cnn | gru | cnn_gru | hierarchical')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')

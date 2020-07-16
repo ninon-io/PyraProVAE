@@ -41,41 +41,29 @@ class Learn:
         self.recon_loss_mean = torch.zeros(1).to(args.device)
         self.kl_div_mean = torch.zeros(1).to(args.device)
         for batch_idx, x in tqdm(enumerate(self.train_loader), total=len(self.train_set) // args.batch_size):
+            # Send to device
             x = x.to(args.device, non_blocking=True)
-            mu, sigma, latent, x_recon = model(x)
-            # print(x.shape)
-            # import matplotlib.pyplot as plt
-            # plt.figure()
-            # if (args.num_classes > 1):
-            #    plt.matshow(torch.argmax(x_recon[0], dim=0).detach())
-            # else:
-            #    plt.matshow(x_recon[0].detach())
-            # plt.show()
-            # plt.figure()
-            # plt.matshow(x[0].detach())
-            # plt.show()
-            log_var = sigma
-            kl_div = torch.mean(- 1 / 2 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp(), 1))
+            # Pass into model
+            x_recon, latent, z_loss = model(x)
+            # Turn into index vector (multinouli)
             if args.num_classes > 1:
                 x = x.long()
+            # Compute reconstruction criterion
             recon_loss = criterion(x_recon, x)
-            # if (args.model == 'vae_kawai'):
-            #    recon_loss = F.nll_loss(torch.softmax(x_recon, dim=1), torch.argmax(x, dim=1))
             self.recon_loss_mean += recon_loss.detach()
-            self.kl_div_mean += kl_div.detach()
+            self.kl_div_mean += z_loss.detach()
             # Training pass
-            loss = recon_loss + self.beta * kl_div
+            loss = recon_loss + self.beta * z_loss
             self.loss_mean += loss.detach()
             optimizer.zero_grad()
             # Learning with back-propagation
             loss.backward()
+            # Clip gradient for recurrent models
             if (args.encoder_type in ['gru', 'cnn_gru', 'hierarchical']):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.)
-            #else:
-            #    torch.nn.utils.clip_grad_value_(model.parameters(), clip_value=1.)
             # Optimizes weights
             optimizer.step()
-        if self.iter_train > 0 and self.beta < 1:
+        if self.iter_train > 0 and self.beta < args.beta:
             self.beta += 0.01
         self.iter_train += 1
         with torch.no_grad():
@@ -94,16 +82,18 @@ class Learn:
         self.kl_div_mean_validate = torch.zeros(1).to(args.device)
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.validate_loader), total=len(self.validate_set) // args.batch_size):
+                # Send to device
                 x = x.to(args.device)
-                mu, sigma, latent, x_recon = model(x)
-                log_var = sigma
-                kl_div = torch.sum(- 1 / 2 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp(), 1))
+                # Pass into model
+                x_recon, latent, z_loss = model(x)
+                # Turn into index vector
                 if args.num_classes > 1:
                     x = x.long()
+                # Compute criterion
                 recon_loss = criterion(x_recon, x)
                 self.recon_loss_mean_validate += recon_loss.detach()
-                self.kl_div_mean_validate += kl_div.detach()
-                loss = recon_loss + self.beta * kl_div
+                self.kl_div_mean_validate += z_loss.detach()
+                loss = recon_loss + self.beta * z_loss
                 self.loss_mean_validate += loss.detach()
         with torch.no_grad():
             writer.add_scalar('data/loss_mean_VALID', self.loss_mean_validate, epoch)
@@ -122,16 +112,17 @@ class Learn:
         with torch.no_grad():
             for batch_idx, x in tqdm(enumerate(self.test_loader), total=len(self.test_set) // args.batch_size):
                 x = x.to(args.device)
-                mu, sigma, latent, x_recon = model(x)
-                log_var = sigma
-                kl_div = torch.sum(- 1 / 2 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp(), 1))
+                # Pass into model
+                x_recon, latent, z_loss = model(x)
+                # Turn into index vector
                 if args.num_classes > 1:
                     x = x.long()
+                # Compute criterion
                 recon_loss = criterion(x_recon, x)
-                self.recon_loss_mean_test += recon_loss.detach()
-                self.kl_div_mean_test += kl_div.detach()
-                loss = recon_loss + self.beta * kl_div
-                self.loss_mean_test += loss.detach()
+                self.recon_loss_mean_validate += recon_loss.detach()
+                self.kl_div_mean_validate += z_loss.detach()
+                loss = recon_loss + self.beta * z_loss
+                self.loss_mean_validate += loss.detach()
         with torch.no_grad():
             writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test, epoch)
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test, epoch)
