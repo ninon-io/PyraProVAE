@@ -707,7 +707,7 @@ class DecoderHierarchical(nn.Module):
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
-            h0_dec = h0s_dec[-1, :, sub, :].contiguous()
+            h0_dec = h0s_dec[0, :, sub, :].contiguous()
             c0_dec = h0s_dec[:, :, sub, :].contiguous()
             for i in range(self.subseq_size):
                 # Concat the previous token and the current sub embedding as input
