@@ -271,9 +271,9 @@ class EncoderCNNGRU(nn.Module):
 #
 # -----------------------------------------------------------
 
-class EncoderHierarchical(Encoder):
-    def __init__(self, input_size, enc_size, args):
-        super(EncoderHierarchical, self).__init__(input_size, enc_size, args)
+class EncoderHierarchical(nn.Module):
+    def __init__(self, args):
+        super(EncoderHierarchical, self).__init__(args)
         self.enc_hidden_size = args.enc_hidden_size
         self.latent_size = args.latent_size
         self.num_layers = args.num_layers
