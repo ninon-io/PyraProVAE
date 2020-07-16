@@ -158,8 +158,8 @@ elif args.encoder_type == 'cnn-gru':
     args.cnn_size = encoder.cnn_size
     decoder = DecoderGRU(args)
 elif args.encoder_type == 'hierarchical':
-    encoder = HierarchicalEncoder(args)
-    decoder = HierarchicalDecoder(args)
+    encoder = EncoderHierarchical(args)
+    decoder = DecoderHierarchical(args)
 print('[Creating model]')
 # Then select different models
 if args.model == 'ae':

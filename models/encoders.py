@@ -281,7 +281,26 @@ class EncoderHierarchical(Encoder):
 
         # Define the LSTM layer
         self.RNN = nn.LSTM(args.input_size[0], args.enc_hidden_size, batch_first=True, num_layers=args.num_layers,
-                           bidirectional=True, dropout=0.6)
+                           bidirectional=True, dropout=0.4)
+        self.linear_enc = nn.Linear(args.enc_hidden_size * 2, args.enc_hidden_size)
+        self.bn_enc = nn.BatchNorm1d(args.enc_hidden_size)
+        self.init_parameters()
+
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for m in self.modules():
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
+            elif m.__class__ in [nn.LSTM, nn.LSTMCell, nn.GRU, nn.GRUCell]:
+                for param in m.parameters():
+                    if len(param.shape) >= 2:
+                        init.orthogonal_(param.data)
+                    else:
+                        init.normal_(param.data)
 
     def init_hidden(self, batch_size=1):
         # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
@@ -289,14 +308,12 @@ class EncoderHierarchical(Encoder):
                 torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device))
 
     def forward(self, x, ctx=None):
-        h0, c0 = ctx
-        batch_size = x.shape[0]
-        x = x.transpose(1, 2)
-        _, (h, _) = self.RNN(x, (h0, c0))
-        h = h.view(self.num_layers, 2, batch_size, -1)
-        h = h[-1]
-        h = torch.cat([h[0], h[1]], dim=1)
-        return h
+        x = self.RNN(x)
+        x = x[-1]
+        x = x.transpose_(0, 1).contiguous()
+        x = x.view(x.size(0), -1)
+        x = torch.tanh(self.bn_enc(self.linear_enc(x)))
+        return x
 
 
 # -----------------------------------------------------------
@@ -619,9 +636,9 @@ class DecoderCNNGRU(nn.Module):
 # -----------------------------------------------------------
 
 
-class DecoderHierarchical(Decoder):
-    def __init__(self, in_size, out_size, args):
-        super(DecoderHierarchical, self).__init__(in_size, out_size, args)
+class DecoderHierarchical(nn.Module):
+    def __init__(self, args, k=500):
+        super(DecoderHierarchical, self).__init__()
         self.device = args.device
         self.num_subsequences = args.num_subsequences
         self.input_size = args.input_size[0]
@@ -643,8 +660,35 @@ class DecoderHierarchical(Decoder):
                                    num_layers=2,
                                    bidirectional=False, dropout=0.6)
         self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size)
+        self.num_classes = args.num_classes
+        self.k = torch.FloatTensor([k])
+        self.eps = 1
+        self.iteration = 0
+        self.init_parameters()
 
-    def forward(self, latent, target=None, teacher_forcing=None):
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for m in self.modules():
+            if m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
+            elif m.__class__ in [nn.LSTM, nn.LSTMCell, nn.GRU, nn.GRUCell]:
+                for param in m.parameters():
+                    if len(param.shape) >= 2:
+                        init.orthogonal_(param.data)
+                    else:
+                        init.normal_(param.data)
+
+    def _sampling(self, x):
+        if (self.num_classes > 1):
+            idx = x.view(x.shape[0], self.num_classes, -1).max(1)[1]
+            x = F.one_hot(idx, num_classes = self.num_classes)
+        return x.view(x.shape[0], -1)
+
+    def forward(self, latent):
         batch_size = latent.shape[0]
         # Get the initial state of the conductor
         h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
@@ -658,22 +702,30 @@ class DecoderHierarchical(Decoder):
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=self.device)
-        token = torch.zeros(batch_size, self.subseq_size, self.input_size, dtype=torch.float, device=self.device)
+        token = torch.zeros(batch_size, self.input_size, dtype=torch.float, device=self.device)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
             h0_dec = h0s_dec[:, :, sub, :].contiguous()
             c0_dec = h0s_dec[:, :, sub, :].contiguous()
-            # Concat the previous token and the current sub embedding as input
-            dec_input = torch.cat((token, subseq_embedding.unsqueeze(1).expand(-1, self.subseq_size, -1)), -1)
-            # Pass through the decoder
-            token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
-            token = self.decoder_output(token)
-            # Fill the out tensor with the token
-            out[:, sub * self.subseq_size:((sub + 1) * self.subseq_size), :] = token
-            # If teacher_forcing replace the output token by the real one sometimes
-            if teacher_forcing:
-                if random.random() <= self.teacher_forcing_ratio:
-                    token = target[:, :, sub * self.subseq_size:((sub + 1) * self.subseq_size)].transpose(1, 2)
-        out = out.transpose(1, 2)
+            for i in range(self.subseq_size):
+                # Concat the previous token and the current sub embedding as input
+                dec_input = torch.cat((token, subseq_embedding), -1)
+                # Pass through the decoder
+                token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
+                token = self.decoder_output(token)
+                if (self.num_classes > 1):
+                    token = F.log_softmax(token.view(latent.size(0), self.num_classes, -1), 1).view(latent.size(0), -1)
+                # Fill the out tensor with the token
+                out[:, (sub * self.subseq_size) + i, :] = token
+                if self.training:
+                    p = torch.rand(1).item()
+                    if p < self.eps:
+                        token = self.sample[:, i, :]
+                    else:
+                        token = self._sampling(token)
+                    self.eps = self.k / \
+                        (self.k + torch.exp(float(self.iteration) / self.k))
+                else:
+                    token = self._sampling(token)
         return out
