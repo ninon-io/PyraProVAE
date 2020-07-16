@@ -702,13 +702,12 @@ class DecoderHierarchical(nn.Module):
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, (self.input_size * self.num_classes), dtype=torch.float, device=self.device)
+        out = []
         token = torch.zeros(batch_size, (self.input_size * self.num_classes), dtype=torch.float, device=self.device)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
-            h0_dec = h0s_dec[0, :, sub, :].contiguous()
-            c0_dec = h0s_dec[:, :, sub, :].contiguous()
+            h0_dec = h0s_dec[1, :, sub, :].contiguous()
             for i in range(self.subseq_size):
                 # Concat the previous token and the current sub embedding as input
                 dec_input = torch.cat((token.float(), subseq_embedding), 1)
@@ -718,7 +717,7 @@ class DecoderHierarchical(nn.Module):
                 if (self.num_classes > 1):
                     token = F.log_softmax(token.view(latent.size(0), self.num_classes, -1), 1).view(latent.size(0), -1)
                 # Fill the out tensor with the token
-                out[:, (sub * self.subseq_size) + i, :] = token
+                out.append(token)
                 if self.training:
                     p = torch.rand(1).item()
                     if p < self.eps:
@@ -729,4 +728,4 @@ class DecoderHierarchical(nn.Module):
                         (self.k + torch.exp(float(self.iteration) / self.k))
                 else:
                     token = self._sampling(token)
-        return out
+        return torch.stack(out, 1)
