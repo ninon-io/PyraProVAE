@@ -704,11 +704,16 @@ class DecoderHierarchical(nn.Module):
         # init the output seq and the first token to 0 tensors
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=self.device)
         token = torch.zeros(batch_size, self.input_size, dtype=torch.float, device=self.device)
+        print(subseq_embeddings.shape)
+        print(h0s_dec.shape)
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
             h0_dec = h0s_dec[:, :, sub, :].contiguous()
             c0_dec = h0s_dec[:, :, sub, :].contiguous()
+            print(subseq_embedding.shape)
+            print(h0_dec.shape)
+            print(c0_dec.shape)
             for i in range(self.subseq_size):
                 # Concat the previous token and the current sub embedding as input
                 dec_input = torch.cat((token, subseq_embedding), 1)
