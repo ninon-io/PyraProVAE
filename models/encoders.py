@@ -711,7 +711,8 @@ class DecoderHierarchical(nn.Module):
             c0_dec = h0s_dec[:, :, sub, :].contiguous()
             for i in range(self.subseq_size):
                 # Concat the previous token and the current sub embedding as input
-                dec_input = torch.cat((token, subseq_embedding), -1)
+                dec_input = torch.cat((token, subseq_embedding), 1)
+                print(dec_input.shape)
                 # Pass through the decoder
                 token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
                 token = self.decoder_output(token)
