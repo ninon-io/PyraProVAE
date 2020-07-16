@@ -645,7 +645,7 @@ class DecoderHierarchical(nn.Module):
         self.input_size = args.input_size[0]
         self.cond_hidden_size = args.cond_hidden_size
         self.dec_hidden_size = args.dec_hidden_size
-        self.num_layers = args.num_layers
+        self.num_layers = 1
         self.seq_length = args.input_size[1]
         self.subseq_size = self.seq_length // self.num_subsequences
         self.teacher_forcing_ratio = 0.5
