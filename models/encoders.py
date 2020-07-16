@@ -309,6 +309,7 @@ class EncoderHierarchical(nn.Module):
                 torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device))
 
     def forward(self, x, ctx=None):
+        self.RNN.flatten_parameters()
         x = self.RNN(x)
         x = x[-1]
         x = x.transpose_(0, 1).contiguous()
