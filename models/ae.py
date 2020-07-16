@@ -46,8 +46,8 @@ class AE(nn.Module):
                 self.sample = x
             self.decoder.sample = self.sample
             self.decoder.iteration += 1
-        z = self.encoder(x)
-        recon = self.decoder(z)
+        z = self.encode(x)
+        recon = self.decode(z)
         return recon, z, self.loss
 
 # -----------------------------------------------------------
