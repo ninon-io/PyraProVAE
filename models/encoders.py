@@ -311,7 +311,7 @@ class EncoderHierarchical(nn.Module):
     def forward(self, x, ctx=None):
         self.RNN.flatten_parameters()
         x, _ = self.RNN(x)
-        print(x)
+        print(x.shape)
         x = x[-1]
         x = x.transpose_(0, 1).contiguous()
         x = x.view(x.size(0), -1)
