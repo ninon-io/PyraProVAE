@@ -41,9 +41,7 @@ def reconstruction(args, model, epoch, dataset):
             ind += 1
 
     plt.tight_layout(True)
-    if not os.path.exists(args.figure_reconstruction_path):
-        os.makedirs(args.figure_reconstruction_path)
-    plt.savefig(args.figure_reconstruction_path + 'epoch_' + str(epoch))
+    plt.savefig(args.figures_path + 'epoch_' + str(epoch))
     # plt.show()
 
 
@@ -67,7 +65,7 @@ def sampling(args, fs=100, program=0):
         generated_bar = torch.argmax(generated_bar, dim=2)
     plt.matshow(generated_bar, alpha=1)
     plt.title("Sampling")
-    plt.savefig(args.sampling_figure + 'sampling.png')
+    plt.savefig(args.figures_path + 'sampling.png')
 
     # Generate MIDI from sampling
     # if not os.path.exists(args.sampling_midi):
@@ -125,7 +123,7 @@ def interpolation(args):
             plt.matshow(interp[i].cpu(), alpha=1)
             plt.title("Interpolation")
             plt.tight_layout(True)
-            plt.savefig(args.interp_figure + "interpolation.png")
+            plt.savefig(args.figures_path + "interpolation.png")
             plt.close()
 
 
