@@ -125,26 +125,26 @@ train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = 
 # Model creation
 print('[Creating encoder and decoder]')
 # Here select between different encoders and decoders
-if (args.encoder_type == 'mlp'):
+if args.encoder_type == 'mlp':
     encoder = EncoderMLP(args)
     decoder = DecoderMLP(args)
-elif (args.encoder_type == 'cnn'):
+elif args.encoder_type == 'cnn':
     args.type_mod = 'normal'
     encoder = EncoderCNN(args)
     args.cnn_size = encoder.cnn_size
     decoder = DecoderCNN(args)
-elif (args.encoder_type == 'res_cnn'):
+elif args.encoder_type == 'res_cnn':
     args.type_mod = 'residual'
     encoder = EncoderCNN(args)
     args.cnn_size = encoder.cnn_size
     decoder = DecoderCNN(args)
-elif (args.encoder_type == 'gru'):
+elif args.encoder_type == 'gru':
     encoder = EncoderGRU(args)
     decoder = DecoderGRU(args)
-elif (args.encoder_type == 'cnn_gru'):
+elif args.encoder_type == 'cnn_gru':
     encoder = EncoderCNNGRU(args)
     decoder = DecoderCNNGRU(args)
-elif (args.encoder_type == 'hierarchical'):
+elif args.encoder_type == 'hierarchical':
     encoder = HierarchicalEncoder(args)
     decoder = HierarchicalDecoder(args)
 print('[Creating model]')
@@ -162,7 +162,7 @@ else:
 model.to(args.device)
 # Initialize the model weights
 print('[Initializing weights]')
-if (args.initialize):
+if args.initialize:
     model.apply(init_classic)
 
 # %%

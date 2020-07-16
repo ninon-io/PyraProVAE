@@ -200,6 +200,7 @@ class EncoderGRU(nn.Module):
 #
 # -----------------------------------------------------------
 
+
 class EncoderCNNGRU(nn.Module):
     
     def __init__(self, args):
@@ -226,6 +227,7 @@ class EncoderCNNGRU(nn.Module):
 # Hierarchical encoder based on MusicVAE
 #
 # -----------------------------------------------------------
+
 
 class EncoderHierarchical(Encoder):
     def __init__(self, input_size, enc_size, args):
@@ -418,6 +420,7 @@ class DecoderCNN(nn.Module):
 # GRU decoder
 #
 # -----------------------------------------------------------
+
 
 class DecoderGRU(nn.Module):
     
