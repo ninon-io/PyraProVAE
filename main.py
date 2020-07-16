@@ -100,7 +100,7 @@ model_variants = [args.dataset, args.score_type, args.data_binarize, args.num_cl
 args.final_path = args.output_path
 for m in model_variants:
     args.final_path += str(m) + '_'
-args.final_path[-1] = args.final_path[:-1] + '/'
+args.final_path = args.final_path[:-1] + '/'
 if (os.path.exists(args.final_path)):
     os.system('rm -rf ' + args.final_path + '/*')
 else:
