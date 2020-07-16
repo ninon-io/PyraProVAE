@@ -200,13 +200,34 @@ class EncoderGRU(nn.Module):
 
 class EncoderCNNGRU(nn.Module):
     
-    def __init__(self, args):
+    def __init__(self, args, channels = 64, n_layers = 5):
         super(EncoderGRU, self).__init__()
+        conv_module = (args.type_mod == 'residual') and ResConv2d or nn.Conv2d
+        # First go through a CNN
+        modules = nn.Sequential()
+        size = [args.input_size[1], args.input_size[0]]
+        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0] #in_size is (C,H,W) or (H,W)
+        kernel = [4, 13]
+        stride = [1, 1]
+        """ First do a CNN """
+        for l in range(n_layers):
+            dil = 1
+            pad = 2
+            in_s = (l==0) and in_channel or channels
+            out_s = (l == n_layers - 1) and 1 or channels
+            modules.add_module('c2%i'%l, conv_module(in_s, out_s, kernel, stride, pad, dilation = dil))
+            if (l < n_layers - 1):
+                modules.add_module('b2%i'%l, nn.BatchNorm2d(out_s))
+                modules.add_module('a2%i'%l, nn.ReLU())
+                modules.add_module('d2%i'%l, nn.Dropout2d(p=.25))
+            size[0] = int((size[0]+2*pad-(dil*(kernel[0]-1)+1))/stride[0]+1)
+            size[1] = int((size[1]+2*pad-(dil*(kernel[1]-1)+1))/stride[1]+1)
         self.gru_0 = nn.GRU(
-            args.input_size[0],
+            size[0],
             args.enc_hidden_size,
             batch_first=True,
             bidirectional=True)
+        self.cnn_size = size
         self.linear_enc = nn.Linear(args.enc_hidden_size * 2, args.enc_hidden_size)
         self.bn_enc = nn.BatchNorm1d(args.enc_hidden_size)
         self.init_parameters()
@@ -232,8 +253,11 @@ class EncoderCNNGRU(nn.Module):
                         init.normal_(param.data)
         
     def forward(self, x, ctx=None):
-        self.gru_0.flatten_parameters()
-        x = self.gru_0(x)
+        out = x
+        self.gru_0.flatten_parameters()        
+        for m in range(len(self.net)):
+            out = self.net[m](out)
+        x = self.gru_0(out)
         x = x[-1]
         x = x.transpose_(0, 1).contiguous()
         x = x.view(x.size(0), -1)
