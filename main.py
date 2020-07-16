@@ -49,7 +49,7 @@ parser.add_argument('--data_augment',   type=int, default=1,        help='use da
 # Model Saving and reconstruction
 parser.add_argument('--output_path', type=str, default='output/', help='major path for data output')
 # Model Parameters
-parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae_flow | wae')
+parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
 parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
 parser.add_argument("--beta_delay", type=int, default=0, help='delay before using beta')
 parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
@@ -201,7 +201,7 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
 # -----------------------------------------------------------
 print('[Creating criterion]')
 # Losses
-if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
+if args.model in ['ae', 'vae', 'wae', 'vae-flow']:
     criterion = nn.MSELoss()
 if args.num_classes > 1:
     criterion = nn.NLLLoss(reduction='sum')
