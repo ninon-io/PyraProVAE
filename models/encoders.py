@@ -657,7 +657,7 @@ class DecoderHierarchical(nn.Module):
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.LSTM(args.cond_output_dim + self.input_size, args.dec_hidden_size, batch_first=True,
+        self.decoder_RNN = nn.GRUCell(args.cond_output_dim + self.input_size, args.dec_hidden_size, batch_first=True,
                                    num_layers=2,
                                    bidirectional=False, dropout=0.6)
         self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size)
