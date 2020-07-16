@@ -702,7 +702,7 @@ class DecoderHierarchical(nn.Module):
         h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
-        out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=self.device)
+        out = torch.zeros(batch_size, self.seq_length, (self.input_size * self.num_classes), dtype=torch.float, device=self.device)
         token = torch.zeros(batch_size, (self.input_size * self.num_classes), dtype=torch.float, device=self.device)
         print(subseq_embeddings.shape)
         print(h0s_dec.shape)
