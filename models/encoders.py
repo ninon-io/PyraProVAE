@@ -657,10 +657,10 @@ class DecoderHierarchical(nn.Module):
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.GRUCell(args.cond_output_dim + self.input_size, args.dec_hidden_size)#, batch_first=True,
+        self.decoder_RNN = nn.GRUCell(args.cond_output_dim + (self.input_size * args.num_classes), args.dec_hidden_size)#, batch_first=True,
                                    #num_layers=2,
                                    #bidirectional=False, dropout=0.6)
-        self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size)
+        self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size * args.num_classes)
         self.num_classes = args.num_classes
         self.k = torch.FloatTensor([k])
         self.eps = 1
@@ -703,7 +703,7 @@ class DecoderHierarchical(nn.Module):
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
         out = torch.zeros(batch_size, self.seq_length, self.input_size, dtype=torch.float, device=self.device)
-        token = torch.zeros(batch_size, self.input_size, dtype=torch.float, device=self.device)
+        token = torch.zeros(batch_size, (self.input_size * self.num_classes), dtype=torch.float, device=self.device)
         print(subseq_embeddings.shape)
         print(h0s_dec.shape)
         # autoregressivly output tokens
