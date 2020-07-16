@@ -222,6 +222,7 @@ class EncoderCNNGRU(nn.Module):
                 modules.add_module('d2%i'%l, nn.Dropout2d(p=.25))
             size[0] = int((size[0]+2*pad-(dil*(kernel[0]-1)+1))/stride[0]+1)
             size[1] = int((size[1]+2*pad-(dil*(kernel[1]-1)+1))/stride[1]+1)
+        self.net = modules
         self.gru_0 = nn.GRU(
             size[0],
             args.enc_hidden_size,
