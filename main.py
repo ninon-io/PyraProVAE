@@ -18,7 +18,8 @@ from models.encoders import EncoderMLP, DecoderMLP, EncoderCNN, DecoderCNN
 from models.encoders import EncoderGRU, DecoderGRU, EncoderCNNGRU, DecoderCNNGRU
 from models.encoders import EncoderHierarchical, DecoderHierarchical
 # Import model variants
-from models.ae import AE, VAE
+from models.ae import AE, VAE, WAE
+# Import initializer
 from utils import init_classic
 
 # %%
@@ -54,8 +55,8 @@ parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/
 parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae_flow | wae')
-parser.add_argument("--beta", type=int, default=1, help='ae | vae | vae_flow | wae')
-parser.add_argument("--beta_delay", type=int, default=1, help='ae | vae | vae_flow | wae')
+parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
+parser.add_argument("--beta_delay", type=int, default=0, help='delay before using beta')
 parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res_cnn | gru | cnn_gru | hierarchical')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
@@ -154,8 +155,8 @@ if args.model == 'ae':
     model = AE(encoder, decoder, args).float()
 elif args.model == 'vae':
     model = VAE(encoder, decoder, args).float()
-elif args.model == 'vae_mathieu':
-    model = VAEPianoroll(encoder=encoder, decoder=decoder, args=args).float()
+elif args.model == 'wae':
+    model = WAE(encoder, decoder, args).float()
 else:
     print("Oh no, unknown model " + args.model + ".\n")
     exit()
@@ -192,8 +193,6 @@ learn = Learn(args, train_loader=train_loader, validate_loader=valid_loader, tes
 print('[Creating criterion]')
 # Losses
 if args.model in ['ae', 'vae', 'wae', 'vae_flow']:
-    criterion = nn.MSELoss()
-elif args.model in ['PyraPro', 'vae_mathieu', 'vae_kawai']:
     criterion = nn.MSELoss()
 if args.num_classes > 1:
     criterion = nn.NLLLoss(reduction='sum')

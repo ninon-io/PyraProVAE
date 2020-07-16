@@ -18,6 +18,7 @@ class AE(nn.Module):
         self.decoder = decoder
         self.decoder.iteration = 0
         self.apply(self.init_parameters)
+        self.map_latent = nn.Linear(args.enc_hidden_size, args.latent_size)
         self.loss = torch.Tensor(1).zero_().to(args.device)
 
     def init_parameters(self, m):
@@ -26,20 +27,21 @@ class AE(nn.Module):
             m.bias.data.fill_(0.01)
 
     def encode(self, x):
+        # Re-arrange to put time first
+        x = x.transpose(1, 2)
         x = self.encoder(x)
+        x = self.map_latent(x)
         return x
 
     def decode(self, z):
-        return self.decoder(z)
-
-    def regularize(self, z):
-        z = self.map_latent(z)
-        return z, torch.zeros(z.shape[0]).to(z.device).mean()
+        recon = self.decoder(z)
+        recon = recon.transpose(1, 2)
+        if self.num_classes > 1:
+            recon = recon.view(z.shape[0], self.num_classes, self.input_size, -1)
+        return recon
 
     def forward(self, x):
         b, c, s = x.size()
-        # Re-arrange to put time first
-        x = x.transpose(1, 2)
         if self.training:
             if self.num_classes > 1:
                 self.sample = torch.nn.functional.one_hot(x.long())
@@ -50,9 +52,6 @@ class AE(nn.Module):
             self.decoder.iteration += 1
         z = self.encoder(x)
         recon = self.decoder(z)
-        recon = recon.transpose(1, 2)
-        if self.num_classes > 1:
-            recon = recon.view(b, self.num_classes, self.input_size, -1)
         return recon, z, self.loss
 
 # -----------------------------------------------------------
@@ -82,6 +81,8 @@ class VAE(nn.Module):
         return generated_bar
 
     def encode(self, x):
+        # Re-arrange to put time first
+        x = x.transpose(1, 2)
         out = self.encoder(x)
         mu = self.linear_mu(out)
         var = self.linear_var(out).exp_()
@@ -106,8 +107,6 @@ class VAE(nn.Module):
 
     def forward(self, x):
         b, c, s = x.size()
-        # Re-arrange to put time first
-        x = x.transpose(1, 2)
         if self.training:
             if self.num_classes > 1:
                 self.sample = torch.nn.functional.one_hot(x.long())
@@ -134,19 +133,15 @@ class VAE(nn.Module):
 
 class WAE(VAE):
 
-    def __init__(self, encoder, decoder, input_dims, encoder_dims, latent_dims):
-        super(WAE, self).__init__(encoder, decoder, input_dims, encoder_dims, latent_dims)
+    def __init__(self, encoder, decoder, args):
+        super(WAE, self).__init__(encoder, decoder, args)
 
-    def latent(self, x, z_params):
-        n_batch = x.size(0)
-        mu, log_var = z_params
+    def regularize(self, z, mu, var):
+        n_batch = z.size(0)
         # Re-parametrize
-        q = Normal(torch.zeros(mu.shape[1]), torch.ones(log_var.shape[1]))
-        # eps = q.sample((n_batch, )).detach().to(x.device)
-        eps = torch.randn_like(mu).detach().to(x.device)
-        z = (log_var.exp().sqrt() * eps) + mu
+        q = Normal(torch.zeros(mu.shape[1]), torch.ones(var.shape[1]))
         # Sample from the z prior
-        z_prior = q.sample((n_batch,)).to(x.device)
+        z_prior = q.sample((n_batch,)).to(z.device)
         # Compute MMD divergence
         mmd_dist = compute_mmd(z, z_prior)
         return z, mmd_dist
