@@ -49,7 +49,7 @@ class Learn:
             if args.num_classes > 1:
                 x = x.long()
             # Compute reconstruction criterion
-            recon_loss = criterion(x_recon, x)
+            recon_loss = criterion(x_recon, x) / x.shape[0]
             self.recon_loss_mean += recon_loss.detach()
             self.kl_div_mean += z_loss.detach()
             # Training pass

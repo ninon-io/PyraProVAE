@@ -91,7 +91,7 @@ class VAE(nn.Module):
         # Compute KL divergence
         kl_div = -0.5 * torch.sum(1 + torch.log(var) - mu.pow(2) - var)
         # Normalize by size of batch
-        # kl_div = kl_div / n_batch
+        kl_div = kl_div / n_batch
         return kl_div
     
     def decode(self, z):
@@ -156,7 +156,7 @@ def compute_kernel(x, y):
     y = y.unsqueeze(0)
     tiled_x = x.expand(x_size, y_size, dim)
     tiled_y = y.expand(x_size, y_size, dim)
-    kernel_input = (tiled_x - tiled_y).pow(2).mean(2) / float(dim)
+    kernel_input = (tiled_x - tiled_y).pow(2).mean(2)
     return torch.exp(-kernel_input)
 
 def compute_mmd(x, y):
