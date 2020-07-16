@@ -15,7 +15,6 @@ from models.layers import GatedDense, ResConv2d, ResConvTranspose2d
 # -----------------------------------------------------------
 # -----------------------------------------------------------
 
-
 class Encoder(nn.Module):
 
     def __init__(self, input_size, enc_size, args):
@@ -29,7 +28,6 @@ class Encoder(nn.Module):
 
     def init(self, vals):
         pass
-
 
 # -----------------------------------------------------------
 #
@@ -200,7 +198,6 @@ class EncoderGRU(nn.Module):
 #
 # -----------------------------------------------------------
 
-
 class EncoderCNNGRU(nn.Module):
     
     def __init__(self, args):
@@ -212,6 +209,27 @@ class EncoderCNNGRU(nn.Module):
             bidirectional=True)
         self.linear_enc = nn.Linear(args.enc_hidden_size * 2, args.enc_hidden_size)
         self.bn_enc = nn.BatchNorm1d(args.enc_hidden_size)
+        self.init_parameters()
+
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for m in self.modules():
+            if m.__class__ in [nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d, nn.ConvTranspose3d]:
+                init.xavier_normal_(m.weight.data)
+                if m.bias is not None:
+                    init.normal_(m.bias.data)
+            elif m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
+            elif m.__class__ in [nn.LSTM, nn.LSTMCell, nn.GRU, nn.GRUCell]:
+                for param in m.parameters():
+                    if len(param.shape) >= 2:
+                        init.orthogonal_(param.data)
+                    else:
+                        init.normal_(param.data)
         
     def forward(self, x, ctx=None):
         self.gru_0.flatten_parameters()
@@ -227,7 +245,6 @@ class EncoderCNNGRU(nn.Module):
 # Hierarchical encoder based on MusicVAE
 #
 # -----------------------------------------------------------
-
 
 class EncoderHierarchical(Encoder):
     def __init__(self, input_size, enc_size, args):
@@ -421,7 +438,6 @@ class DecoderCNN(nn.Module):
 #
 # -----------------------------------------------------------
 
-
 class DecoderGRU(nn.Module):
     
     def __init__(self, args, k=500):
@@ -514,6 +530,27 @@ class DecoderCNNGRU(nn.Module):
         self.n_step = args.input_size[1]
         self.input_size = args.input_size[0]
         self.num_classes = args.num_classes
+        self.init_parameters()
+
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for m in self.modules():
+            if m.__class__ in [nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d, nn.ConvTranspose3d]:
+                init.xavier_normal_(m.weight.data)
+                if m.bias is not None:
+                    init.normal_(m.bias.data)
+            elif m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
+            elif m.__class__ in [nn.LSTM, nn.LSTMCell, nn.GRU, nn.GRUCell]:
+                for param in m.parameters():
+                    if len(param.shape) >= 2:
+                        init.orthogonal_(param.data)
+                    else:
+                        init.normal_(param.data)
     
     def _sampling(self, x):
         if (self.num_classes > 1):

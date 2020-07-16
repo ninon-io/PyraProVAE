@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from models.vae.vae import VAE
 
-
 class VAEFlow(VAE):
 
     def __init__(self, encoder, decoder, flow, input_dims, encoder_dims, latent_dims):
