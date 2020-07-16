@@ -653,7 +653,7 @@ class DecoderHierarchical(nn.Module):
         self.sigmoid = torch.nn.Sigmoid()
         self.fc_init_cond = nn.Linear(args.latent_size, args.cond_hidden_size * args.num_layers)
         self.conductor_RNN = nn.LSTM(args.latent_size // args.num_subsequences, args.cond_hidden_size, batch_first=True,
-                                     num_layers=2,
+                                     num_layers=1,
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
@@ -699,7 +699,7 @@ class DecoderHierarchical(nn.Module):
         subseq_embeddings, _ = self.conductor_RNN(latent, (h0_cond, h0_cond))
         subseq_embeddings = self.conductor_output(subseq_embeddings)
         # Get the initial states of the decoder
-        h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(self.num_layers, batch_size,
+        h0s_dec = self.tanh(self.fc_init_dec(subseq_embeddings)).view(batch_size,
                                                                       self.num_subsequences, -1).contiguous()
         # init the output seq and the first token to 0 tensors
         out = []
@@ -707,7 +707,7 @@ class DecoderHierarchical(nn.Module):
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
-            h0_dec = h0s_dec[1, :, sub, :].contiguous()
+            h0_dec = h0s_dec[:, sub, :].contiguous()
             for i in range(self.subseq_size):
                 # Concat the previous token and the current sub embedding as input
                 dec_input = torch.cat((token.float(), subseq_embedding), 1)
