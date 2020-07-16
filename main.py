@@ -110,7 +110,7 @@ args.model_path = args.final_path + 'models/'
 args.tensorboard_path = args.final_path + 'tensorboard/'
 args.weights_path = args.final_path + 'weights/'
 args.figures_path = args.final_path + 'figures/'
-args.midi_path = args.final_path + 'midi/'
+args.midi_results_path = args.final_path + 'midi/'
 for p in [args.model_path, args.tensorboard_path, args.weights_path, args.figures_path, args.midi_path]:
     os.makedirs(p)
 # Ensure coherence of classes parameters
