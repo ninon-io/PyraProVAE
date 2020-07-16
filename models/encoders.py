@@ -692,7 +692,7 @@ class DecoderHierarchical(nn.Module):
     def forward(self, latent):
         batch_size = latent.shape[0]
         # Get the initial state of the conductor
-        h0_cond = self.tanh(self.fc_init_cond(latent)).view(self.num_layers, batch_size, -1).contiguous()
+        h0_cond = self.tanh(self.fc_init_cond(latent)).view(1, batch_size, -1).contiguous()
         # Divide the latent code in subsequences
         latent = latent.view(batch_size, self.num_subsequences, -1)
         # Pass through the conductor
