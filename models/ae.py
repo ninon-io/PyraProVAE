@@ -140,7 +140,7 @@ class WAE(VAE):
         z_prior = q.sample((n_batch,)).to(z.device)
         # Compute MMD divergence
         mmd_dist = compute_mmd(z, z_prior)
-        return mmd_dist
+        return mmd_dist * 1e3
 
 # -----------------------------------------------------------
 #
