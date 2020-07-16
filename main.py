@@ -47,17 +47,12 @@ parser.add_argument('--data_pitch',     type=int, default=1,        help='constr
 parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
 parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
 # Model Saving and reconstruction
-parser.add_argument('--model_path',     type=str, default='output/')#'/slow-2/ninon/pyrapro/models_saving/entire_model/', help='path to the saved model')
-parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
-parser.add_argument('--weights_path', type=str, default='output/')#'/slow-2/ninon/pyrapro/models_saving/weights/', help='path to the saved model')
-parser.add_argument('--figure_reconstruction_path', type=str, default='output/')#'slow-2/ninon/pyrapro/reconstruction_withoutTF/', help='path to reconstruction figures')
-parser.add_argument('--sampling_midi', type=str, default='/slow-2/ninon/pyrapro/sampling/midi/', help='path to MIDI reconstruction from sampling')
-parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapro/sampling/figure/', help='path to visuam reconstruction from sampling')
+parser.add_argument('--output_path', type=str, default='output/', help='major path for data output')
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae_flow | wae')
 parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
 parser.add_argument("--beta_delay", type=int, default=0, help='delay before using beta')
-parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res_cnn | gru | cnn_gru | hierarchical')
+parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
 parser.add_argument('--latent_size', type=int, default=128, help='do not touch if you do not know')
@@ -75,9 +70,6 @@ parser.add_argument('--epochs', type=int, default=300, help='number of epochs to
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
-# parser.add_argument('--log-interval', type=int, default=10, help='how many batches to wait before logging training status')
-# parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
-# parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
 # Parse the arguments
 args = parser.parse_args()
 
@@ -104,7 +96,24 @@ print('* Your wonderful model is ' + str(args.model))
 print('* You are using the schwifty ' + str(args.dataset) + ' dataset')
 print(10 * '*******')
 # Handling directories
-os.system('rm -rf /slow-2/ninon/pyrapro/*')
+model_variants = [args.dataset, args.score_type, args.data_binarize, args.num_classes, args.data_augment, args.model, args.encoder_type, args.latent_size, args.beta, args.enc_hidden_size]
+args.final_path = args.output_path
+for m in model_variants:
+    args.final_path += str(m) + '_'
+args.final_path[-1] = '/'
+if (os.path.exists(args.final_path)):
+    os.system('rm -rf ' + args.final_path + '/*')
+else:
+    os.makedirs(args.final_path)
+# Create all sub-folders
+args.model_path = args.final_path + 'models/'
+args.tensorboard_path = args.final_path + 'tensorboard/'
+args.weights_path = args.final_path + 'weights/'
+args.figures_path = args.final_path + 'figures/'
+args.midi_path = args.final_path + 'midi/'
+for p in [args.model_path, args.tensorboard_path, args.weights_path, args.figures_path, args.midi_path]:
+    os.makedirs(p)
+# Ensure coherence of classes parameters
 if args.data_binarize and args.num_classes > 1:
     args.num_classes = 2
 
@@ -135,7 +144,7 @@ elif args.encoder_type == 'cnn':
     encoder = EncoderCNN(args)
     args.cnn_size = encoder.cnn_size
     decoder = DecoderCNN(args)
-elif args.encoder_type == 'res_cnn':
+elif args.encoder_type == 'res-cnn':
     args.type_mod = 'residual'
     encoder = EncoderCNN(args)
     args.cnn_size = encoder.cnn_size
@@ -143,7 +152,7 @@ elif args.encoder_type == 'res_cnn':
 elif args.encoder_type == 'gru':
     encoder = EncoderGRU(args)
     decoder = DecoderGRU(args)
-elif args.encoder_type == 'cnn_gru':
+elif args.encoder_type == 'cnn-gru':
     encoder = EncoderCNNGRU(args)
     decoder = DecoderCNNGRU(args)
 elif args.encoder_type == 'hierarchical':
