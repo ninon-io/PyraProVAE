@@ -254,11 +254,11 @@ class EncoderCNNGRU(nn.Module):
                         init.normal_(param.data)
         
     def forward(self, x, ctx=None):
-        out = x
+        out = x.unsqueeze(1)
         self.gru_0.flatten_parameters()        
         for m in range(len(self.net)):
             out = self.net[m](out)
-        x = self.gru_0(out)
+        x = self.gru_0(out.squeeze(1))
         x = x[-1]
         x = x.transpose_(0, 1).contiguous()
         x = x.view(x.size(0), -1)
