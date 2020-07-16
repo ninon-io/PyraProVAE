@@ -153,7 +153,9 @@ elif args.encoder_type == 'gru':
     encoder = EncoderGRU(args)
     decoder = DecoderGRU(args)
 elif args.encoder_type == 'cnn-gru':
+    args.type_mod = 'normal'
     encoder = EncoderCNNGRU(args)
+    args.cnn_size = encoder.cnn_size
     decoder = DecoderGRU(args)
 elif args.encoder_type == 'hierarchical':
     encoder = HierarchicalEncoder(args)
