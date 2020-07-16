@@ -719,8 +719,8 @@ class DecoderHierarchical(nn.Module):
                 dec_input = torch.cat((token, subseq_embedding), 1)
                 print(dec_input.shape)
                 # Pass through the decoder
-                token, (h0_dec, c0_dec) = self.decoder_RNN(dec_input, (h0_dec, c0_dec))
-                token = self.decoder_output(token)
+                h0_dec = self.decoder_RNN(dec_input, h0_dec)
+                token = self.decoder_output(h0_dec)
                 if (self.num_classes > 1):
                     token = F.log_softmax(token.view(latent.size(0), self.num_classes, -1), 1).view(latent.size(0), -1)
                 # Fill the out tensor with the token
