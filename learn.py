@@ -63,7 +63,7 @@ class Learn:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.)
             # Optimizes weights
             optimizer.step()
-        if self.iter_train > 0 and self.beta < args.beta:
+        if self.iter_train > args.beta_delay and self.beta < args.beta:
             self.beta += 0.01
         self.iter_train += 1
         with torch.no_grad():
@@ -119,10 +119,10 @@ class Learn:
                     x = x.long()
                 # Compute criterion
                 recon_loss = criterion(x_recon, x)
-                self.recon_loss_mean_validate += recon_loss.detach()
-                self.kl_div_mean_validate += z_loss.detach()
+                self.recon_loss_mean_test += recon_loss.detach()
+                self.kl_div_mean_test += z_loss.detach()
                 loss = recon_loss + self.beta * z_loss
-                self.loss_mean_validate += loss.detach()
+                self.loss_mean_test += loss.detach()
         with torch.no_grad():
             writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test, epoch)
             writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test, epoch)

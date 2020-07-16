@@ -40,7 +40,6 @@ parser.add_argument("--shuffle_data_set", type=int, default=1, help='')
 parser.add_argument('--frame_bar',      type=int, default=64,       help='put a power of 2 here')
 parser.add_argument('--score_type',     type=str, default='mono',   help='use mono measures or poly ones')
 parser.add_argument('--score_sig',      type=str, default='4_4',    help='rhythmic signature to use (use "all" to bypass)')
-# parser.add_argument('--data_keys',      type=str, default='C',      help='transpose all tracks to a given key')
 parser.add_argument('--data_normalize', type=int, default=1,        help='normalize the data')
 parser.add_argument('--data_binarize',  type=int, default=1,        help='binarize the data')
 parser.add_argument('--data_pitch',     type=int, default=1,        help='constrain pitches in the data')
@@ -56,6 +55,7 @@ parser.add_argument('--sampling_figure', type=str, default='/slow-2/ninon/pyrapr
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae_flow | wae')
 parser.add_argument("--beta", type=int, default=1, help='ae | vae | vae_flow | wae')
+parser.add_argument("--beta_delay", type=int, default=1, help='ae | vae | vae_flow | wae')
 parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res_cnn | gru | cnn_gru | hierarchical')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
