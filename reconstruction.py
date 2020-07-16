@@ -51,8 +51,8 @@ def sampling(args, fs=100, program=0):
     # Create normal distribution representing latent space
     latent = distributions.normal.Normal(torch.tensor([0, 0], dtype=torch.float), torch.tensor([1, 0], dtype=torch.float))
     # Sampling random from latent space
-    z = latent.sample(sample_shape=torch.Size([64, args.latent_size]))
-    z = z.view([128, 512])
+    z = latent.sample(sample_shape=torch.Size([args.frame_bar, args.latent_size]))
+    z = z.view([128, args.latent_size])
     # Pass through the decoder
     z = z.transpose(0, 1)
     generated_bar = model.decoder(z)
@@ -60,8 +60,11 @@ def sampling(args, fs=100, program=0):
     if not os.path.exists(args.sampling_figure):
         os.makedirs(args.sampling_figure)
     generated_bar = generated_bar.detach().cpu()
+    # generated_bar = generated_bar.transpose(1, 2)
     if args.num_classes > 1:
-        generated_bar = torch.argmax(generated_bar, dim=0)
+        generated_bar = generated_bar.reshape(args.batch_size, args.num_classes, 128, -1)
+        generated_bar = torch.argmax(generated_bar, dim=1)
+        generated_bar = torch.argmax(generated_bar, dim=2)
     plt.matshow(generated_bar, alpha=1)
     plt.title("Sampling")
     plt.savefig(args.sampling_figure + 'sampling.png')
@@ -106,22 +109,16 @@ def sampling(args, fs=100, program=0):
     # pm.write(args.sampling_midi + ".mid")
 
 
-def interpolation(x, labels, args, a=None, b=None, x_c=None):
+def interpolation(args):
+    x_a, x_b = torch.rand(128 * args.frame_bar), torch.rand(128 * args.frame_bar)
     # Encode samples to the latent space
-    z_a, z_b = model.encode(x[labels == a]), model.encode(x[labels == b])
-    # Find the centroids of the classes a, b in the latent space
-    z_a_centroid = z_a.mean(axis=0)
-    z_b_centroid = z_b.mean(axis=0)
-    # The interpolation vector pointing from b to a
-    z_b2a = z_a_centroid - z_b_centroid
-    # Manipulate x_c
-    z_c = model.encode(x_c)
+    z_a, z_b = model.encode(x_a), model.encode(x_b)
     # Run through alpha values
     interp = []
     alpha_values = np.linspace(0, 1, args.n_steps)
     for alpha in alpha_values:
-        z_c_interp = z_c + alpha * z_b2a
-        interp.append(model.decode(z_c_interp))
+        z_interp = (1 - alpha) * z_a + alpha * z_b
+        interp.append(model.decode(z_interp))
     # Draw interpolation
     for v in interp:
         for i in range(v.shape[0]):
@@ -195,5 +192,5 @@ if __name__ == "__main__":
     epoch = 260
     model = torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
     sampling(args)
-    # interpolation(model, )
+    interpolation(args)
     print("[DEBUG END]")
