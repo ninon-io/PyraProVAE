@@ -657,7 +657,7 @@ class DecoderHierarchical(nn.Module):
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.LSTM(args.cond_output_dim + (self.input_size * args.num_classes), args.dec_hidden_size, num_layers=2)#, batch_first=True,
+        self.decoder_RNN = nn.GRUCell(args.cond_output_dim + (self.input_size * args.num_classes), args.dec_hidden_size)#, batch_first=True,
                                    #num_layers=2,
                                    #bidirectional=False, dropout=0.6)
         self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size * args.num_classes)
@@ -707,7 +707,7 @@ class DecoderHierarchical(nn.Module):
         # autoregressivly output tokens
         for sub in range(self.num_subsequences):
             subseq_embedding = subseq_embeddings[:, sub, :]
-            h0_dec = h0s_dec[:, :, sub, :].contiguous()
+            h0_dec = torch.mean(h0s_dec[:, :, sub, :].contiguous(), 0)
             for i in range(self.subseq_size):
                 # Concat the previous token and the current sub embedding as input
                 dec_input = torch.cat((token.float(), subseq_embedding), 1)
