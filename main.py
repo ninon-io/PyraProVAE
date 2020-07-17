@@ -9,7 +9,7 @@ from texttable import Texttable
 # Personnal imports
 from learn import Learn
 from data_loaders.data_loader import import_dataset
-from reconstruction import reconstruction, sampling
+from reconstruction import reconstruction, sampling, interpolation
 # Import models
 from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
 from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
@@ -101,7 +101,7 @@ args.final_path = args.output_path
 for m in model_variants:
     args.final_path += str(m) + '_'
 args.final_path = args.final_path[:-1] + '/'
-if (os.path.exists(args.final_path)):
+if os.path.exists(args.final_path):
     os.system('rm -rf ' + args.final_path + '/*')
 else:
     os.makedirs(args.final_path)
@@ -233,6 +233,17 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
     # Save weights
     learn.save(model, args, epoch)
+    torch.save({
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'loss_train': loss_mean,
+        'recon_loss_train': recon_loss_mean,
+        'loss_validate': loss_mean_validate,
+        'recon_loss_validate': recon_loss_mean_validate,
+        'loss_test': loss_mean_test,
+        'recon_loss_test': recon_loss_mean_test
+    }, args.final_path + 'losses/' + '_epoch_' + str(epoch) + '.pth')
 # -----------------------------------------------------------
 #
 # Evaluate stuffs
@@ -251,3 +262,4 @@ for epoch in range(1, args.epochs + 1, 1):
     print(t.draw())
     print(10 * '*******')
 print('\nTraining Time in minutes =', (time() - time0) / 60)
+
