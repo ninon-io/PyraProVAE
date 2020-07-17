@@ -9,11 +9,11 @@ import torch
 from torch import distributions
 from data_loaders.data_loader import maximum
 import argparse
-from models.vae_gru import VAEKawai
+from models.encoders import *
+from models.ae import *
 
 
 def reconstruction(args, model, epoch, dataset):
-    max_global = 128
     # Plot settings
     nrows, ncols = 4, 2  # array of sub-plots
     figsize = np.array([8, 20])  # figure size, inches
@@ -58,7 +58,7 @@ def sampling(args, fs=100, program=0):
     if not os.path.exists(args.sampling_figure):
         os.makedirs(args.sampling_figure)
     generated_bar = generated_bar.detach().cpu()
-    # generated_bar = generated_bar.transpose(1, 2)
+    generated_bar = generated_bar.transpose(1, 2)
     if args.num_classes > 1:
         generated_bar = generated_bar.reshape(args.batch_size, args.num_classes, 128, -1)
         generated_bar = torch.argmax(generated_bar, dim=1)
@@ -128,11 +128,17 @@ def interpolation(args):
 
 
 if __name__ == "__main__":
+    # %%
+    # -----------------------------------------------------------
+    #
+    # Argument parser, get the arguments, if not on command line, the arguments are default
+    #
+    # -----------------------------------------------------------
     parser = argparse.ArgumentParser(description='PyraProVAE')
     # Device Information
     parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
     # Data Parameters
-    parser.add_argument('--midi_path', type=str, default='/Squarp/PyraProVAE/midi_short_dataset', help='path to midi folder')
+    parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/', help='path to midi folder')
     parser.add_argument("--test_size", type=float, default=0.2, help="% of data used in test set")
     parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
     parser.add_argument("--dataset", type=str, default="nottingham",
@@ -142,36 +148,29 @@ if __name__ == "__main__":
     parser.add_argument('--frame_bar', type=int, default=64, help='put a power of 2 here')
     parser.add_argument('--score_type', type=str, default='mono', help='use mono measures or poly ones')
     parser.add_argument('--score_sig', type=str, default='4_4', help='rhythmic signature to use (use "all" to bypass)')
-    # parser.add_argument('--data_keys',      type=str, default='C',      help='transpose all tracks to a given key')
     parser.add_argument('--data_normalize', type=int, default=1, help='normalize the data')
     parser.add_argument('--data_binarize', type=int, default=1, help='binarize the data')
     parser.add_argument('--data_pitch', type=int, default=1, help='constrain pitches in the data')
     parser.add_argument('--data_export', type=int, default=0, help='recompute the dataset (for debug purposes)')
     parser.add_argument('--data_augment', type=int, default=1, help='use data augmentation')
     # Model Saving and reconstruction
-    parser.add_argument('--model_path', type=str, default='/home/ninon/Squarp/PyraProVAE/saving_model/',
-                        help='path to the saved model')
-    parser.add_argument('--tensorboard_path', type=str, default='output/', help='path to the saved model')
-    parser.add_argument('--weights_path', type=str, default='/home/ninon/Squarp/PyraProVAE/models_saving/weights/',
-                        help='path to the saved model')
-    parser.add_argument('--figure_reconstruction_path', type=str,
-                        default='/home/ninon/Squarp/PyraProVAE/reconstruction/',
-                        help='path to reconstruction figures')
-    parser.add_argument('--sampling_midi', type=str, default='/home/ninon/Squarp/PyraProVAE/sampling/midi/',
-                        help='path to MIDI reconstruction from sampling')
-    parser.add_argument('--sampling_figure', type=str, default='/home/ninon/Squarp/PyraProVAE/sampling/figure/',
-                        help='path to visual reconstruction from sampling')
+    parser.add_argument('--output_path', type=str, default='output/', help='major path for data output')
     # Model Parameters
-    parser.add_argument("--model", type=str, default="vae_kawai", help='PyraPro | vae_mathieu | ae')
+    parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
+    parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
+    parser.add_argument("--beta_delay", type=int, default=0, help='delay before using beta')
+    parser.add_argument("--encoder_type", type=str, default="gru",
+                        help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
     # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
-    parser.add_argument('--enc_hidden_size', type=int, default=2048, help='do not touch if you do not know')
-    parser.add_argument('--latent_size', type=int, default=512, help='do not touch if you do not know')
+    parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
+    parser.add_argument('--latent_size', type=int, default=128, help='do not touch if you do not know')
     parser.add_argument('--cond_hidden_size', type=int, default=1024, help='do not touch if you do not know')
     parser.add_argument('--cond_output_dim', type=int, default=512, help='do not touch if you do not know')
-    parser.add_argument('--dec_hidden_size', type=int, default=1024, help='do not touch if you do not know')
+    parser.add_argument('--dec_hidden_size', type=int, default=512, help='do not touch if you do not know')
     parser.add_argument('--num_layers', type=int, default=2, help='do not touch if you do not know')
     parser.add_argument('--num_subsequences', type=int, default=8, help='do not touch if you do not know')
     parser.add_argument('--num_classes', type=int, default=2, help='number of velocity classes')
+    parser.add_argument('--initialize', type=int, default=0, help='use initialization on the model')
     # Optimization parameters
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
     parser.add_argument('--subsample', type=int, default=0, help='train on subset')
@@ -179,16 +178,49 @@ if __name__ == "__main__":
     parser.add_argument('--nbworkers', type=int, default=3, help='')
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--seed', type=int, default=1, help='random seed')
-    # Interpolation parameters
-    parser.add_argument('--nb_steps', type=int, default=10, help='nb steps for the interpolation')
-    # parser.add_argument('--log-interval', type=int, default=10, help='how many batches to wait before logging training status')
-    # parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
-    # parser.add_argument('--save-model', action='store_true', default=True, help='For Saving the current Model')
     # Parse the arguments
     args = parser.parse_args()
+
+    # Model creation
+    print('[Creating encoder and decoder]')
+    # Here select between different encoders and decoders
+    if args.encoder_type == 'mlp':
+        encoder = EncoderMLP(args)
+        decoder = DecoderMLP(args)
+    elif args.encoder_type == 'cnn':
+        args.type_mod = 'normal'
+        encoder = EncoderCNN(args)
+        args.cnn_size = encoder.cnn_size
+        decoder = DecoderCNN(args)
+    elif args.encoder_type == 'res-cnn':
+        args.type_mod = 'residual'
+        encoder = EncoderCNN(args)
+        args.cnn_size = encoder.cnn_size
+        decoder = DecoderCNN(args)
+    elif args.encoder_type == 'gru':
+        encoder = EncoderGRU(args)
+        decoder = DecoderGRU(args)
+    elif args.encoder_type == 'cnn-gru':
+        encoder = EncoderCNNGRU(args)
+        decoder = DecoderCNNGRU(args)
+    # elif args.encoder_type == 'hierarchical':
+    #     encoder = HierarchicalEncoder(args)
+    #     decoder = HierarchicalDecoder(args)
+    print('[Creating model]')
+    # Then select different models
+    if args.model == 'ae':
+        model = AE(encoder, decoder, args).float()
+    elif args.model == 'vae':
+        model = VAE(encoder, decoder, args).float()
+    elif args.model == 'wae':
+        model = WAE(encoder, decoder, args).float()
+    else:
+        print("Oh no, unknown model " + args.model + ".\n")
+        exit()
     print("[DEBUG BEGIN]")
-    epoch = 260
-    model = torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
+    epoch = 200
+    model = args.model
+    model = torch.load(args.output_path + '/output200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
     sampling(args)
     interpolation(args)
     print("[DEBUG END]")
