@@ -7,6 +7,7 @@ import random
 import numpy as np
 from models.layers import GatedDense, ResConv2d, ResConvTranspose2d
 
+
 # -----------------------------------------------------------
 # -----------------------------------------------------------
 #
@@ -28,6 +29,7 @@ class Encoder(nn.Module):
 
     def init(self, vals):
         pass
+
 
 # -----------------------------------------------------------
 #
@@ -66,8 +68,8 @@ class EncoderMLP(nn.Module):
             elif m.__class__ in [nn.Linear]:
                 init.xavier_normal_(m.weight.data)
                 init.normal_(m.bias.data)
-        #self.net[-1].weight.data.uniform_(-0.001, 0.001)
-        #self.net[-1].bias.data.uniform_(-0.001, 0.001)
+        # self.net[-1].weight.data.uniform_(-0.001, 0.001)
+        # self.net[-1].bias.data.uniform_(-0.001, 0.001)
 
     def forward(self, x, ctx=None):
         # Flatten the input
@@ -75,6 +77,7 @@ class EncoderMLP(nn.Module):
         for m in range(len(self.net)):
             out = self.net[m](out)
         return torch.tanh(out)
+
 
 # -----------------------------------------------------------
 #
@@ -84,8 +87,8 @@ class EncoderMLP(nn.Module):
 
 
 class EncoderCNN(nn.Module):
-    
-    def __init__(self, args, channels = 64, n_layers = 5, n_mlp = 3):
+
+    def __init__(self, args, channels=64, n_layers=5, n_mlp=3):
         super(EncoderCNN, self).__init__()
         conv_module = (args.type_mod == 'residual') and ResConv2d or nn.Conv2d
         dense_module = (args.type_mod == 'residual') and GatedDense or nn.Linear
@@ -94,36 +97,36 @@ class EncoderCNN(nn.Module):
         size = [args.input_size[1], args.input_size[0]]
         out_size = args.enc_hidden_size
         hidden_size = args.enc_hidden_size
-        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0] #in_size is (C,H,W) or (H,W)
+        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0]  # in_size is (C,H,W) or (H,W)
         kernel = [4, 13]
         stride = [1, 1]
         """ First do a CNN """
         for l in range(n_layers):
             dil = 1
             pad = 2
-            in_s = (l==0) and in_channel or channels
+            in_s = (l == 0) and in_channel or channels
             out_s = (l == n_layers - 1) and 1 or channels
-            modules.add_module('c2%i'%l, conv_module(in_s, out_s, kernel, stride, pad, dilation = dil))
-            if (l < n_layers - 1):
-                modules.add_module('b2%i'%l, nn.BatchNorm2d(out_s))
-                modules.add_module('a2%i'%l, nn.ReLU())
-                modules.add_module('d2%i'%l, nn.Dropout2d(p=.25))
-            size[0] = int((size[0]+2*pad-(dil*(kernel[0]-1)+1))/stride[0]+1)
-            size[1] = int((size[1]+2*pad-(dil*(kernel[1]-1)+1))/stride[1]+1)
+            modules.add_module('c2%i' % l, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
+            if l < n_layers - 1:
+                modules.add_module('b2%i' % l, nn.BatchNorm2d(out_s))
+                modules.add_module('a2%i' % l, nn.ReLU())
+                modules.add_module('d2%i' % l, nn.Dropout2d(p=.25))
+            size[0] = int((size[0] + 2 * pad - (dil * (kernel[0] - 1) + 1)) / stride[0] + 1)
+            size[1] = int((size[1] + 2 * pad - (dil * (kernel[1] - 1) + 1)) / stride[1] + 1)
         self.net = modules
         self.mlp = nn.Sequential()
         """ Then go through MLP """
         for l in range(n_mlp):
-            in_s = (l==0) and (size[0] * size[1]) or hidden_size
+            in_s = (l == 0) and (size[0] * size[1]) or hidden_size
             out_s = (l == n_mlp - 1) and out_size or hidden_size
-            self.mlp.add_module('h%i'%l, dense_module(in_s, out_s))
+            self.mlp.add_module('h%i' % l, dense_module(in_s, out_s))
             if (l < n_layers - 1):
-                self.mlp.add_module('b%i'%l, nn.BatchNorm1d(out_s))
-                self.mlp.add_module('a%i'%l, nn.LeakyReLU())
-                self.mlp.add_module('d%i'%l, nn.Dropout(p=.25))
+                self.mlp.add_module('b%i' % l, nn.BatchNorm1d(out_s))
+                self.mlp.add_module('a%i' % l, nn.LeakyReLU())
+                self.mlp.add_module('d%i' % l, nn.Dropout(p=.25))
         self.cnn_size = size
         self.init_parameters()
-    
+
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for net in [self.net, self.mlp]:
@@ -138,15 +141,16 @@ class EncoderCNN(nn.Module):
                 elif m.__class__ in [nn.Linear]:
                     init.xavier_normal_(m.weight.data)
                     init.normal_(m.bias.data)
-        
+
     def forward(self, inputs):
-        out = inputs.unsqueeze(1) if len(inputs.shape) < 4 else inputs # force to (batch, C, H, W)
+        out = inputs.unsqueeze(1) if len(inputs.shape) < 4 else inputs  # force to (batch, C, H, W)
         for m in range(len(self.net)):
             out = self.net[m](out)
         out = out.view(inputs.shape[0], -1)
         for m in range(len(self.mlp)):
             out = self.mlp[m](out)
         return torch.tanh(out)
+
 
 # -----------------------------------------------------------
 #
@@ -155,7 +159,7 @@ class EncoderCNN(nn.Module):
 # -----------------------------------------------------------
 
 class EncoderGRU(nn.Module):
-    
+
     def __init__(self, args):
         super(EncoderGRU, self).__init__()
         self.gru_0 = nn.GRU(
@@ -182,7 +186,7 @@ class EncoderGRU(nn.Module):
                         init.orthogonal_(param.data)
                     else:
                         init.normal_(param.data)
-        
+
     def forward(self, x, ctx=None):
         self.gru_0.flatten_parameters()
         x = self.gru_0(x)
@@ -192,6 +196,7 @@ class EncoderGRU(nn.Module):
         x = torch.tanh(self.bn_enc(self.linear_enc(x)))
         return x
 
+
 # -----------------------------------------------------------
 #
 # CNN-GRU Encoder
@@ -199,7 +204,7 @@ class EncoderGRU(nn.Module):
 # -----------------------------------------------------------
 
 class EncoderCNNGRU(nn.Module):
-    
+
     def __init__(self, args):
         super(EncoderGRU, self).__init__()
         self.gru_0 = nn.GRU(
@@ -230,7 +235,7 @@ class EncoderCNNGRU(nn.Module):
                         init.orthogonal_(param.data)
                     else:
                         init.normal_(param.data)
-        
+
     def forward(self, x, ctx=None):
         self.gru_0.flatten_parameters()
         x = self.gru_0(x)
@@ -239,6 +244,7 @@ class EncoderCNNGRU(nn.Module):
         x = x.view(x.size(0), -1)
         x = F.relu(self.bn_enc(self.linear_enc(x)))
         return x
+
 
 # -----------------------------------------------------------
 #
@@ -260,8 +266,9 @@ class EncoderHierarchical(Encoder):
 
     def init_hidden(self, batch_size=1):
         # initialize the the hidden state // Bidirectionnal so num_layers * 2 \\
-        return (torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device),
-                torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device))
+        return (
+            torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device),
+            torch.zeros(self.num_layers * 2, batch_size, self.enc_hidden_size, dtype=torch.float, device=self.device))
 
     def forward(self, x, ctx=None):
         h0, c0 = ctx
@@ -337,9 +344,8 @@ class DecoderMLP(nn.Module):
             elif m.__class__ in [nn.Linear]:
                 init.xavier_normal_(m.weight.data)
                 init.normal_(m.bias.data)
-        #self.net[-1].weight.data.uniform_(-0.001, 0.001)
-        #self.net[-1].bias.data.uniform_(-0.001, 0.001)
-        
+        # self.net[-1].weight.data.uniform_(-0.001, 0.001)
+        # self.net[-1].bias.data.uniform_(-0.001, 0.001)
 
     def forward(self, z, ctx=None):
         # Flatten the input
@@ -351,16 +357,17 @@ class DecoderMLP(nn.Module):
         out = out.view(z.size(0), self.output_size[1], -1)
         return out
 
+
 # -----------------------------------------------------------
 #
 # Basic CNN decoder
 #
 # -----------------------------------------------------------
 
-    
+
 class DecoderCNN(nn.Module):
-    
-    def __init__(self, args, channels = 64, n_layers = 5, n_mlp = 2):
+
+    def __init__(self, args, channels=64, n_layers=5, n_mlp=2):
         super(DecoderCNN, self).__init__()
         conv_module = (args.type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
         dense_module = (args.type_mod == 'residual') and GatedDense or nn.Linear
@@ -376,33 +383,34 @@ class DecoderCNN(nn.Module):
         out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
         """ First go through MLP """
         for l in range(n_mlp):
-            in_s = (l==0) and (in_size) or hidden_size
+            in_s = (l == 0) and (in_size) or hidden_size
             out_s = (l == n_mlp - 1) and np.prod(cnn_size) or hidden_size
-            self.mlp.add_module('h%i'%l, dense_module(in_s, out_s))
+            self.mlp.add_module('h%i' % l, dense_module(in_s, out_s))
             if (l < n_layers - 1):
-                self.mlp.add_module('b%i'%l, nn.BatchNorm1d(out_s))
-                self.mlp.add_module('a%i'%l, nn.ReLU())
-                self.mlp.add_module('d%i'%l, nn.Dropout(p=.25))
+                self.mlp.add_module('b%i' % l, nn.BatchNorm1d(out_s))
+                self.mlp.add_module('a%i' % l, nn.ReLU())
+                self.mlp.add_module('d%i' % l, nn.Dropout(p=.25))
         modules = nn.Sequential()
         """ Then do a CNN """
         for l in range(n_layers):
             dil = 1
             pad = 2
             out_pad = (pad % 2)
-            in_s = (l==0) and 1 or channels
+            in_s = (l == 0) and 1 or channels
             out_s = (l == n_layers - 1) and out_size[0] or channels
-            modules.add_module('c2%i'%l, conv_module(in_s, out_s, kernel, stride, pad, output_padding=out_pad, dilation = dil))
+            modules.add_module('c2%i' % l,
+                               conv_module(in_s, out_s, kernel, stride, pad, output_padding=out_pad, dilation=dil))
             if (l < n_layers - 1):
-                modules.add_module('b2%i'%l, nn.BatchNorm2d(out_s))
-                modules.add_module('a2%i'%l, nn.ReLU())
-                modules.add_module('a2%i'%l, nn.Dropout2d(p=.25))
+                modules.add_module('b2%i' % l, nn.BatchNorm2d(out_s))
+                modules.add_module('a2%i' % l, nn.ReLU())
+                modules.add_module('a2%i' % l, nn.Dropout2d(p=.25))
             size[0] = int((size[0] - 1) * stride[0] - (2 * pad) + dil * (kernel[0] - 1) + out_pad + 1)
             size[1] = int((size[1] - 1) * stride[1] - (2 * pad) + dil * (kernel[1] - 1) + out_pad + 1)
         self.net = modules
-        self.out_size = out_size #(H,W) or (C,H,W)
+        self.out_size = out_size  # (H,W) or (C,H,W)
         self.num_classes = args.num_classes
         self.init_parameters()
-    
+
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
         for net in [self.net, self.mlp]:
@@ -417,7 +425,7 @@ class DecoderCNN(nn.Module):
                 elif m.__class__ in [nn.Linear]:
                     init.xavier_normal_(m.weight.data)
                     init.normal_(m.bias.data)
-        
+
     def forward(self, inputs):
         out = inputs
         for m in range(len(self.mlp)):
@@ -432,6 +440,7 @@ class DecoderCNN(nn.Module):
             out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
+
 # -----------------------------------------------------------
 #
 # GRU decoder
@@ -439,7 +448,7 @@ class DecoderCNN(nn.Module):
 # -----------------------------------------------------------
 
 class DecoderGRU(nn.Module):
-    
+
     def __init__(self, args, k=500):
         super(DecoderGRU, self).__init__()
         self.grucell_1 = nn.GRUCell(
@@ -471,13 +480,13 @@ class DecoderGRU(nn.Module):
                         init.orthogonal_(param.data)
                     else:
                         init.normal_(param.data)
-    
+
     def _sampling(self, x):
-        if (self.num_classes > 1):
+        if self.num_classes > 1:
             idx = x.view(x.shape[0], self.num_classes, -1).max(1)[1]
-            x = F.one_hot(idx, num_classes = self.num_classes)
+            x = F.one_hot(idx, num_classes=self.num_classes)
         return x.view(x.shape[0], -1)
-    
+
     def forward(self, z):
         out = torch.zeros((z.size(0), (self.input_size * self.num_classes)))
         out[:, -1] = 1.
@@ -492,7 +501,7 @@ class DecoderGRU(nn.Module):
                 hx[1] = hx[0]
             hx[1] = self.grucell_2(hx[0], hx[1])
             tmp_out = self.linear_out_1(hx[1])
-            if (self.num_classes > 1):
+            if self.num_classes > 1:
                 out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
             if self.training:
@@ -502,11 +511,11 @@ class DecoderGRU(nn.Module):
                 else:
                     out = self._sampling(out)
                 self.eps = self.k / \
-                    (self.k + torch.exp(float(self.iteration) / self.k))
+                           (self.k + torch.exp(float(self.iteration) / self.k))
             else:
                 out = self._sampling(out)
         return torch.stack(x, 1)
-    
+
 
 # -----------------------------------------------------------
 #
@@ -515,7 +524,7 @@ class DecoderGRU(nn.Module):
 # -----------------------------------------------------------
 
 class DecoderCNNGRU(nn.Module):
-    
+
     def __init__(self, args, k=500):
         super(DecoderGRU, self).__init__()
         self.grucell_1 = nn.GRUCell(
@@ -551,13 +560,13 @@ class DecoderCNNGRU(nn.Module):
                         init.orthogonal_(param.data)
                     else:
                         init.normal_(param.data)
-    
+
     def _sampling(self, x):
-        if (self.num_classes > 1):
+        if self.num_classes > 1:
             idx = x.view(x.shape[0], self.num_classes, -1).max(1)[1]
-            x = F.one_hot(idx, num_classes = self.num_classes)
+            x = F.one_hot(idx, num_classes=self.num_classes)
         return x.view(x.shape[0], -1)
-    
+
     def forward(self, z):
         out = torch.zeros((z.size(0), (self.input_size * self.num_classes)))
         out[:, -1] = 1.
@@ -572,7 +581,7 @@ class DecoderCNNGRU(nn.Module):
                 hx[1] = hx[0]
             hx[1] = self.grucell_2(hx[0], hx[1])
             tmp_out = self.linear_out_1(hx[1])
-            if (self.num_classes > 1):
+            if self.num_classes > 1:
                 out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
             if self.training:
@@ -582,11 +591,12 @@ class DecoderCNNGRU(nn.Module):
                 else:
                     out = self._sampling(out)
                 self.eps = self.k / \
-                    (self.k + torch.exp(float(self.iteration) / self.k))
+                           (self.k + torch.exp(float(self.iteration) / self.k))
             else:
                 out = self._sampling(out)
         return torch.stack(x, 1)
-    
+
+
 # -----------------------------------------------------------
 #
 # Hierarchical encoder based on MusicVAE

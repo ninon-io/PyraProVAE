@@ -10,6 +10,7 @@ from torch.distributions import Normal
 # -----------------------------------------------------------
 # -----------------------------------------------------------
 
+
 class AE(nn.Module):
 
     def __init__(self, encoder, decoder, args):
@@ -57,7 +58,8 @@ class AE(nn.Module):
 #
 # -----------------------------------------------------------
 # -----------------------------------------------------------
-    
+
+
 class VAE(nn.Module):
     def __init__(self, encoder, decoder, args):
         super(VAE, self).__init__()
@@ -127,6 +129,7 @@ class VAE(nn.Module):
 # -----------------------------------------------------------
 # -----------------------------------------------------------
 
+
 class WAE(VAE):
 
     def __init__(self, encoder, decoder, args):
@@ -147,7 +150,8 @@ class WAE(VAE):
 # WAE helper functions
 #
 # -----------------------------------------------------------
-        
+
+
 def compute_kernel(x, y):
     x_size = x.size(0)
     y_size = y.size(0)
@@ -158,6 +162,7 @@ def compute_kernel(x, y):
     tiled_y = y.expand(x_size, y_size, dim)
     kernel_input = (tiled_x - tiled_y).pow(2).mean(2)
     return torch.exp(-kernel_input)
+
 
 def compute_mmd(x, y):
     x_kernel = compute_kernel(x, x)
@@ -173,6 +178,7 @@ def compute_mmd(x, y):
 #
 # -----------------------------------------------------------
 # -----------------------------------------------------------
+
 
 class VAEFlow(VAE):
 
