@@ -120,7 +120,7 @@ class EncoderCNN(nn.Module):
             in_s = (l == 0) and (size[0] * size[1]) or hidden_size
             out_s = (l == n_mlp - 1) and out_size or hidden_size
             self.mlp.add_module('h%i' % l, dense_module(in_s, out_s))
-            if (l < n_layers - 1):
+            if l < n_layers - 1:
                 self.mlp.add_module('b%i' % l, nn.BatchNorm1d(out_s))
                 self.mlp.add_module('a%i' % l, nn.LeakyReLU())
                 self.mlp.add_module('d%i' % l, nn.Dropout(p=.25))
@@ -218,13 +218,13 @@ class EncoderCNNGRU(nn.Module):
         for l in range(n_layers):
             dil = 1
             pad = 2
-            in_s = (l==0) and in_channel or channels
+            in_s = (l == 0) and in_channel or channels
             out_s = (l == n_layers - 1) and 1 or channels
-            modules.add_module('c2%i'%l, conv_module(in_s, out_s, kernel, stride, pad, dilation = dil))
-            if (l < n_layers - 1):
-                modules.add_module('b2%i'%l, nn.BatchNorm2d(out_s))
-                modules.add_module('a2%i'%l, nn.ReLU())
-                modules.add_module('d2%i'%l, nn.Dropout2d(p=.25))
+            modules.add_module('c2%i'% l, conv_module(in_s, out_s, kernel, stride, pad, dilation = dil))
+            if l < n_layers - 1:
+                modules.add_module('b2%i'% l, nn.BatchNorm2d(out_s))
+                modules.add_module('a2%i'% l, nn.ReLU())
+                modules.add_module('d2%i'% l, nn.Dropout2d(p=.25))
             size[0] = int((size[0]+2*pad-(dil*(kernel[0]-1)+1))/stride[0]+1)
             size[1] = int((size[1]+2*pad-(dil*(kernel[1]-1)+1))/stride[1]+1)
         self.net = modules
@@ -395,7 +395,7 @@ class DecoderMLP(nn.Module):
         out = z.view(z.shape[0], -1)
         for m in range(len(self.net)):
             out = self.net[m](out)
-        if (self.num_classes > 1):
+        if self.num_classes > 1:
             out = F.log_softmax(out.view(z.size(0), self.output_size[1], self.num_classes, -1), 2)
         out = out.view(z.size(0), self.output_size[1], -1)
         return out
@@ -443,7 +443,7 @@ class DecoderCNN(nn.Module):
             out_s = (l == n_layers - 1) and out_size[0] or channels
             modules.add_module('c2%i' % l,
                                conv_module(in_s, out_s, kernel, stride, pad, output_padding=out_pad, dilation=dil))
-            if (l < n_layers - 1):
+            if l < n_layers - 1:
                 modules.add_module('b2%i' % l, nn.BatchNorm2d(out_s))
                 modules.add_module('a2%i' % l, nn.ReLU())
                 modules.add_module('a2%i' % l, nn.Dropout2d(p=.25))
@@ -694,7 +694,7 @@ class DecoderHierarchical(nn.Module):
                         init.normal_(param.data)
 
     def _sampling(self, x):
-        if (self.num_classes > 1):
+        if self.num_classes > 1:
             idx = x.view(x.shape[0], self.num_classes, -1).max(1)[1]
             x = F.one_hot(idx, num_classes = self.num_classes)
         return x.view(x.shape[0], -1)
@@ -724,7 +724,7 @@ class DecoderHierarchical(nn.Module):
                 # Pass through the decoder
                 h0_dec = self.decoder_RNN(dec_input, h0_dec)
                 token = self.decoder_output(h0_dec)
-                if (self.num_classes > 1):
+                if self.num_classes > 1:
                     token = F.log_softmax(token.view(latent.size(0), self.num_classes, -1), 1).view(latent.size(0), -1)
                 # Fill the out tensor with the token
                 out.append(token)
