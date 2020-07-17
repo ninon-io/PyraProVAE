@@ -184,42 +184,42 @@ if __name__ == "__main__":
     # Model creation
     print('[Creating encoder and decoder]')
     # Here select between different encoders and decoders
-    if args.encoder_type == 'mlp':
-        encoder = EncoderMLP(args)
-        decoder = DecoderMLP(args)
-    elif args.encoder_type == 'cnn':
-        args.type_mod = 'normal'
-        encoder = EncoderCNN(args)
-        args.cnn_size = encoder.cnn_size
-        decoder = DecoderCNN(args)
-    elif args.encoder_type == 'res-cnn':
-        args.type_mod = 'residual'
-        encoder = EncoderCNN(args)
-        args.cnn_size = encoder.cnn_size
-        decoder = DecoderCNN(args)
-    elif args.encoder_type == 'gru':
-        encoder = EncoderGRU(args)
-        decoder = DecoderGRU(args)
-    elif args.encoder_type == 'cnn-gru':
-        encoder = EncoderCNNGRU(args)
-        decoder = DecoderCNNGRU(args)
+    # if args.encoder_type == 'mlp':
+    #     encoder = EncoderMLP(args)
+    #     decoder = DecoderMLP(args)
+    # elif args.encoder_type == 'cnn':
+    #     args.type_mod = 'normal'
+    #     encoder = EncoderCNN(args)
+    #     args.cnn_size = encoder.cnn_size
+    #     decoder = DecoderCNN(args)
+    # elif args.encoder_type == 'res-cnn':
+    #     args.type_mod = 'residual'
+    #     encoder = EncoderCNN(args)
+    #     args.cnn_size = encoder.cnn_size
+    #     decoder = DecoderCNN(args)
+    # elif args.encoder_type == 'gru':
+    #     encoder = EncoderGRU(args)
+    #     decoder = DecoderGRU(args)
+    # elif args.encoder_type == 'cnn-gru':
+    #     encoder = EncoderCNNGRU(args)
+    #     decoder = DecoderCNNGRU(args)
     # elif args.encoder_type == 'hierarchical':
     #     encoder = HierarchicalEncoder(args)
     #     decoder = HierarchicalDecoder(args)
     print('[Creating model]')
     # Then select different models
-    if args.model == 'ae':
-        model = AE(encoder, decoder, args).float()
-    elif args.model == 'vae':
-        model = VAE(encoder, decoder, args).float()
-    elif args.model == 'wae':
-        model = WAE(encoder, decoder, args).float()
-    else:
-        print("Oh no, unknown model " + args.model + ".\n")
-        exit()
+    # if args.model == 'ae':
+    #     model = AE(encoder, decoder, args).float()
+    # elif args.model == 'vae':
+    #     model = VAE(encoder, decoder, args).float()
+    # elif args.model == 'wae':
+    #     model = WAE(encoder, decoder, args).float()
+    # else:
+    #     print("Oh no, unknown model " + args.model + ".\n")
+    #     exit()
     print("[DEBUG BEGIN]")
     epoch = 200
-    model = args.model
+    # model = args.model
     model = torch.load(args.output_path + '/output200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
     sampling(args)
     interpolation(args)
