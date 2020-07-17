@@ -29,21 +29,17 @@ encoder_type = ['mlp', 'cnn', 'res_cnn', 'gru', 'cnn_gru', 'hierarchical']
 latent_size = [256, 128, 64, 32, 16, 4]
 
 # Using list comprehension to compute all possible permutations
-res = [[i, j, k] for i in [model]
-                 for j in [encoder_type]
-                 for k in [latent_size]]
-
-
-configurations = {'test': 0, 'full': 1, 'large': 2}
-final_config = configurations[args.config_type]
+res = [[i, j, k] for i in model
+                 for j in encoder_type
+                 for k in latent_size]
 
 run_name = 'run_' + str(args.device).replace(':', '_') + '.sh'
 with open(run_name, 'w') as file:
     for r in range(args.n_runs):
         for vals in res:
             cmd_str = 'python main.py --device ' + args.device
-            cmd_str += ' --datadir ' + args.datadir
-            cmd_str += ' --output ' + args.output
+            cmd_str += ' --midi_path ' + args.midi_path
+            cmd_str += ' --output_path ' + args.output_path
             cmd_str += ' --dataset ' + args.dataset
             cmd_str += ' --model ' + vals[0]
             cmd_str += ' --encoder_type ' + vals[1]
