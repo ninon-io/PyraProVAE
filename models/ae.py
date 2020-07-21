@@ -111,9 +111,10 @@ class VAE(nn.Module):
                 self.sample = self.sample.view(b, s, -1)
             else:
                 self.sample = x
+
             self.decoder.sample = self.sample
             self.decoder.iteration += 1
-        # Encode the inut
+        # Encode the input
         z, mu, var = self.encode(x)
         # Regularize the latent
         loss = self.regularize(z, mu, var)
