@@ -45,86 +45,128 @@ def reconstruction(args, model, epoch, dataset):
     # plt.show()
 
 
-def sampling(args, fs=100, program=0):
+def sampling(args, nb_samples=10, fs=100, program=0):
     # Create normal distribution representing latent space
-    latent = distributions.normal.Normal(torch.tensor([0, 0], dtype=torch.float), torch.tensor([1, 0], dtype=torch.float))
+    latent = distributions.normal.Normal(torch.tensor([0], dtype=torch.float),
+                                         torch.tensor([1], dtype=torch.float))
     # Sampling random from latent space
-    z = latent.sample(sample_shape=torch.Size([args.frame_bar, args.latent_size]))
-    z = z.view([128, args.latent_size])
+    z = latent.sample(sample_shape=torch.Size([nb_samples, args.latent_size])).squeeze(2)
     # Pass through the decoder
-    z = z.transpose(0, 1)
     generated_bar = model.decoder(z)
     # Generate figure from sampling
-    if not os.path.exists(args.sampling_figure):
-        os.makedirs(args.sampling_figure)
     generated_bar = generated_bar.detach().cpu()
-    generated_bar = generated_bar.transpose(1, 2)
     if args.num_classes > 1:
-        generated_bar = generated_bar.reshape(args.batch_size, args.num_classes, 128, -1)
+        generated_bar = generated_bar.reshape(nb_samples, args.num_classes, -1, args.frame_bar)
         generated_bar = torch.argmax(generated_bar, dim=1)
-        generated_bar = torch.argmax(generated_bar, dim=2)
-    plt.matshow(generated_bar, alpha=1)
-    plt.title("Sampling")
-    plt.savefig(args.figures_path + 'sampling.png')
-
+    for i in range(nb_samples):
+        plt.matshow(generated_bar[i], alpha=1)
+        plt.title("Sampling from latent space")
+        plt.savefig(args.figures_path + 'sampling' + str(i) + '.png')
+    plt.close()
     # Generate MIDI from sampling
-    # if not os.path.exists(args.sampling_midi):
-    #     os.makedirs(args.sampling_midi)
-    # pm = pretty_midi.PrettyMIDI()
-    # print('bar:', generated_bar.shape)
-    # # generated_bar = torch.mean(generated_bar, dim=2)
-    # print('bar_gen_mean:', generated_bar.shape)
-    # notes, frames = generated_bar.shape
-    # instrument = pretty_midi.Instrument(program=program)
-    # # Pad 1 column of zeros to acknowledge initial and ending events
-    # piano_roll = np.pad(generated_bar.detach(), [(0, 0), (1, 1)], 'constant')
-    # # Use changes in velocities to find note on/note off events
-    # velocity_changes = np.nonzero(np.diff(piano_roll).T)
-    # # Keep track on velocities and note on times
-    # prev_velocities = np.zeros(notes, dtype=int)
-    # note_on_time = np.zeros(notes)
-    #
-    # for time, note in zip(*velocity_changes):
-    #     # Use time + 1 because of padding above
-    #     velocity = piano_roll[notes, time + 1]
-    #     time = time / fs
-    #     if velocity > 0:
-    #         if prev_velocities[note] == 0:
-    #             note_on_time[note] = time
-    #             prev_velocities[note] = velocity
-    #     else:
-    #         pm_note = pretty_midi.Note(
-    #             velocity=prev_velocities[note],
-    #             pitch=note,
-    #             start=note_on_time[note],
-    #             end=time)
-    #         instrument.notes.append(pm_note)
-    #         prev_velocities[note] = 0
-    #     pm.instruments.append(instrument)
-    #     return pm
-    # # Write out the MIDI data
-    # print('[Writing MIDI from:]', pm)
-    # pm.write(args.sampling_midi + ".mid")
+    pm = pretty_midi.PrettyMIDI()
+    notes, frames = generated_bar[0].shape
+    instrument = pretty_midi.Instrument(program=program)
+    # Pad 1 column of zeros to acknowledge initial and ending events
+    piano_roll = np.pad(generated_bar[0].detach(), [(0, 0), (1, 1)], 'constant')
+    # Use changes in velocities to find note on/note off events
+    velocity_changes = np.nonzero(np.diff(piano_roll).T)
+    # Keep track on velocities and note on times
+    prev_velocities = np.zeros(notes, dtype=int)
+    note_on_time = np.zeros(notes)
+    for time, note in zip(*velocity_changes):
+        # Use time + 1 because of padding above
+        velocity = piano_roll[notes - 1, time + 1]
+        time = time / fs
+        if velocity > 0:
+            if prev_velocities[note] == 0:
+                note_on_time[note] = time
+                prev_velocities[note] = velocity
+        else:
+            pm_note = pretty_midi.Note(
+                velocity=prev_velocities[note],
+                pitch=note,
+                start=note_on_time[note],
+                end=time)
+            instrument.notes.append(pm_note)
+            prev_velocities[note] = 0
+    pm.instruments.append(instrument)
+    # Write out the MIDI data
+    pm.write(args.midi_results_path + "sampling.mid")
 
 
-def interpolation(args):
-    x_a, x_b = torch.rand(128 * args.frame_bar), torch.rand(128 * args.frame_bar)
+def interpolation(args, fs=100, program=0):
+    x_a, x_b = torch.rand(args.frame_bar * 48, dtype=torch.float), torch.rand(args.frame_bar * 48, dtype=torch.float)
+    x_a, x_b = x_a.view(1, args.frame_bar, 48), x_b.view(1, args.frame_bar, 48)
     # Encode samples to the latent space
-    z_a, z_b = model.encode(x_a), model.encode(x_b)
+    z_a, z_b = model.encoder(x_a), model.encoder(x_b)
+    if args.model in ['vae', 'wae']:
+        mu_a = model.linear_mu(z_a)
+        mu_b = model.linear_mu(z_b)
+        var_a = model.linear_var(z_a)
+        var_b = model.linear_var(z_b)
+        distribution_a = Normal(mu_a, var_a)
+        distribution_b = Normal(mu_b, var_b)
+        z_a = distribution_a.rsample()
+        z_b = distribution_b.rsample()
+    elif args.model == 'ae':
+        z_a = model.map_latent(z_a)
+        z_b = model.map_latent(z_b)
     # Run through alpha values
     interp = []
     alpha_values = np.linspace(0, 1, args.n_steps)
     for alpha in alpha_values:
-        z_interp = (1 - alpha) * z_a + alpha * z_b
-        interp.append(model.decode(z_interp))
-    # Draw interpolation
-    for v in interp:
-        for i in range(v.shape[0]):
-            plt.matshow(interp[i].cpu(), alpha=1)
-            plt.title("Interpolation")
-            plt.tight_layout(True)
-            plt.savefig(args.figures_path + "interpolation.png")
-            plt.close()
+        z_interp = 1 - alpha * z_a + alpha * z_b
+        interp.append(model.decoder(z_interp))
+    # Draw interpolation step by step
+    i = 0
+    stack_interp = []
+    for step in interp:
+        if args.num_classes > 1:
+            step = step.reshape(1, args.num_classes, -1, args.frame_bar)
+            step = torch.argmax(step[0], dim=0)
+        stack_interp.append(step)
+        plt.matshow(step.detach(), alpha=1)
+        plt.title("Interpolation " + str(i))
+        plt.savefig(args.figures_path + "interpolation" + str(i) + ".png")
+        plt.close()
+        i += 1
+    stack_interp = torch.cat(stack_interp, dim=1)
+    # Draw stacked interpolation
+    plt.matshow(stack_interp, alpha=1)
+    plt.title("Interpolation")
+    plt.savefig(args.figures_path + "interpolation.png")
+    plt.close()
+    # Generate MIDI from interpolation
+    pm = pretty_midi.PrettyMIDI()
+    notes, frames = stack_interp.shape
+    instrument = pretty_midi.Instrument(program=program)
+    # Pad 1 column of zeros to acknowledge initial and ending events
+    piano_roll = np.pad(stack_interp.detach(), [(0, 0), (1, 1)], 'constant')
+    # Use changes in velocities to find note on/note off events
+    velocity_changes = np.nonzero(np.diff(piano_roll).T)
+    # Keep track on velocities and note on times
+    prev_velocities = np.zeros(notes, dtype=int)
+    note_on_time = np.zeros(notes)
+    for time, note in zip(*velocity_changes):
+        # Use time + 1 because of padding above
+        velocity = piano_roll[notes - 1, time + 1]
+        time = time / fs
+        if velocity > 0:
+            if prev_velocities[note] == 0:
+                note_on_time[note] = time
+                prev_velocities[note] = velocity
+        else:
+            pm_note = pretty_midi.Note(
+                velocity=prev_velocities[note],
+                pitch=note,
+                start=note_on_time[note],
+                end=time)
+            instrument.notes.append(pm_note)
+            prev_velocities[note] = 0
+    pm.instruments.append(instrument)
+    # Write out the MIDI data
+    pm.write(args.midi_results_path + "interpolation.mid")
 
 
 if __name__ == "__main__":
@@ -179,48 +221,33 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
     parser.add_argument('--seed', type=int, default=1, help='random seed')
     # Parse the arguments
+    parser.add_argument('--n_steps', type=int, default=11, help='number of steps for interpolation')
+    parser.add_argument('--nb_samples', type=int, default=10, help='number of sampling from latent space')
     args = parser.parse_args()
 
-    # Model creation
-    print('[Creating encoder and decoder]')
-    # Here select between different encoders and decoders
-    # if args.encoder_type == 'mlp':
-    #     encoder = EncoderMLP(args)
-    #     decoder = DecoderMLP(args)
-    # elif args.encoder_type == 'cnn':
-    #     args.type_mod = 'normal'
-    #     encoder = EncoderCNN(args)
-    #     args.cnn_size = encoder.cnn_size
-    #     decoder = DecoderCNN(args)
-    # elif args.encoder_type == 'res-cnn':
-    #     args.type_mod = 'residual'
-    #     encoder = EncoderCNN(args)
-    #     args.cnn_size = encoder.cnn_size
-    #     decoder = DecoderCNN(args)
-    # elif args.encoder_type == 'gru':
-    #     encoder = EncoderGRU(args)
-    #     decoder = DecoderGRU(args)
-    # elif args.encoder_type == 'cnn-gru':
-    #     encoder = EncoderCNNGRU(args)
-    #     decoder = DecoderCNNGRU(args)
-    # elif args.encoder_type == 'hierarchical':
-    #     encoder = HierarchicalEncoder(args)
-    #     decoder = HierarchicalDecoder(args)
-    print('[Creating model]')
-    # Then select different models
-    # if args.model == 'ae':
-    #     model = AE(encoder, decoder, args).float()
-    # elif args.model == 'vae':
-    #     model = VAE(encoder, decoder, args).float()
-    # elif args.model == 'wae':
-    #     model = WAE(encoder, decoder, args).float()
-    # else:
-    #     print("Oh no, unknown model " + args.model + ".\n")
-    #     exit()
+    model_variants = [args.dataset, args.score_type, args.data_binarize, args.num_classes, args.data_augment,
+                      args.model, args.encoder_type, args.latent_size, args.beta, args.enc_hidden_size]
+    args.final_path = args.output_path
+    for m in model_variants:
+        args.final_path += str(m) + '_'
+    args.final_path = args.final_path[:-1] + '/'
+    if os.path.exists(args.final_path):
+        os.system('rm -rf ' + args.final_path + '/*')
+    else:
+        os.makedirs(args.final_path)
+    # Create all sub-folders
+    args.model_path = args.final_path + 'models/'
+    args.tensorboard_path = args.final_path + 'tensorboard/'
+    args.weights_path = args.final_path + 'weights/'
+    args.figures_path = args.final_path + 'figures/'
+    args.midi_results_path = args.final_path + 'midi/'
+    for p in [args.model_path, args.tensorboard_path, args.weights_path, args.figures_path, args.midi_results_path]:
+        os.makedirs(p)
+
     print("[DEBUG BEGIN]")
     epoch = 200
     # model = args.model
-    model = torch.load(args.output_path + '/output200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
-    sampling(args)
+    model = torch.load(args.output_path + '/out200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
+    sampling(args, args.nb_samples)
     interpolation(args)
     print("[DEBUG END]")
