@@ -70,6 +70,9 @@ parser.add_argument('--epochs', type=int, default=300, help='number of epochs to
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
+# Reconstruction parameters
+parser.add_argument('--n_steps', type=int, default=11, help='number of steps for interpolation')
+parser.add_argument('--nb_samples', type=int, default=10, help='number of samples to decode from latent space')
 # Parse the arguments
 args = parser.parse_args()
 
@@ -235,6 +238,19 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
     # Save weights
     learn.save(model, args, epoch)
+
+# -----------------------------------------------------------
+#
+# Evaluate stuffs
+#
+# -----------------------------------------------------------
+    # Compare input data and reconstruction
+    reconstruction(args, model, epoch, test_set)
+    # Sample random point from latent space
+    sampling(args)
+    # Interpolation between two inputs
+    interpolation(args)
+    # Save stuffs
     torch.save({
         'epoch': epoch,
         'model_state_dict': model.state_dict(),
@@ -246,13 +262,6 @@ for epoch in range(1, args.epochs + 1, 1):
         'loss_test': loss_mean_test,
         'recon_loss_test': recon_loss_mean_test
     }, args.final_path + 'losses/' + '_epoch_' + str(epoch) + '.pth')
-# -----------------------------------------------------------
-#
-# Evaluate stuffs
-#
-# -----------------------------------------------------------
-    reconstruction(args, model, epoch, test_set)
-    # sampling(args)
     # Track on stuffs
     print("*******" * 10)
     print('* Useful & incredible tracking:')
