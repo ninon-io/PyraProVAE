@@ -248,6 +248,6 @@ if __name__ == "__main__":
     epoch = 200
     # model = args.model
     model = torch.load(args.output_path + '/out200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
-    sampling(args, args.nb_samples)
+    sampling(args)
     interpolation(args)
     print("[DEBUG END]")
