@@ -211,7 +211,7 @@ class EncoderCNNGRU(nn.Module):
         # First go through a CNN
         modules = nn.Sequential()
         size = [args.input_size[1], args.input_size[0]]
-        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0] #in_size is (C,H,W) or (H,W)
+        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0]  # in_size is (C,H,W) or (H,W)
         kernel = [4, 13]
         stride = [1, 1]
         """ First do a CNN """
@@ -220,7 +220,7 @@ class EncoderCNNGRU(nn.Module):
             pad = 2
             in_s = (l == 0) and in_channel or channels
             out_s = (l == n_layers - 1) and 1 or channels
-            modules.add_module('c2%i'% l, conv_module(in_s, out_s, kernel, stride, pad, dilation = dil))
+            modules.add_module('c2%i'% l, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
             if l < n_layers - 1:
                 modules.add_module('b2%i'% l, nn.BatchNorm2d(out_s))
                 modules.add_module('a2%i'% l, nn.ReLU())
@@ -429,7 +429,7 @@ class DecoderCNN(nn.Module):
             in_s = (l == 0) and (in_size) or hidden_size
             out_s = (l == n_mlp - 1) and np.prod(cnn_size) or hidden_size
             self.mlp.add_module('h%i' % l, dense_module(in_s, out_s))
-            if (l < n_layers - 1):
+            if l < n_layers - 1:
                 self.mlp.add_module('b%i' % l, nn.BatchNorm1d(out_s))
                 self.mlp.add_module('a%i' % l, nn.ReLU())
                 self.mlp.add_module('d%i' % l, nn.Dropout(p=.25))
