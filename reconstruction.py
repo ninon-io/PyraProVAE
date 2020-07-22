@@ -136,7 +136,7 @@ def interpolation(args, model, dataset, fs=100, program=0):
         i += 1
     stack_interp = torch.cat(stack_interp, dim=1)
     # Draw stacked interpolation
-    plt.matshow(stack_interp, alpha=1)
+    plt.matshow(stack_interp.cpu(), alpha=1)
     plt.title("Interpolation")
     plt.savefig(args.figures_path + "interpolation.png")
     plt.close()
