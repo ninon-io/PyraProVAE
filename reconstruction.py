@@ -97,12 +97,13 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
 
 
 def interpolation(args, model, dataset, fs=100, program=0):
-    rand_input = dataset[random.randint(0, len(dataset) - 1)]
-    x_a, x_b = rand_input, rand_input
+    x_a, x_b = dataset[random.randint(0, len(dataset) - 1)], dataset[random.randint(0, len(dataset) - 1)]
     x_a, x_b = x_a.to(args.device), x_b.to(args.device)
-    x_a, x_b = x_a.transpose(0, 1), x_b.transpose(0, 1)
+    #x_a, x_b = x_a.transpose(0, 1), x_b.transpose(0, 1)
+    # Or switch to encode
     # Encode samples to the latent space
-    z_a, z_b = model.encoder(x_a.unsqueeze(0)), model.encoder(x_b.unsqueeze(0))
+    z_a, z_b = model.encode(x_a.unsqueeze(0)), model.encode(x_b.unsqueeze(0))
+    """
     if args.model in ['vae', 'wae']:
         mu_a = model.linear_mu(z_a)
         mu_b = model.linear_mu(z_b)
@@ -115,18 +116,19 @@ def interpolation(args, model, dataset, fs=100, program=0):
     elif args.model == 'ae':
         z_a = model.map_latent(z_a)
         z_b = model.map_latent(z_b)
+    """
     # Run through alpha values
     interp = []
     alpha_values = np.linspace(0, 1, args.n_steps)
     for alpha in alpha_values:
         z_interp = 1 - alpha * z_a + alpha * z_b
-        interp.append(model.decoder(z_interp))
+        interp.append(model.decode(z_interp))
     # Draw interpolation step by step
     i = 0
     stack_interp = []
     for step in interp:
         if args.num_classes > 1:
-            step = step.reshape(1, args.num_classes, -1, args.frame_bar)
+            #step = step.reshape(1, args.num_classes, -1, args.frame_bar)
             step = torch.argmax(step[0], dim=0)
         stack_interp.append(step)
         plt.matshow(step.cpu().detach(), alpha=1)
