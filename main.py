@@ -111,6 +111,7 @@ else:
     os.makedirs(args.final_path)
 # Create all sub-folders
 args.model_path = args.final_path + 'models/'
+args.losses_path = args.final_path + 'losses/'
 args.tensorboard_path = args.final_path + 'tensorboard/'
 args.weights_path = args.final_path + 'weights/'
 args.figures_path = args.final_path + 'figures/'
@@ -263,7 +264,7 @@ for epoch in range(1, args.epochs + 1, 1):
         'recon_loss_validate': recon_loss_mean_validate,
         'loss_test': loss_mean_test,
         'recon_loss_test': recon_loss_mean_test
-    }, args.final_path + 'losses/' + '_epoch_' + str(epoch) + '.pth')
+    }, args.losses_path + '_epoch_' + str(epoch) + '.pth')
     # Track on stuffs
     print("*******" * 10)
     print('* Useful & incredible tracking:')
