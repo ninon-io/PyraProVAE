@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
 parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/', help='path to midi folder')
+parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets', help='path to midi folder')
 parser.add_argument("--test_size",  type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
@@ -47,7 +47,7 @@ parser.add_argument('--data_pitch',     type=int, default=1,        help='constr
 parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
 parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
 # Model Saving and reconstruction
-parser.add_argument('--output_path', type=str, default='output/', help='major path for data output')
+parser.add_argument('--output_path', type=str, default='output', help='major path for data output')
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
 parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
@@ -71,6 +71,7 @@ parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
 # Reconstruction parameters
+parser.add_argument('--epoch_evaluation', type=int, default=180, help='epoch number to begin sampling + inteprolation')
 parser.add_argument('--n_steps', type=int, default=11, help='number of steps for interpolation')
 parser.add_argument('--nb_samples', type=int, default=10, help='number of samples to decode from latent space')
 # Parse the arguments
@@ -246,10 +247,11 @@ for epoch in range(1, args.epochs + 1, 1):
 # -----------------------------------------------------------
     # Compare input data and reconstruction
     reconstruction(args, model, epoch, test_set)
-    # Sample random point from latent space
-    sampling(args)
-    # Interpolation between two inputs
-    interpolation(args)
+    if epoch >= args.epoch_evaluate:
+        # Sample random point from latent space
+        sampling(args)
+        # Interpolation between two inputs
+        interpolation(args, test_set)
     # Save stuffs
     torch.save({
         'epoch': epoch,

@@ -182,7 +182,7 @@ if __name__ == "__main__":
     # Device Information
     parser.add_argument('--device', type=str, default='cuda:0', help='device cuda or cpu')
     # Data Parameters
-    parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets/', help='path to midi folder')
+    parser.add_argument('--midi_path', type=str, default='/fast-1/mathieu/datasets', help='path to midi folder')
     parser.add_argument("--test_size", type=float, default=0.2, help="% of data used in test set")
     parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
     parser.add_argument("--dataset", type=str, default="nottingham",
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_export', type=int, default=0, help='recompute the dataset (for debug purposes)')
     parser.add_argument('--data_augment', type=int, default=1, help='use data augmentation')
     # Model Saving and reconstruction
-    parser.add_argument('--output_path', type=str, default='output/', help='major path for data output')
+    parser.add_argument('--output_path', type=str, default='output', help='major path for data output')
     # Model Parameters
     parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
     parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
@@ -252,7 +252,6 @@ if __name__ == "__main__":
 
     print("[DEBUG BEGIN]")
     epoch = 200
-    # model = args.model
     model = torch.load(args.output_path + '/out200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
     sampling(args)
     interpolation(args, test_set)
