@@ -249,7 +249,7 @@ for epoch in range(1, args.epochs + 1, 1):
     reconstruction(args, model, epoch, test_set)
     if epoch >= args.epoch_evaluation:
         # Sample random point from latent space
-        sampling(args)
+        sampling(args, model)
         # Interpolation between two inputs
         interpolation(args, test_set)
     # Save stuffs
