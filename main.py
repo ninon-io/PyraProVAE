@@ -251,7 +251,7 @@ for epoch in range(1, args.epochs + 1, 1):
         # Sample random point from latent space
         sampling(args, model)
         # Interpolation between two inputs
-        interpolation(args, test_set)
+        interpolation(args, model, test_set)
     # Save stuffs
     torch.save({
         'epoch': epoch,

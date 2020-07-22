@@ -96,7 +96,7 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
     pm.write(args.midi_results_path + "sampling.mid")
 
 
-def interpolation(args, dataset, fs=100, program=0):
+def interpolation(args, model, dataset, fs=100, program=0):
     rand_input = dataset[random.randint(0, len(dataset) - 1)]
     x_a, x_b = rand_input, rand_input
     # x_a, x_b = torch.rand(args.frame_bar * 48, dtype=torch.float), torch.rand(args.frame_bar * 48, dtype=torch.float)
