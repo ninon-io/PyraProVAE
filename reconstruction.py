@@ -129,7 +129,7 @@ def interpolation(args, model, dataset, fs=100, program=0):
             step = step.reshape(1, args.num_classes, -1, args.frame_bar)
             step = torch.argmax(step[0], dim=0)
         stack_interp.append(step)
-        plt.matshow(step.detach(), alpha=1)
+        plt.matshow(step.cpu().detach(), alpha=1)
         plt.title("Interpolation " + str(i))
         plt.savefig(args.figures_path + "interpolation" + str(i) + ".png")
         plt.close()
