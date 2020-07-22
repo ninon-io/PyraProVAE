@@ -51,6 +51,7 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
                                          torch.tensor([1], dtype=torch.float))
     # Sampling random from latent space
     z = latent.sample(sample_shape=torch.Size([args.nb_samples, args.latent_size])).squeeze(2)
+    z = z.to(args.device)
     # Pass through the decoder
     generated_bar = model.decoder(z)
     # Generate figure from sampling
