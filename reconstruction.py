@@ -45,18 +45,18 @@ def reconstruction(args, model, epoch, dataset):
     # plt.show()
 
 
-def sampling(args, nb_samples=10, fs=100, program=0):
+def sampling(args, model, nb_samples=10, fs=100, program=0):
     # Create normal distribution representing latent space
     latent = distributions.normal.Normal(torch.tensor([0], dtype=torch.float),
                                          torch.tensor([1], dtype=torch.float))
     # Sampling random from latent space
-    z = latent.sample(sample_shape=torch.Size([nb_samples, args.latent_size])).squeeze(2)
+    z = latent.sample(sample_shape=torch.Size([args.nb_samples, args.latent_size])).squeeze(2)
     # Pass through the decoder
     generated_bar = model.decoder(z)
     # Generate figure from sampling
     generated_bar = generated_bar.detach().cpu()
     if args.num_classes > 1:
-        generated_bar = generated_bar.reshape(nb_samples, args.num_classes, -1, args.frame_bar)
+        generated_bar = generated_bar.reshape(args.nb_samples, args.num_classes, -1, args.frame_bar)
         generated_bar = torch.argmax(generated_bar, dim=1)
     for i in range(nb_samples):
         plt.matshow(generated_bar[i], alpha=1)
