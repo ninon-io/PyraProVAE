@@ -99,6 +99,7 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
 def interpolation(args, model, dataset, fs=100, program=0):
     rand_input = dataset[random.randint(0, len(dataset) - 1)]
     x_a, x_b = rand_input, rand_input
+    x_a, x_b = x_a.to(args.device), x_b.to(args.device)
     x_a, x_b = x_a.transpose(0, 1), x_b.transpose(0, 1)
     # Encode samples to the latent space
     z_a, z_b = model.encoder(x_a.unsqueeze(0)), model.encoder(x_b.unsqueeze(0))
