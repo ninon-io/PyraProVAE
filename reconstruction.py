@@ -145,7 +145,7 @@ def interpolation(args, model, dataset, fs=100, program=0):
     notes, frames = stack_interp.shape
     instrument = pretty_midi.Instrument(program=program)
     # Pad 1 column of zeros to acknowledge initial and ending events
-    piano_roll = np.pad(stack_interp.detach(), [(0, 0), (1, 1)], 'constant')
+    piano_roll = np.pad(stack_interp.cpu().detach(), [(0, 0), (1, 1)], 'constant')
     # Use changes in velocities to find note on/note off events
     velocity_changes = np.nonzero(np.diff(piano_roll).T)
     # Keep track on velocities and note on times
