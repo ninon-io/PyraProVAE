@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from torch import distributions
 import pretty_midi
-from data_loaders import data_loader
+from data_loaders.data_loader import import_dataset
 import random
 import numpy as np
 import os
@@ -21,7 +21,7 @@ def reconstruction(args, model, epoch, dataset):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
 
     # generate random index for testing random data
-    rand_ind = np.array([random.randint(0, len(dataset) - 1) for i in range(nrows)])
+    rand_ind = np.array([random.randint(0, len(dataset) - 1)])
     ind = 0
     for i, axi in enumerate(ax.flat):
         if i % 2 == 0:
@@ -95,8 +95,10 @@ def sampling(args, nb_samples=10, fs=100, program=0):
     pm.write(args.midi_results_path + "sampling.mid")
 
 
-def interpolation(args, fs=100, program=0):
-    x_a, x_b = torch.rand(args.frame_bar * 48, dtype=torch.float), torch.rand(args.frame_bar * 48, dtype=torch.float)
+def interpolation(args, dataset, fs=100, program=0):
+    rand_input = dataset[random.randint(0, len(dataset) - 1)]
+    x_a, x_b = rand_input, rand_input
+    # x_a, x_b = torch.rand(args.frame_bar * 48, dtype=torch.float), torch.rand(args.frame_bar * 48, dtype=torch.float)
     x_a, x_b = x_a.view(1, args.frame_bar, 48), x_b.view(1, args.frame_bar, 48)
     # Encode samples to the latent space
     z_a, z_b = model.encoder(x_a), model.encoder(x_b)
@@ -243,11 +245,15 @@ if __name__ == "__main__":
     args.midi_results_path = args.final_path + 'midi/'
     for p in [args.model_path, args.tensorboard_path, args.weights_path, args.figures_path, args.midi_results_path]:
         os.makedirs(p)
+    # Ensure coherence of classes parameters
+    if args.data_binarize and args.num_classes > 1:
+        args.num_classes = 2
+    train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
 
     print("[DEBUG BEGIN]")
     epoch = 200
     # model = args.model
     model = torch.load(args.output_path + '/out200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
     sampling(args)
-    interpolation(args)
+    interpolation(args, test_set)
     print("[DEBUG END]")

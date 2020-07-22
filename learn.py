@@ -59,7 +59,7 @@ class Learn:
             # Learning with back-propagation
             loss.backward()
             # Clip gradient for recurrent models
-            if (args.encoder_type in ['gru', 'cnn_gru', 'hierarchical']):
+            if args.encoder_type in ['gru', 'cnn_gru', 'hierarchical']:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.)
             # Optimizes weights
             optimizer.step()
