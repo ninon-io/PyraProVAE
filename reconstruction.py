@@ -100,7 +100,7 @@ def interpolation(args, dataset, fs=100, program=0):
     rand_input = dataset[random.randint(0, len(dataset) - 1)]
     x_a, x_b = rand_input, rand_input
     # x_a, x_b = torch.rand(args.frame_bar * 48, dtype=torch.float), torch.rand(args.frame_bar * 48, dtype=torch.float)
-    x_a, x_b = x_a.view(1, args.frame_bar, 48), x_b.view(1, args.frame_bar, 48)
+    # x_a, x_b = x_a.view(1, args.frame_bar, 48), x_b.view(1, args.frame_bar, 48)
     # Encode samples to the latent space
     z_a, z_b = model.encoder(x_a), model.encoder(x_b)
     if args.model in ['vae', 'wae']:
