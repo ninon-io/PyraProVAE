@@ -47,7 +47,7 @@ parser.add_argument('--data_pitch',     type=int, default=1,        help='constr
 parser.add_argument('--data_export',    type=int, default=0,        help='recompute the dataset (for debug purposes)')
 parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
 # Model Saving and reconstruction
-parser.add_argument('--output_path', type=str, default='output', help='major path for data output')
+parser.add_argument('--output_path', type=str, default='/slow-2/ninon/pyrapro/', help='major path for data output')
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
 parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
