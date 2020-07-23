@@ -244,13 +244,13 @@ for epoch in range(1, args.epochs + 1, 1):
     # Compare input data and reconstruction
     reconstruction(args, model, epoch, test_set)
     # Gather losses
-    loss_list = [loss_mean, loss_mean_validate, loss_mean_test]
-    for i in loss_list:
-        losses = torch.cat(([epoch, loss_list[i]]), 0)
+    losses[epoch, 0] = loss_mean
+    losses[epoch, 1] = loss_mean_validate
+    losses[epoch, 2] = loss_mean_test
     # Gather reconstruction losses # TODO: Probably useless?
-    recon_loss_list = [recon_loss_mean, recon_loss_mean_validate, recon_loss_mean_test]
-    for i in recon_loss_list:
-        recon_losses = recon_losses.append[epoch, recon_loss_list[i]]
+    # recon_loss_list = torch.tensor([recon_loss_mean, recon_loss_mean_validate, recon_loss_mean_test])
+    # for i in recon_loss_list:
+    #     recon_losses = torch.cat((epoch, recon_loss_list[i]), 0)
     # Save losses
     torch.save({
         'loss': losses,
