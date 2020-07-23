@@ -47,9 +47,9 @@ parser.add_argument('--data_augment',   type=int, default=1,        help='use da
 parser.add_argument('--output_path', type=str, default='/slow-2/ninon/pyrapro/', help='major path for data output')
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
+parser.add_argument("--encoder_type", type=str, default="cnn-gru", help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
 parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
 parser.add_argument("--beta_delay", type=int, default=0, help='delay before using beta')
-parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
 parser.add_argument('--latent_size', type=int, default=128, help='do not touch if you do not know')
@@ -224,7 +224,7 @@ print('[Initial evaluation]')
 print('[Starting main training]')
 # Set losses
 losses = torch.zeros(args.epochs + 1, 3)
-recon_losses = torch.zeros(args.epochs, 3)
+recon_losses = torch.zeros(args.epochs + 1, 3)
 # Set minimum to infinity
 cur_best_valid = np.inf
 cur_best_valid_recons = np.inf
