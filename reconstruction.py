@@ -100,7 +100,7 @@ def interpolation(args, model, dataset, fs=100, program=0):
     interp = []
     alpha_values = np.linspace(0, 1, args.n_steps)
     for alpha in alpha_values:
-        z_interp = 1 - alpha * z_a + alpha * z_b
+        z_interp = (1 - alpha) * z_a + alpha * z_b
         interp.append(model.decode(z_interp))
     # Draw interpolation step by step
     i = 0
