@@ -47,7 +47,7 @@ parser.add_argument('--data_augment',   type=int, default=1,        help='use da
 parser.add_argument('--output_path', type=str, default='/slow-2/ninon/pyrapro/', help='major path for data output')
 # Model Parameters
 parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
-parser.add_argument("--encoder_type", type=str, default="cnn-gru", help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
+parser.add_argument("--encoder_type", type=str, default="gru", help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
 parser.add_argument("--beta", type=float, default=1., help='value of beta regularization')
 parser.add_argument("--beta_delay", type=int, default=0, help='delay before using beta')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
@@ -244,9 +244,12 @@ for epoch in range(1, args.epochs + 1, 1):
     # Compare input data and reconstruction
     reconstruction(args, model, epoch, test_set)
     # Gather losses
-    losses[epoch, 0] = loss_mean
-    losses[epoch, 1] = loss_mean_validate
-    losses[epoch, 2] = loss_mean_test
+    loss_list = [loss_mean, loss_mean_validate, loss_mean_test]
+    for counter, loss in enumerate(loss_list):
+        losses[epoch, counter] = loss
+    # losses[epoch, 0] = loss_mean
+    # losses[epoch, 1] = loss_mean_validate
+    # losses[epoch, 2] = loss_mean_test
     # Gather reconstruction losses # TODO: Probably useless?
     recon_loss_list = [recon_loss_mean, recon_loss_mean_validate, recon_loss_mean_test]
     for counter, loss in enumerate(recon_loss_list):
