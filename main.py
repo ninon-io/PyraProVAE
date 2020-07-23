@@ -10,9 +10,6 @@ from texttable import Texttable
 from learn import Learn
 from data_loaders.data_loader import import_dataset
 from reconstruction import reconstruction, sampling, interpolation
-# Import models
-from models.vae_pyrapro import VaeModel, HierarchicalEncoder, HierarchicalDecoder, Decoder
-from models.vae_mathieu import VAEPianoroll, EncoderPianoroll, DecoderPianoroll
 # Import encoders
 from models.encoders import EncoderMLP, DecoderMLP, EncoderCNN, DecoderCNN
 from models.encoders import EncoderGRU, DecoderGRU, EncoderCNNGRU, DecoderCNNGRU
@@ -67,6 +64,7 @@ parser.add_argument('--initialize', type=int, default=0, help='use initializatio
 parser.add_argument('--batch_size', type=int, default=64, help='input batch size')
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
 parser.add_argument('--epochs', type=int, default=300, help='number of epochs to train')
+parser.add_argument('--early_stop', default=30, type=int, help='')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
@@ -161,7 +159,7 @@ elif args.encoder_type == 'cnn-gru':
     args.type_mod = 'normal'
     encoder = EncoderCNNGRU(args)
     args.cnn_size = encoder.cnn_size
-    decoder = DecoderGRU(args)
+    decoder = DecoderCNNGRU(args)
 elif args.encoder_type == 'hierarchical':
     encoder = EncoderHierarchical(args)
     decoder = DecoderHierarchical(args)
@@ -219,19 +217,20 @@ if args.num_classes > 1:
 # Training loop
 #
 # -----------------------------------------------------------
-# Initial training of the model
-# learn.save(model, args, epoch=0)
 # Set time
 time0 = time()
 # Initial test
 print('[Initial evaluation]')
 # learn.test(model, args, epoch=0)  # First test on randomly initialized data
 print('[Starting main training]')
-### TODO = SAVE ALL LOSSES IN A SINGLE VECTOR
-losses = torch.Tensor(args.epochs, 3)
+# Set losses
+losses = torch.zeros(args.epochs, 3)
+recon_losses = torch.zeros(args.epochs, 3)
 # Set minimum to infinity
-cur_best_valid = torch.inf
-cur_best_valid_recons = torch.inf
+cur_best_valid = np.inf
+cur_best_valid_recons = np.inf
+# Set early stop
+early_stop = 0
 # Through the epochs
 for epoch in range(1, args.epochs + 1, 1):
     print(f"Epoch: {epoch}")
@@ -243,41 +242,35 @@ for epoch in range(1, args.epochs + 1, 1):
     scheduler.step(loss_mean_validate)
     # Test model
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
-    # Save best weights (mean validation loss)
-    if (loss_mean_validate < cur_best_valid):
-        cur_best_valid = loss_mean_validate
-        learn.save(model, args, 'full')
-    # Save best weights (mean validation loss)
-    if (recon_loss_mean_validate < cur_best_valid_recons):
-        cur_best_valid_recons = recon_loss_mean_validate
-        learn.save(model, args, 'reconstruction')
-    
-    ### TODO = EVENTUALLY ADD EARLY STOPPING
-
-# -----------------------------------------------------------
-#
-# Evaluate stuffs
-#
-# -----------------------------------------------------------
     # Compare input data and reconstruction
     reconstruction(args, model, epoch, test_set)
-    ### TODO = MAYBE REMOVE THIS
-    if epoch >= args.epoch_evaluation:
-        # Sample random point from latent space
-        sampling(args, model)
-        # Interpolation between two inputs
-        interpolation(args, model, test_set)
-    # Save stuffs
-    ### TODO = ALWAYS SAVE TO THE SAME FILE (BUT THE WHOLE VECTORS)
+    # Gather losses
+    loss_list = [loss_mean, loss_mean_validate, loss_mean_test]
+    for i in loss_list:
+        losses = losses.append[epoch, loss_list[i]]
+    # Gather reconstruction losses # TODO: Probably useless?
+    recon_loss_list = [recon_loss_mean, recon_loss_mean_validate, recon_loss_mean_test]
+    for i in recon_loss_list:
+        recon_losses = recon_losses.append[epoch, recon_loss_list[i]]
+    # Save losses
     torch.save({
-        'epoch': epoch,
-        'loss_train': loss_mean,
-        'recon_loss_train': recon_loss_mean,
-        'loss_validate': loss_mean_validate,
-        'recon_loss_validate': recon_loss_mean_validate,
-        'loss_test': loss_mean_test,
-        'recon_loss_test': recon_loss_mean_test
+        'loss': losses,
+        'recon_loss': recon_losses,
     }, args.losses_path + '_epoch_' + str(epoch) + '.pth')
+    # Save best weights (mean validation loss)
+    if recon_loss_mean_validate < cur_best_valid_recons:
+        cur_best_valid_recons = recon_loss_mean_validate
+        learn.save(model, args, 'reconstruction')
+    # Save best weights (mean validation loss)
+    if loss_mean_validate < cur_best_valid:
+        cur_best_valid = loss_mean_validate
+        learn.save(model, args, 'full')
+        early_stop = 0
+    elif args.early_stop > 0:
+        early_stop += 1
+        if early_stop > args.early_stop:
+            print('[Model stopped early]')
+            break
     # Track on stuffs
     print("*******" * 10)
     print('* Useful & incredible tracking:')
@@ -289,11 +282,14 @@ for epoch in range(1, args.epochs + 1, 1):
     print(t.draw())
     print(10 * '*******')
 print('\nTraining Time in minutes =', (time() - time0) / 60)
-### TODO = FINISH AND TEST THE FOLLOWING CODE
-# Need to reload best model
-model = torch.load()
-# Compare input data and reconstruction
-reconstruction(args, model, epoch, test_set)
+
+# -----------------------------------------------------------
+#
+# Evaluate stuffs
+#
+# -----------------------------------------------------------
+# Reload best performing model
+model = torch.load(args.model_path + '_' + 'full' + '.pth')
 # Sample random point from latent space
 sampling(args, model)
 # Interpolation between two inputs

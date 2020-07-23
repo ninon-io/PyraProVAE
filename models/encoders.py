@@ -204,8 +204,8 @@ class EncoderGRU(nn.Module):
 # -----------------------------------------------------------
 
 class EncoderCNNGRU(nn.Module):
-    
-    def __init__(self, args, channels = 64, n_layers = 5):
+
+    def __init__(self, args, channels=64, n_layers=5):
         super(EncoderCNNGRU, self).__init__()
         conv_module = (args.type_mod == 'residual') and ResConv2d or nn.Conv2d
         # First go through a CNN
@@ -220,13 +220,13 @@ class EncoderCNNGRU(nn.Module):
             pad = 2
             in_s = (l == 0) and in_channel or channels
             out_s = (l == n_layers - 1) and 1 or channels
-            modules.add_module('c2%i'% l, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
+            modules.add_module('c2%i' % l, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
             if l < n_layers - 1:
-                modules.add_module('b2%i'% l, nn.BatchNorm2d(out_s))
-                modules.add_module('a2%i'% l, nn.ReLU())
-                modules.add_module('d2%i'% l, nn.Dropout2d(p=.25))
-            size[0] = int((size[0]+2*pad-(dil*(kernel[0]-1)+1))/stride[0]+1)
-            size[1] = int((size[1]+2*pad-(dil*(kernel[1]-1)+1))/stride[1]+1)
+                modules.add_module('b2%i' % l, nn.BatchNorm2d(out_s))
+                modules.add_module('a2%i' % l, nn.ReLU())
+                modules.add_module('d2%i' % l, nn.Dropout2d(p=.25))
+            size[0] = int((size[0] + 2 * pad - (dil * (kernel[0] - 1) + 1)) / stride[0] + 1)
+            size[1] = int((size[1] + 2 * pad - (dil * (kernel[1] - 1) + 1)) / stride[1] + 1)
         self.net = modules
         self.gru_0 = nn.GRU(
             size[1],
@@ -260,7 +260,7 @@ class EncoderCNNGRU(nn.Module):
 
     def forward(self, x, ctx=None):
         out = x.unsqueeze(1)
-        self.gru_0.flatten_parameters()        
+        self.gru_0.flatten_parameters()
         for m in range(len(self.net)):
             out = self.net[m](out)
         x = self.gru_0(out.squeeze(1))
@@ -278,7 +278,7 @@ class EncoderCNNGRU(nn.Module):
 # -----------------------------------------------------------
 
 class EncoderHierarchical(nn.Module):
-    
+
     def __init__(self, args):
         super(EncoderHierarchical, self).__init__()
         self.enc_hidden_size = args.enc_hidden_size
@@ -426,7 +426,7 @@ class DecoderCNN(nn.Module):
         out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
         """ First go through MLP """
         for l in range(n_mlp):
-            in_s = (l == 0) and (in_size) or hidden_size
+            in_s = (l == 0) and in_size or hidden_size
             out_s = (l == n_mlp - 1) and np.prod(cnn_size) or hidden_size
             self.mlp.add_module('h%i' % l, dense_module(in_s, out_s))
             if l < n_layers - 1:
@@ -568,8 +568,8 @@ class DecoderGRU(nn.Module):
 
 class DecoderCNNGRU(nn.Module):
 
-    def __init__(self, args, k=500):
-        super(DecoderGRU, self).__init__()
+    def __init__(self, args, k=500, channels=64, n_layers=5):
+        super(DecoderCNNGRU, self).__init__()
         self.grucell_1 = nn.GRUCell(
             args.latent_size + (args.input_size[0] * args.num_classes),
             args.dec_hidden_size)
@@ -583,6 +583,27 @@ class DecoderCNNGRU(nn.Module):
         self.input_size = args.input_size[0]
         self.num_classes = args.num_classes
         self.init_parameters()
+        conv_module = (args.type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
+        # Go through a CNN after RNN
+        modules = nn.Sequential()
+        size = [args.dec_hidden_size[1], args.dec_hidden_size[0]]
+        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0]  # in_size is (C,H,W) or (H,W) #TODO
+        kernel = [13, 4]
+        stride = [1, 1]
+        for layer in range(n_layers):
+            dil = 1
+            pad = 2
+            in_s = (layer == 0) and in_channel or channels
+            out_s = (layer == n_layers - 1) and 1 or channels
+            modules.add_module('c2%i' % layer, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
+            if layer < n_layers - 1:
+                modules.add_module('b2%i' % layer, nn.BatchNorm2d(out_s))
+                modules.add_module('a2%i' % layer, nn.ReLU())
+                modules.add_module('d2%i' % layer, nn.Dropout2d(p=.25))
+            size[0] = int((size[0] + 2 * pad - (dil * (kernel[0] - 1) + 1)) / stride[0] + 1)
+            size[1] = int((size[1] + 2 * pad - (dil * (kernel[1] - 1) + 1)) / stride[1] + 1)
+        self.cnn_size = size
+        self.net = modules
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -667,9 +688,10 @@ class DecoderHierarchical(nn.Module):
                                      bidirectional=False, dropout=0.6)
         self.conductor_output = nn.Linear(args.cond_hidden_size, args.cond_output_dim)
         self.fc_init_dec = nn.Linear(args.cond_output_dim, args.dec_hidden_size * args.num_layers)
-        self.decoder_RNN = nn.GRUCell(args.cond_output_dim + (self.input_size * args.num_classes), args.dec_hidden_size)#, batch_first=True,
-                                   #num_layers=2,
-                                   #bidirectional=False, dropout=0.6)
+        self.decoder_RNN = nn.GRUCell(args.cond_output_dim + (self.input_size * args.num_classes),
+                                      args.dec_hidden_size)  # , batch_first=True,
+        # num_layers=2,
+        # bidirectional=False, dropout=0.6)
         self.decoder_output = nn.Linear(args.dec_hidden_size, self.input_size * args.num_classes)
         self.num_classes = args.num_classes
         self.k = torch.FloatTensor([k])
@@ -696,7 +718,7 @@ class DecoderHierarchical(nn.Module):
     def _sampling(self, x):
         if self.num_classes > 1:
             idx = x.view(x.shape[0], self.num_classes, -1).max(1)[1]
-            x = F.one_hot(idx, num_classes = self.num_classes)
+            x = F.one_hot(idx, num_classes=self.num_classes)
         return x.view(x.shape[0], -1)
 
     def forward(self, latent):
@@ -735,7 +757,7 @@ class DecoderHierarchical(nn.Module):
                     else:
                         token = self._sampling(token)
                     self.eps = self.k / \
-                        (self.k + torch.exp(float(self.iteration) / self.k))
+                               (self.k + torch.exp(float(self.iteration) / self.k))
                 else:
                     token = self._sampling(token)
         return torch.stack(out, 1)

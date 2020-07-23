@@ -1,13 +1,10 @@
 import matplotlib.pyplot as plt
-from torch import distributions
 import pretty_midi
-from data_loaders.data_loader import import_dataset
 import random
 import numpy as np
 import os
 import torch
 from torch import distributions
-from data_loaders.data_loader import maximum
 import argparse
 from models.encoders import *
 from models.ae import *
@@ -42,7 +39,6 @@ def reconstruction(args, model, epoch, dataset):
 
     plt.tight_layout(True)
     plt.savefig(args.figures_path + 'epoch_' + str(epoch))
-    # plt.show()
 
 
 def sampling(args, model, nb_samples=10, fs=100, program=0):
@@ -53,11 +49,10 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
     z = latent.sample(sample_shape=torch.Size([args.nb_samples, args.latent_size])).squeeze(2)
     z = z.to(args.device)
     # Pass through the decoder
-    generated_bar = model.decoder(z)
+    generated_bar = model.decode(z)
     # Generate figure from sampling
     generated_bar = generated_bar.detach().cpu()
     if args.num_classes > 1:
-        generated_bar = generated_bar.reshape(args.nb_samples, args.num_classes, -1, args.frame_bar)
         generated_bar = torch.argmax(generated_bar, dim=1)
     for i in range(nb_samples):
         plt.matshow(generated_bar[i], alpha=1)
@@ -99,24 +94,8 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
 def interpolation(args, model, dataset, fs=100, program=0):
     x_a, x_b = dataset[random.randint(0, len(dataset) - 1)], dataset[random.randint(0, len(dataset) - 1)]
     x_a, x_b = x_a.to(args.device), x_b.to(args.device)
-    #x_a, x_b = x_a.transpose(0, 1), x_b.transpose(0, 1)
-    # Or switch to encode
     # Encode samples to the latent space
     z_a, z_b = model.encode(x_a.unsqueeze(0)), model.encode(x_b.unsqueeze(0))
-    """
-    if args.model in ['vae', 'wae']:
-        mu_a = model.linear_mu(z_a)
-        mu_b = model.linear_mu(z_b)
-        var_a = model.linear_var(z_a)
-        var_b = model.linear_var(z_b)
-        distribution_a = Normal(mu_a, var_a)
-        distribution_b = Normal(mu_b, var_b)
-        z_a = distribution_a.rsample()
-        z_b = distribution_b.rsample()
-    elif args.model == 'ae':
-        z_a = model.map_latent(z_a)
-        z_b = model.map_latent(z_b)
-    """
     # Run through alpha values
     interp = []
     alpha_values = np.linspace(0, 1, args.n_steps)
@@ -128,7 +107,6 @@ def interpolation(args, model, dataset, fs=100, program=0):
     stack_interp = []
     for step in interp:
         if args.num_classes > 1:
-            #step = step.reshape(1, args.num_classes, -1, args.frame_bar)
             step = torch.argmax(step[0], dim=0)
         stack_interp.append(step)
         plt.matshow(step.cpu().detach(), alpha=1)
@@ -251,11 +229,11 @@ if __name__ == "__main__":
     # Ensure coherence of classes parameters
     if args.data_binarize and args.num_classes > 1:
         args.num_classes = 2
-    train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
+    # train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
 
     print("[DEBUG BEGIN]")
     epoch = 200
     model = torch.load(args.output_path + '/out200/_epoch_' + str(epoch) + '.pth', map_location=torch.device('cpu'))
-    sampling(args)
-    interpolation(args, test_set)
+    sampling(args, model)
+    # interpolation(args, model, test_set)
     print("[DEBUG END]")
