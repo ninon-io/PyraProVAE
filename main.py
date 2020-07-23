@@ -227,6 +227,11 @@ time0 = time()
 print('[Initial evaluation]')
 # learn.test(model, args, epoch=0)  # First test on randomly initialized data
 print('[Starting main training]')
+### TODO = SAVE ALL LOSSES IN A SINGLE VECTOR
+losses = torch.Tensor(args.epochs, 3)
+# Set minimum to infinity
+cur_best_valid = torch.inf
+cur_best_valid_recons = torch.inf
 # Through the epochs
 for epoch in range(1, args.epochs + 1, 1):
     print(f"Epoch: {epoch}")
@@ -238,8 +243,16 @@ for epoch in range(1, args.epochs + 1, 1):
     scheduler.step(loss_mean_validate)
     # Test model
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
-    # Save weights
-    learn.save(model, args, epoch)
+    # Save best weights (mean validation loss)
+    if (loss_mean_validate < cur_best_valid):
+        cur_best_valid = loss_mean_validate
+        learn.save(model, args, 'full')
+    # Save best weights (mean validation loss)
+    if (recon_loss_mean_validate < cur_best_valid_recons):
+        cur_best_valid_recons = recon_loss_mean_validate
+        learn.save(model, args, 'reconstruction')
+    
+    ### TODO = EVENTUALLY ADD EARLY STOPPING
 
 # -----------------------------------------------------------
 #
@@ -248,16 +261,16 @@ for epoch in range(1, args.epochs + 1, 1):
 # -----------------------------------------------------------
     # Compare input data and reconstruction
     reconstruction(args, model, epoch, test_set)
+    ### TODO = MAYBE REMOVE THIS
     if epoch >= args.epoch_evaluation:
         # Sample random point from latent space
         sampling(args, model)
         # Interpolation between two inputs
         interpolation(args, model, test_set)
     # Save stuffs
+    ### TODO = ALWAYS SAVE TO THE SAME FILE (BUT THE WHOLE VECTORS)
     torch.save({
         'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
         'loss_train': loss_mean,
         'recon_loss_train': recon_loss_mean,
         'loss_validate': loss_mean_validate,
@@ -276,4 +289,13 @@ for epoch in range(1, args.epochs + 1, 1):
     print(t.draw())
     print(10 * '*******')
 print('\nTraining Time in minutes =', (time() - time0) / 60)
+### TODO = FINISH AND TEST THE FOLLOWING CODE
+# Need to reload best model
+model = torch.load()
+# Compare input data and reconstruction
+reconstruction(args, model, epoch, test_set)
+# Sample random point from latent space
+sampling(args, model)
+# Interpolation between two inputs
+interpolation(args, model, test_set)
 

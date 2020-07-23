@@ -130,16 +130,13 @@ class Learn:
             writer.close()
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
-    def save(self, model, args, epoch):
+    def save(self, model, args, variant):
         # Save entire model
         if not os.path.exists(args.model_path):
             os.makedirs(args.model_path)
-        torch.save(model, args.model_path + '_epoch_' + str(epoch) + '.pth')
-        # Save only the weights
-        if not os.path.exists(args.weights_path):
-            os.makedirs(args.weights_path)
-        torch.save(model.state_dict(), args.weights_path + '_epoch_' + str(epoch) + '.pth')
-
-    def resume_training(self, args, model, epoch):  # Specify the wishing epoch resuming here
-        torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
+        torch.save(model, args.model_path + '_' + str(variant) + '.pth')
+       
+    def resume_training(self, args, model, epoch):  
+        # Specify the wishing epoch resuming here
+        model = torch.load(args.model_path + '_epoch_' + str(epoch) + '.pth')
         model.eval()
