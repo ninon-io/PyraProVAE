@@ -69,7 +69,6 @@ parser.add_argument('--nbworkers', type=int, default=3, help='')
 parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
 parser.add_argument('--seed', type=int, default=1, help='random seed')
 # Reconstruction parameters
-parser.add_argument('--epoch_evaluation', type=int, default=180, help='epoch number to begin sampling + inteprolation')
 parser.add_argument('--n_steps', type=int, default=11, help='number of steps for interpolation')
 parser.add_argument('--nb_samples', type=int, default=10, help='number of samples to decode from latent space')
 # Parse the arguments
@@ -247,7 +246,7 @@ for epoch in range(1, args.epochs + 1, 1):
     # Gather losses
     loss_list = [loss_mean, loss_mean_validate, loss_mean_test]
     for i in loss_list:
-        losses = losses.append[epoch, loss_list[i]]
+        losses = torch.cat(([epoch, loss_list[i]]), 0)
     # Gather reconstruction losses # TODO: Probably useless?
     recon_loss_list = [recon_loss_mean, recon_loss_mean_validate, recon_loss_mean_test]
     for i in recon_loss_list:
@@ -288,6 +287,7 @@ print('\nTraining Time in minutes =', (time() - time0) / 60)
 # Evaluate stuffs
 #
 # -----------------------------------------------------------
+print('[Evaluation]')
 # Reload best performing model
 model = torch.load(args.model_path + '_' + 'full' + '.pth')
 # Sample random point from latent space
