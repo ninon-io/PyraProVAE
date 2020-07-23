@@ -223,7 +223,7 @@ print('[Initial evaluation]')
 # learn.test(model, args, epoch=0)  # First test on randomly initialized data
 print('[Starting main training]')
 # Set losses
-losses = torch.zeros(args.epochs, 3)
+losses = torch.zeros(args.epochs + 1, 3)
 recon_losses = torch.zeros(args.epochs, 3)
 # Set minimum to infinity
 cur_best_valid = np.inf
@@ -243,7 +243,7 @@ for epoch in range(1, args.epochs + 1, 1):
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
     # Compare input data and reconstruction
     reconstruction(args, model, epoch, test_set)
-    # Gather losses  # TODO make the for loop fckg working using torch.cat
+    # Gather losses  # TODO make the for loop working using torch.cat
     losses[epoch, 0] = loss_mean
     losses[epoch, 1] = loss_mean_validate
     losses[epoch, 2] = loss_mean_test
