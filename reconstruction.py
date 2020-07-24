@@ -96,7 +96,8 @@ def interpolation(args, model, dataset, fs=100, program=0):
     x_a, x_b = x_a.to(args.device), x_b.to(args.device)
     # Encode samples to the latent space
     z_a, z_b = model.encode(x_a.unsqueeze(0)), model.encode(x_b.unsqueeze(0))
-    z_a, z_b = z_a.type(torch.float), z_b.type(torch.float)
+    print('zzz', z_a)
+    # z_a, z_b = z_a.type(torch.float), z_b.type(torch.float)
     # Run through alpha values
     interp = []
     alpha_values = np.linspace(0, 1, args.n_steps)
