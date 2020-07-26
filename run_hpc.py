@@ -67,7 +67,7 @@ def write_basic_script(file, args, out_f="%N-%j.out"):
     else:
         file.write("source $HOME/env/bin/activate\n")
     file.write("\n")
-    file.write("cd /scratch/ninon/\n")
+    file.write("cd /scratch/esling/ninon/\n")
 
 # Using list comprehension to compute all possible permutations
 res = [[i, j, k, l]     for i in model
