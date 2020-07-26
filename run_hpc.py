@@ -80,7 +80,7 @@ cpt = 1
 with open(run_name, 'w') as file:
     #for r in range(args.n_runs):
     for vals in res:
-        model_vals = vals[0] + '_' + vals[1] + '_' + str(cpt)
+        model_vals = vals[0] + '_' + vals[1] + '_' + str(vals[2]) + '_' + str(vals[3])
         # Write the original script file
         final_script = 'scripts/sc_'  + model_vals + '.sh'
         f_script = open(final_script, 'w')
