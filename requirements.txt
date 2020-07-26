@@ -1,0 +1,17 @@
+scipy
+torch_gpu
+torchvision
+tqdm
+numpy
+matplotlib
+tensorflow_gpu
+tensorboardX
+texttable
+natsort
+joblib
+scikit_learn
+audioread
+decorator
+six
+llvmlite
+imageio
