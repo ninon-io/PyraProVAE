@@ -76,10 +76,11 @@ res = [[i, j, k, l]     for i in model
                         for l in beta_vals]
 
 run_name = 'run_' + str(args.dataset) + '.sh'
+cpt = 1
 with open(run_name, 'w') as file:
     #for r in range(args.n_runs):
     for vals in res:
-        model_vals = vals[0] + '_' + vals[1] + '_' + str(vals[2]) + '_' + str(vals[3])
+        model_vals = vals[0] + '_' + vals[1] + '_' + str(cpt)
         # Write the original script file
         final_script = 'scripts/sc_'  + model_vals + '.sh'
         f_script = open(final_script, 'w')
@@ -97,4 +98,5 @@ with open(run_name, 'w') as file:
         f_script.write(cmd_str + '\n')
         f_script.close()
         file.write('sbatch ' + final_script + '\n')
+        cpt += 1
 os.system('chmod +x ' + run_name)
