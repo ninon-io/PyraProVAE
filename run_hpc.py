@@ -3,23 +3,23 @@ import argparse
 # Argument Parser
 parser = argparse.ArgumentParser()
 # Device Information
-parser.add_argument('--device',         type=str,   default='cuda', help='device cuda or cpu')
+parser.add_argument('--device',         type=str,   default='cuda',     help='device cuda or cpu')
 # Data information
-parser.add_argument('--midi_path',      type=str,   default='/fast-1/mathieu/datasets/', help='path to midi folder')
+parser.add_argument('--midi_path',      type=str,   default='/scratch/esling/datasets/', help='path to midi folder')
 parser.add_argument("--dataset",        type=str,   default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
 # Model Saving and reconstruction
-parser.add_argument('--output_path',    type=str,   default='output/', help='major path for data output')
+parser.add_argument('--output_path',    type=str,   default='/scratch/esling/output/', help='major path for data output')
 # Model Parameters
-parser.add_argument("--model",          type=str,   default="vae", help='ae | vae | vae-flow | wae')
-parser.add_argument("--beta",           type=float, default=1., help='value of beta regularization')
-parser.add_argument("--beta_delay",     type=int,   default=0, help='delay before using beta')
-parser.add_argument("--encoder_type",   type=str,   default="gru", help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
+parser.add_argument("--model",          type=str,   default="vae",      help='ae | vae | vae-flow | wae')
+parser.add_argument("--beta",           type=float, default=1.,         help='value of beta regularization')
+parser.add_argument("--beta_delay",     type=int,   default=0,          help='delay before using beta')
+parser.add_argument("--encoder_type",   type=str,   default="gru",      help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
-parser.add_argument('--latent_size',    type=int,   default=128, help='do not touch if you do not know')
+parser.add_argument('--latent_size',    type=int,   default=128,        help='do not touch if you do not know')
 # Optimization parameters
-parser.add_argument('--epochs',         type=int,   default=300, help='number of epochs to train')
-parser.add_argument('--machine'         type=str,   default='cedar',       help='Machine on which we are computing')
-parser.add_argument('--time',               default='0-11:59',      type=str,       help='Machine on which we are computing')
+parser.add_argument('--epochs',         type=int,   default=300,        help='number of epochs to train')
+parser.add_argument('--machine',        type=str,   default='cedar',    help='Machine on which we are computing')
+parser.add_argument('--time',           type=str,   default='0-11:59',  help='Machine on which we are computing')
 # Parse the arguments
 args = parser.parse_args()
 # Dataset argument
@@ -67,7 +67,7 @@ def write_basic_script(file, args, out_f="%N-%j.out"):
     else:
         file.write("source $HOME/env/bin/activate\n")
     file.write("\n")
-    file.write("cd /scratch/esling/lottery/\n")
+    file.write("cd /scratch/ninon/\n")
 
 # Using list comprehension to compute all possible permutations
 res = [[i, j, k, l]     for i in model
@@ -79,6 +79,11 @@ run_name = 'run_' + str(args.dataset) + '.sh'
 with open(run_name, 'w') as file:
     #for r in range(args.n_runs):
     for vals in res:
+        model_vals = vals[0] + '_' + vals[1] + '_' + str(vals[2]) + '_' + str(vals[3])
+        # Write the original script file
+        final_script = 'scripts/sc_'  + model_vals + '.sh'
+        f_script = open(final_script, 'w')
+        write_basic_script(f_script, args, 'output/out_'  + model_vals)
         cmd_str = 'python main.py --device ' + args.device
         cmd_str += ' --midi_path ' + args.midi_path
         cmd_str += ' --output_path ' + args.output_path
@@ -89,6 +94,7 @@ with open(run_name, 'w') as file:
         cmd_str += ' --beta ' + str(vals[3])
         cmd_str += ' --epochs ' + str(args.epochs)
         #cmd_str += ' --k_run ' + str(r)
-        print(cmd_str)
-        file.write(cmd_str + '\n')
+        f_script.write(cmd_str + '\n')
+        f_script.close()
+        file.write('sbatch ' + final_script + '\n')
 os.system('chmod +x ' + run_name)
