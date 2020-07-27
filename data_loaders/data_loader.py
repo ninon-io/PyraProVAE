@@ -258,12 +258,12 @@ def stats_dataset(loaders):
             else:
                 count_mono += 1
         cur_loader.training = train_val
+    pitch_on = torch.unique(torch.cat(pitch_on))
     min_p, max_p = int(min(pitch_on)), int(max(pitch_on))
     if (min_p > 5):
         min_p -= 6
     if (max_p < 122):
         max_p += 6
-    pitch_on = torch.unique(torch.cat(pitch_on))
     print('*' * 32)
     print('Dataset summary')
     print('Min : %d' % min_v)
