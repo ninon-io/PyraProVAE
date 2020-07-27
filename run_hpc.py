@@ -27,7 +27,7 @@ args = parser.parse_args()
 # Models grid arguments
 model = ['ae', 'vae', 'wae']
 # Types of sub-layers in the *AE architectures
-encoder_type = ['mlp', 'cnn', 'res_cnn', 'gru', 'cnn_gru', 'hierarchical']
+encoder_type = ['mlp', 'cnn', 'res-cnn', 'gru', 'cnn-gru', 'hierarchical']
 # Latent sizes
 latent_size = [256, 128, 64, 32, 16, 4]
 # Beta values
