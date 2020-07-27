@@ -258,10 +258,11 @@ def stats_dataset(loaders):
             else:
                 count_mono += 1
         cur_loader.training = train_val
-    if (min_v > 5):
-        min_v -= 6
-    if (max_v < 122):
-        max_v += 6
+    min_p, max_p = int(min(pitch_on)), int(max(pitch_on))
+    if (min_p > 5):
+        min_p -= 6
+    if (max_p < 122):
+        max_p += 6
     pitch_on = torch.unique(torch.cat(pitch_on))
     print('*' * 32)
     print('Dataset summary')
@@ -273,7 +274,7 @@ def stats_dataset(loaders):
     print(pitch_on)
     print('Poly : %d' % count_poly)
     print('Mono : %d' % count_mono)
-    return float(min_v), float(max_v), int(min(pitch_on)), int(max(pitch_on)), val
+    return float(min_v), float(max_v), min_p, max_p, val
 
 
 if __name__ == "__main__":
