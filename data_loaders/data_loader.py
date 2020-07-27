@@ -239,6 +239,8 @@ def test_data(args, batch):
 def stats_dataset(loaders):
     max_v, min_v, val, pitch_on, count_mono, count_poly = 0, 3000, {}, [], 0, 0
     for cur_loader in loaders:
+        train_val = cur_loader.training
+        cur_loader.training = False
         for x in cur_loader:
             max_v = max((torch.max(x), max_v))
             min_v = min((torch.min(x), min_v))
@@ -255,6 +257,7 @@ def stats_dataset(loaders):
                 count_poly += 1
             else:
                 count_mono += 1
+        cur_loader.training = train_val
     pitch_on = torch.unique(torch.cat(pitch_on))
     print('*' * 32)
     print('Dataset summary')

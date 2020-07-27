@@ -128,7 +128,8 @@ def retrieve_z(model, loader, args):
         if (latent.__class__ == tuple):
             latent = latent[0]
             mu = latent[1]
-            mu_set.append(latent[1])
+            print(mu.shape)
+            mu_set.append(mu)
         # Add current latent
         latent_set.append(latent)
         for b in feats:
@@ -221,7 +222,7 @@ def epoch_test(model, optimizer, criterion, loader, args):
     return loss_mean
 
 # Classifier properties
-latent_size = latent.shape[1]
+latent_size = latent_train.shape[1]
 hidden_size = 256
 args.lr = 1e-3
 args.epochs = 100
@@ -231,17 +232,18 @@ classification_targets = ['nb_notes', 'note_density', 'quality', 'range',
 for target in classification_targets:
     # Number of classes
     if (features[target][1] == 'int'):
-        nb_classes = max(features_dset[target])
+        nb_classes = max(features_train[target])
     elif (features[target][1] == 'float'):
         nb_classes = 1
     else:
         nb_classes = 2
     # Create dataset holders
-    z_train_set = Dataset(latent_dset, features_dset[target])
+    z_train_set = Dataset(latent_train, features_train[target])
     z_train_loader = torch.utils.data.DataLoader(z_train_set, batch_size=64)
-    # Right now just copypaste valid and test
-    z_valid_loader = z_train_loader
-    z_test_loader = z_train_loader
+    z_valid_set = Dataset(latent_valid, features_valid[target])
+    z_valid_loader = torch.utils.data.DataLoader(z_valid_set, batch_size=64)
+    z_test_set = Dataset(latent_test, features_test[target])
+    z_test_loader = torch.utils.data.DataLoader(z_test_set, batch_size=64)
     # Create simple classifier
     classifier = nn.Sequential()
     classifier.add_module('l1', nn.Linear(latent_size, hidden_size))
