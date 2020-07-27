@@ -586,24 +586,29 @@ class DecoderCNNGRU(nn.Module):
         conv_module = (args.type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
         # Go through a CNN after RNN
         modules = nn.Sequential()
-        size = [args.dec_hidden_size[1], args.dec_hidden_size[0]]  # TODO: Find the solution for sizes
-        in_channel = 1 if len(args.dec_hidden_size) < 3 else args.dec_hidden_size[0]  # in_size is (C,H,W) or (H,W) #TODO
-        kernel = [13, 4]
+        cnn_size = [args.cnn_size[1], args.cnn_size[0]]
+        self.cnn_size = cnn_size
+        size = cnn_size
+        kernel = [4, 13]
         stride = [1, 1]
+        in_size = args.dec_hidden_size
+        # hidden_size = args.dec_hidden_size
+        out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
         for layer in range(n_layers):
             dil = 1
             pad = 2
+            out_pad = (pad % 2)
             in_s = (layer == 0) and 1 or channels
-            out_s = (layer == n_layers - 1) and in_channel or channels
+            out_s = (layer == n_layers - 1) and out_size[0] or channels
             modules.add_module('c2%i' % layer, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
             if layer < n_layers - 1:
                 modules.add_module('b2%i' % layer, nn.BatchNorm2d(out_s))
                 modules.add_module('a2%i' % layer, nn.ReLU())
                 modules.add_module('d2%i' % layer, nn.Dropout2d(p=.25))
-            size[0] = int((size[0] - 1) * stride[0] - 2 * pad + dil * (kernel[0] - 1) + 1)
-            size[1] = int((size[1] - 1) * stride[1] - 2 * pad - dil * (kernel[1] - 1) + 1)
-        self.cnn_size = size
+            size[0] = int((size[0] - 1) * stride[0] - 2 * pad + dil * (kernel[0] - 1) + out_pad + 1)
+            size[1] = int((size[1] - 1) * stride[1] - 2 * pad - dil * (kernel[1] - 1) + out_pad + 1)
         self.net = modules
+        self.out_size = out_size  # (H,W) or (C,H,W)
 
     def init_parameters(self):
         """ Initialize internal parameters (sub-modules) """
@@ -659,8 +664,14 @@ class DecoderCNNGRU(nn.Module):
             else:
                 out = self._sampling(out)
             out = torch.stack(x, 1)
+        out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
         for m in range(len(self.net)):
             out = self.net[m](out)
+        if len(self.out_size) < 3 or self.num_classes < 2:
+            out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
+        else:
+            out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
+            out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
 
