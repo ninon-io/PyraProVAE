@@ -586,22 +586,22 @@ class DecoderCNNGRU(nn.Module):
         conv_module = (args.type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
         # Go through a CNN after RNN
         modules = nn.Sequential()
-        size = [args.dec_hidden_size[1], args.dec_hidden_size[0]]
-        in_channel = 1 if len(args.input_size) < 3 else args.input_size[0]  # in_size is (C,H,W) or (H,W) #TODO
+        size = [args.dec_hidden_size[1], args.dec_hidden_size[0]]  # TODO: Find the solution for sizes
+        in_channel = 1 if len(args.dec_hidden_size) < 3 else args.dec_hidden_size[0]  # in_size is (C,H,W) or (H,W) #TODO
         kernel = [13, 4]
         stride = [1, 1]
         for layer in range(n_layers):
             dil = 1
             pad = 2
-            in_s = (layer == 0) and in_channel or channels
-            out_s = (layer == n_layers - 1) and 1 or channels
+            in_s = (layer == 0) and 1 or channels
+            out_s = (layer == n_layers - 1) and in_channel or channels
             modules.add_module('c2%i' % layer, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
             if layer < n_layers - 1:
                 modules.add_module('b2%i' % layer, nn.BatchNorm2d(out_s))
                 modules.add_module('a2%i' % layer, nn.ReLU())
                 modules.add_module('d2%i' % layer, nn.Dropout2d(p=.25))
-            size[0] = int((size[0] + 2 * pad - (dil * (kernel[0] - 1) + 1)) / stride[0] + 1)
-            size[1] = int((size[1] + 2 * pad - (dil * (kernel[1] - 1) + 1)) / stride[1] + 1)
+            size[0] = int((size[0] - 1) * stride[0] - 2 * pad + dil * (kernel[0] - 1) + 1)
+            size[1] = int((size[1] - 1) * stride[1] - 2 * pad - dil * (kernel[1] - 1) + 1)
         self.cnn_size = size
         self.net = modules
 
