@@ -10,7 +10,11 @@ import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
+import music21
+import music21.features.jSymbolic as jSymbolic
 from data_loaders.data_loader import import_dataset
+from mido import MidiFile, MidiTrack
+from utils import roll_to_track
 
 #%% - Argument parsing
 parser = argparse.ArgumentParser(description='PyraProVAE')
@@ -53,51 +57,10 @@ print('[Importing dataset]')
 train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
 # Recall minimum pitch
 args.min_pitch = train_set.min_p
-
-#%% Reload best performing model
+# Reload best performing model
 model = torch.load(model_path, map_location=args.device)
 
-import music21
-import music21.features.jSymbolic as jSymbolic
-from mido import Message, MidiFile, MidiTrack
-
-def stop_note(note, time):
-    return Message('note_off', note = note,
-                   velocity = 0, time = time)
-
-def start_note(note, time):
-    return Message('note_on', note = note,
-                   velocity = 127, time = time)
-
-def roll_to_track(roll, midi_base=0):
-    roll = roll.t()
-    delta = 0
-    # State of the notes in the roll.
-    notes = [False] * len(roll[0])
-    for row in roll:
-        for i, col in enumerate(row):
-            note = midi_base + i
-            if col == 1:
-                if notes[i]:
-                    delta += 25
-                    continue
-                yield start_note(note, delta)
-                delta = 0
-                notes[i] = True
-            elif col == 0:
-                if notes[i]:
-                    # Stop the ringing note
-                    yield stop_note(note, delta)
-                    delta = 0
-                notes[i] = False
-        if notes[i]:
-            # Stop the ringing note
-            yield stop_note(note, delta)
-            delta = 0
-        else:
-            # ms per row
-            delta += 25 
-
+#%%
 features = {
     'nb_notes':(None, 'int'),
     'min_duration':(jSymbolic.MinimumNoteDurationFeature, 'float'),
@@ -178,31 +141,28 @@ def retrieve_z(model, loader, args):
         mu_set = torch.cat(mu_set, dim = 0)
     return final_latent, final_features, mu_set
 
-latent_dset, features_dset, mus_dset = retrieve_z(model, test_loader, args)
+latent_train, features_train, mus_train = retrieve_z(model, train_loader, args)
+latent_valid, features_valid, mus_valid = retrieve_z(model, valid_loader, args)
+latent_test, features_test, mus_test = retrieve_z(model, test_loader, args)
 
-from sklearn import decomposition
+from sklearn import manifold, decomposition
 from mpl_toolkits.mplot3d import Axes3D
 
-plt.cla()
-pca = decomposition.PCA(n_components=3)
-pca.fit(mus_dset.detach())
-X = pca.transform(mus_dset.detach())
-fig = plt.figure(1, figsize=(4, 3))
-plt.clf()
-ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=30, azim=1)
-ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=features['nb_notes'], cmap=plt.cm.nipy_spectral, edgecolor='k')
-
-#%%
-from sklearn import manifold
-
-plt.cla()
-tsne = manifold.TSNE(n_components=3)
-X = tsne.fit_transform(mus_dset.detach())
-#%%
-fig = plt.figure(1, figsize=(4, 3))
-plt.clf()
-ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=50, azim=100)
-ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=features['nb_notes'], cmap=plt.cm.nipy_spectral, edgecolor='k')
+def compute_projection(dataset, n_dims=3, plot=True):
+    pca = decomposition.PCA(n_components=3)
+    pca.fit(mus_dset.detach())
+    X = pca.transform(mus_dset.detach())
+    fig = plt.figure(1, figsize=(4, 3))
+    plt.clf()
+    ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=30, azim=1)
+    ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=features['nb_notes'], cmap=plt.cm.nipy_spectral, edgecolor='k')
+    plt.cla()
+    tsne = manifold.TSNE(n_components=3)
+    X = tsne.fit_transform(mus_dset.detach())
+    fig = plt.figure(1, figsize=(4, 3))
+    plt.clf()
+    ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=50, azim=100)
+    ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=features['nb_notes'], cmap=plt.cm.nipy_spectral, edgecolor='k')
 
 
 #%% -----------------------------------------------------------

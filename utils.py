@@ -2,6 +2,45 @@
 
 import torch.nn as nn
 import torch.nn.init as init
+from mido import Message, MidiFile, MidiTrack
+
+def stop_note(note, time):
+    return Message('note_off', note = note,
+                   velocity = 0, time = time)
+
+def start_note(note, time):
+    return Message('note_on', note = note,
+                   velocity = 127, time = time)
+
+# Turn track into mido MidiFile
+def roll_to_track(roll, midi_base=0):
+    roll = roll.t()
+    delta = 0
+    # State of the notes in the roll.
+    notes = [False] * len(roll[0])
+    for row in roll:
+        for i, col in enumerate(row):
+            note = midi_base + i
+            if col == 1:
+                if notes[i]:
+                    delta += 25
+                    continue
+                yield start_note(note, delta)
+                delta = 0
+                notes[i] = True
+            elif col == 0:
+                if notes[i]:
+                    # Stop the ringing note
+                    yield stop_note(note, delta)
+                    delta = 0
+                notes[i] = False
+        if notes[i]:
+            # Stop the ringing note
+            yield stop_note(note, delta)
+            delta = 0
+        else:
+            # ms per row
+            delta += 25 
 
 
 # Function for Initialization

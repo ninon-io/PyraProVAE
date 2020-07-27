@@ -28,7 +28,7 @@ class AE(nn.Module):
         x = x.transpose(1, 2)
         x = self.encoder(x)
         x = self.map_latent(x)
-        return x
+        return x, x, x
 
     def decode(self, z):
         recon = self.decoder(z)
@@ -47,7 +47,7 @@ class AE(nn.Module):
                 self.sample = x
             self.decoder.sample = self.sample
             self.decoder.iteration += 1
-        z = self.encode(x)
+        z, _, _ = self.encode(x)
         recon = self.decode(z)
         return recon, z, self.loss
 
