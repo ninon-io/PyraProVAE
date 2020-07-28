@@ -100,7 +100,7 @@ class VAE(nn.Module):
         recon = self.decoder(z)
         recon = recon.transpose(1, 2)
         if self.num_classes > 1:
-            recon = recon.reshape(z.shape[0], self.num_classes, self.input_size, -1)
+            recon = recon.reshape(z.shape[0], self.num_classes, self.input_size, -1)  # TODO put view instead of reshape
         return recon
 
     def forward(self, x):

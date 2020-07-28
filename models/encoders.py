@@ -672,11 +672,11 @@ class DecoderCNNGRU(nn.Module):
         print('out after unsqueeze', out.shape)
         for m in range(len(self.net)):
             out = self.net[m](out)
-        # if len(self.out_size) < 3 or self.num_classes < 2:
-        #     out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
-        # else:
-        #     out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
-        #     out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
+        if len(self.out_size) < 3 or self.num_classes < 2:
+            out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
+        else:
+            out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
+            out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
 
