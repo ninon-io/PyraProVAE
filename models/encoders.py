@@ -668,7 +668,7 @@ class DecoderCNNGRU(nn.Module):
                            (self.k + torch.exp(float(self.iteration) / self.k))
             else:
                 out = self._sampling(out)
-            out = torch.stack(x, 1)
+            return torch.stack(x, 1)
         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])  # TODO
         for m in range(len(self.net)):
             out = self.net[m](out)
