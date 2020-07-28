@@ -669,10 +669,9 @@ class DecoderCNNGRU(nn.Module):
             else:
                 out = self._sampling(out)
             print('final out:', out.shape)
-            if i != 0:
-                out = out.squeeze(1)
-            print('after loop out:', out.shape)
-        out = torch.stack(x, 1).unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])  # TODO
+        out = torch.stack(x, 1)  # TODO
+        print('after loop out:', out.shape)
+        out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
         print('out before CNN', out.shape)
         for m in range(len(self.net)):
             out = self.net[m](out)
