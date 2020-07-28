@@ -671,7 +671,7 @@ class DecoderCNNGRU(nn.Module):
             print('final out:', out.shape)
         out = torch.stack(x, 1)  # TODO
         print('after loop out:', out.shape)
-        out = out.view(-1, self.cnn_size[0], self.cnn_size[1])
+        out = out.view(self.cnn_size[0], self.cnn_size[1], -1)
         print('*' * 15)
         print('after view:', out.shape)
 #         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
