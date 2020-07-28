@@ -589,7 +589,7 @@ class DecoderCNNGRU(nn.Module):
         cnn_size = [args.cnn_size[0], args.cnn_size[1]]
         self.cnn_size = cnn_size
         size = args.cnn_size
-        self.linear_out_2 = nn.Linear(args.dec_hidden_size, np.prod(cnn_size))  # TODO
+        self.linear_out_2 = nn.Linear(args.dec_hidden_size, self.cnn_size[0] * self.cnn_size[1])  # TODO
         kernel = [4, 13]
         stride = [1, 1]
         out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
@@ -658,7 +658,7 @@ class DecoderCNNGRU(nn.Module):
                 out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
             print('out before training:', out.shape)
-            if self.training:  # TODO: WTF
+            if self.training:
                 p = torch.rand(1).item()
                 if p < self.eps:
                     out = self.sample[:, i, :]
@@ -674,8 +674,9 @@ class DecoderCNNGRU(nn.Module):
         out = out.reshape(-1, 1, self.cnn_size[0], self.cnn_size[1])
         print('*' * 15)
         print('after view:', out.shape)
+        out = self.linear_out_2(out)
 #         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
-        print('out before CNN', out.shape)
+        print('out after linear', out.shape)
         for m in range(len(self.net)):
             out = self.net[m](out)
         if len(self.out_size) < 3 or self.num_classes < 2:
