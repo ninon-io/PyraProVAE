@@ -653,9 +653,11 @@ class DecoderCNNGRU(nn.Module):
                 hx[1] = hx[0]
             hx[1] = self.grucell_2(hx[0], hx[1])
             tmp_out = self.linear_out_1(hx[1])
+            print('tmp_out:', tmp_out.shape)
             if self.num_classes > 1:
                 out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
+            print('out before training:', out.shape)
             if self.training:  # TODO: WTF
                 p = torch.rand(1).item()
                 if p < self.eps:
@@ -666,6 +668,7 @@ class DecoderCNNGRU(nn.Module):
                            (self.k + torch.exp(float(self.iteration) / self.k))
             else:
                 out = self._sampling(out)
+            print('final out:', out.shape)
             if i != 0:
                 out = out.squeeze(1)
             out = torch.stack(x, 1)
