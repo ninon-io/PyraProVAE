@@ -676,8 +676,9 @@ class DecoderCNNGRU(nn.Module):
         print('*' * 15)
         # print('after view:', out.shape)
         out = self.linear_out_2(out)
-#         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
         print('out after linear', out.shape)
+        out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
+        print('out after unsqueeze', out.shape)
         for m in range(len(self.net)):
             out = self.net[m](out)
         if len(self.out_size) < 3 or self.num_classes < 2:
