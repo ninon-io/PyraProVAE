@@ -645,8 +645,10 @@ class DecoderCNNGRU(nn.Module):
         hx[0] = t
         out = out.to(z.device)
         for i in range(self.n_step):
-            print('out', out.shape)
-            print('z', z.shape)
+            print('*' * 15)
+            print('iteration:', i)
+            print('out:', out.shape)
+            print('z:', z.shape)
             out = torch.cat([out.float(), z], 1)
             hx[0] = self.grucell_1(out, hx[0])
             if i == 0:
