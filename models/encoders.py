@@ -678,6 +678,7 @@ class DecoderCNNGRU(nn.Module):
         else:
             out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
             out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
+        print('out after alles', out.shape)
         return out
 
 
