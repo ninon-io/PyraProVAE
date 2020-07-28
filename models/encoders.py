@@ -591,7 +591,7 @@ class DecoderCNNGRU(nn.Module):
         size = args.cnn_size
         self.linear_out_2 = nn.Linear(args.dec_hidden_size, self.cnn_size[0] * self.cnn_size[1])  # TODO
         kernel = [4, 13]
-        stride = [1, 2]
+        stride = [1, 1]
         out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
         for layer in range(n_layers):
             dil = 1
