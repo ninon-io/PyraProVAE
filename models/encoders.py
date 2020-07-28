@@ -586,14 +586,12 @@ class DecoderCNNGRU(nn.Module):
         conv_module = (args.type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
         # Go through a CNN after RNN
         modules = nn.Sequential()
-        cnn_size = [args.cnn_size[1], args.cnn_size[0]]
+        cnn_size = [args.cnn_size[0], args.cnn_size[1]]
         self.cnn_size = cnn_size
+        size = args.cnn_size
         self.linear_out_2 = nn.Linear(args.dec_hidden_size, np.prod(cnn_size))  # TODO
-        size = cnn_size
         kernel = [4, 13]
         stride = [1, 1]
-        in_size = args.dec_hidden_size
-        # hidden_size = args.dec_hidden_size
         out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
         for layer in range(n_layers):
             dil = 1
@@ -668,7 +666,7 @@ class DecoderCNNGRU(nn.Module):
                            (self.k + torch.exp(float(self.iteration) / self.k))
             else:
                 out = self._sampling(out)
-            return torch.stack(x, 1)
+            out = torch.stack(x, 1)
         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])  # TODO
         for m in range(len(self.net)):
             out = self.net[m](out)
