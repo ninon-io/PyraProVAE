@@ -588,6 +588,7 @@ class DecoderCNNGRU(nn.Module):
         modules = nn.Sequential()
         cnn_size = [args.cnn_size[1], args.cnn_size[0]]
         self.cnn_size = cnn_size
+        self.linear_out_2 = nn.Linear(args.dec_hidden_size, np.prod(cnn_size))  # TODO
         size = cnn_size
         kernel = [4, 13]
         stride = [1, 1]
@@ -644,6 +645,8 @@ class DecoderCNNGRU(nn.Module):
         hx[0] = t
         out = out.to(z.device)
         for i in range(self.n_step):
+            print('out', out.shape)
+            print('z', z.shape)
             out = torch.cat([out.float(), z], 1)
             hx[0] = self.grucell_1(out, hx[0])
             if i == 0:
@@ -653,7 +656,7 @@ class DecoderCNNGRU(nn.Module):
             if self.num_classes > 1:
                 out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
-            if self.training:
+            if self.training:  # TODO: WTF
                 p = torch.rand(1).item()
                 if p < self.eps:
                     out = self.sample[:, i, :]
@@ -664,7 +667,7 @@ class DecoderCNNGRU(nn.Module):
             else:
                 out = self._sampling(out)
             out = torch.stack(x, 1)
-        out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])
+        out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])  # TODO
         for m in range(len(self.net)):
             out = self.net[m](out)
         if len(self.out_size) < 3 or self.num_classes < 2:
