@@ -39,7 +39,14 @@ def symbolic_features(x_cur, feature_set=features, min_pitch=0):
     midi.tracks.append(MidiTrack(roll_to_track(x_cur, min_pitch)))
     midi.save('/tmp/track.mid')
     # Then transform to a Music21 stream
-    stream = music21.converter.parse('/tmp/track.mid')
+    try:
+        stream = music21.converter.parse('/tmp/track.mid')
+    except: 
+        feature_vals = {}
+        feature_vals['nb_notes'] = 0
+        for key, val in feature_set.items():
+            feature_vals[key] = 0
+        return feature_vals
     feature_vals = {}
     # Number of notes
     nb_notes = 0
@@ -68,7 +75,7 @@ def compute_symbolic_features(loader, args):
         x = x.to(args.device, non_blocking=True)
         for x_cur in x:
             # Compute symbolic features on input
-            feats = symbolic_features(x, min_pitch=args.min_pitch)
+            feats = symbolic_features(x_cur, min_pitch=args.min_pitch)
             for f in features:
                 final_features[f].append(feats[f])
     return final_features

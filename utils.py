@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import torch
 import torch.nn as nn
 import torch.nn.init as init
 
-# Function for Initialization
+#%% ---------------------------------------------------------
+#
+# Initialization utils
+#
+# -----------------------------------------------------------
 def init_classic(m):
     '''
     Usage:
@@ -30,3 +35,60 @@ def init_classic(m):
                 init.orthogonal_(param.data)
             else:
                 init.normal_(param.data)
+                
+#%% ---------------------------------------------------------
+#
+# Classification utils
+#
+# -----------------------------------------------------------
+
+class LatentDataset(torch.utils.data.Dataset):
+    """ Simplest dataset for latent """
+    def __init__(self, latent, labels):
+        self.latent = latent
+        self.labels = labels
+
+    def __len__(self):
+        return self.latent.shape[0]
+
+    def __getitem__(self, index):
+        # Load data and get label
+        x = self.latent[index]
+        y = self.labels[index]
+        return x, y
+
+def epoch_train(model, optimizer, criterion, loader, args):
+    model.train()
+    # Create mean loss
+    loss_mean = torch.zeros(1).to(args.device)
+    for x, y in loader:
+        # Send to device
+        x = x.to(args.device, non_blocking=True)
+        # Pass into model
+        out = model(x)
+        print(out.shape)
+        print(y)
+        # Compute reconstruction criterion
+        loss = criterion(out, y) / y.shape[0]
+        loss_mean += loss.detach()
+        optimizer.zero_grad()
+        # Learning with back-propagation
+        loss.backward()
+        # Optimizes weights
+        optimizer.step()
+    return loss_mean
+
+def epoch_test(model, optimizer, criterion, loader, args):
+    model.eval()
+    # Create mean loss
+    loss_mean = torch.zeros(1).to(args.device)
+    with torch.no_grad():
+        for x, y in loader:
+            # Send to device
+            x = x.to(args.device, non_blocking=True)
+            # Pass into model
+            out = model(x)
+            # Compute reconstruction criterion
+            loss = criterion(out, y) / y.shape[0]
+            loss_mean += loss.detach()
+    return loss_mean
