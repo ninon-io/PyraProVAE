@@ -672,6 +672,7 @@ class DecoderCNNGRU(nn.Module):
         print('out after unsqueeze', out.shape)
         for m in range(len(self.net)):
             out = self.net[m](out)
+        print('out after CNN', out.shape)
         if len(self.out_size) < 3 or self.num_classes < 2:
             out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
         else:
