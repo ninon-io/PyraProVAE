@@ -665,8 +665,6 @@ class DecoderCNNGRU(nn.Module):
         out = torch.stack(x, 1)
         out = out.view(-1, 512)
         print('after loop out:', out.shape)
-        # out = out.reshape(-1, 1, self.cnn_size[0], self.cnn_size[1])
-        print('*' * 15)
         # print('after view:', out.shape)
         out = self.linear_out_2(out)
         print('out after linear', out.shape)
@@ -674,11 +672,11 @@ class DecoderCNNGRU(nn.Module):
         print('out after unsqueeze', out.shape)
         for m in range(len(self.net)):
             out = self.net[m](out)
-        if len(self.out_size) < 3 or self.num_classes < 2:
-            out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
-        else:
-            out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
-            out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
+        # if len(self.out_size) < 3 or self.num_classes < 2:
+        #     out = out[:, :, :self.out_size[0], :self.out_size[1]].squeeze(1)
+        # else:
+        #     out = F.log_softmax(out[:, :, :self.out_size[1], :self.out_size[2]], 1)
+        #     out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
 
