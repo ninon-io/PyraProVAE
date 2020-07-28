@@ -643,21 +643,15 @@ class DecoderCNNGRU(nn.Module):
         hx[0] = t
         out = out.to(z.device)
         for i in range(self.n_step):
-            print('*' * 15)
-            print('iteration:', i)
-            print('out:', out.shape)
-            print('z:', z.shape)
             out = torch.cat([out.float(), z], 1)
             hx[0] = self.grucell_1(out, hx[0])
             if i == 0:
                 hx[1] = hx[0]
             hx[1] = self.grucell_2(hx[0], hx[1])
             tmp_out = self.linear_out_1(hx[1])
-            print('tmp_out:', tmp_out.shape)
             if self.num_classes > 1:
                 out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
-            print('out before training:', out.shape)
             if self.training:
                 p = torch.rand(1).item()
                 if p < self.eps:
@@ -668,7 +662,6 @@ class DecoderCNNGRU(nn.Module):
                            (self.k + torch.exp(float(self.iteration) / self.k))
             else:
                 out = self._sampling(out)
-            print('final out:', out.shape)
         out = torch.stack(x, 1)
         out = out.view(-1, 512)
         print('after loop out:', out.shape)
