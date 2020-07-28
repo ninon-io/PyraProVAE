@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import music21
+from music21.stream import Voice
 import music21.features.jSymbolic as jSymbolic
 from mido import Message, MidiFile, MidiTrack
 
@@ -32,6 +33,17 @@ features = {
     'melodic_span':(jSymbolic.SizeOfMelodicArcsFeature, 'float'),
     }
 
+features_simple = {
+    'nb_notes':(None, 'int'),
+    'note_density':(jSymbolic.NoteDensityFeature, 'float'),
+    'average_duration':(jSymbolic.AverageNoteDurationFeature, 'float'),
+    'range':(jSymbolic.RangeFeature, 'int'),
+    'average_interval':(jSymbolic.AverageMelodicIntervalFeature, 'float'),
+    'pitch_variety':(jSymbolic.PitchVarietyFeature, 'int'),
+    'amount_arpeggiation':(jSymbolic.AmountOfArpeggiationFeature, 'float'),
+    'direction_motion':(jSymbolic.DirectionOfMotionFeature, 'float'),
+    }
+
 # Function to compute features from one given piano_roll
 def symbolic_features(x_cur, feature_set=features, min_pitch=0):
     # First create a MIDI version
@@ -51,6 +63,8 @@ def symbolic_features(x_cur, feature_set=features, min_pitch=0):
     # Number of notes
     nb_notes = 0
     for n in stream.parts[0]:
+        if (type(n) == Voice):
+            continue
         if (n.isRest):
             continue
         nb_notes += 1

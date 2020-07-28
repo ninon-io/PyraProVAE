@@ -179,6 +179,8 @@ def plot_projection(X, colors=[], name=None, output=None):
 
 # Plots we are going to check
 plot_targets = ['nb_notes', 'note_density', 'quality', 'range', 'pitch_variety', 'amount_arpeggiation', 'direction_motion']
+# Compute one full PCA on train set
+_, full_pca = compute_projection(mu_train, target_dims=mu_train.shape[1])
 # Compute 3D PCA on train set
 z_train_pca, pca = compute_projection(mu_train)
 # Apply PCA on the test set
@@ -188,7 +190,7 @@ for f in plot_targets:
     plot_projection(z_test_pca, colors=torch.Tensor(test_features[f]), name=f + ' - Test', output='output/figures/pca_test_' + f + '.pdf')
     plot_projection(z_train_pca, colors=torch.Tensor(train_features[f]), name=f + ' - Train', output='output/figures/pca_train_' + f + '.pdf')
 # Compute 3D t-SNE on test set
-z_test_tsne, _ = compute_projection(mu_test)
+z_test_tsne, _ = compute_projection(mu_test, projection='tsne')
 # Plot various feature-colored variants
 for f in plot_targets:
     plot_projection(z_test_tsne, colors=torch.Tensor(test_features[f]), name=f + ' - Test', output='output/figures/tSNE_test_' + f + '.pdf')
@@ -198,12 +200,19 @@ for f in plot_targets:
 # Analyze latent dimensions
 #
 # -----------------------------------------------------------
+from figures import evaluate_dimensions
 # Compute combo sets
 mu_full = torch.cat([mu_train, mu_valid, mu_test], dim = 0)
 var_full = torch.cat([var_train, var_valid, var_test], dim = 0)
 # Compute mean of var
 var_means = torch.mean(var_full, dim = 0)
 print(var_means)
+# Analyze the PCA latent dimensions 
+#evaluate_dimensions(model, test_loader, full_pca, name='output/figures/dimension_pca_')
+# Analyze the latent dimensions
+evaluate_dimensions(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/dimension_')
+# Evaluate some translations in the latent space
+evaluate_translations(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/tranlation_')
 
 #%% -----------------------------------------------------------
 #
