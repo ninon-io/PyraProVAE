@@ -5,16 +5,14 @@ Created on Mon Jul 27 14:25:06 2020
 
 @author: esling
 """
+import os
 import argparse
 import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
-import music21
-import music21.features.jSymbolic as jSymbolic
 from data_loaders.data_loader import import_dataset
-from mido import MidiFile, MidiTrack
-from utils import roll_to_track
+from symbolic import compute_symbolic_features
 
 #%% - Argument parsing
 parser = argparse.ArgumentParser(description='PyraProVAE')
@@ -37,6 +35,8 @@ parser.add_argument('--data_export',    type=int, default=0,        help='recomp
 parser.add_argument('--data_augment',   type=int, default=1,        help='use data augmentation')
 parser.add_argument('--subsample',      type=int, default=0,        help='train on subset')
 parser.add_argument('--nbworkers',      type=int, default=3,        help='')
+# Output path
+parser.add_argument('--output_path',    type=str, default='output/', help='major path for data output')
 # Optimization arguments
 parser.add_argument('--batch_size',     type=int, default=64, help='input batch size')
 # Parse the arguments
@@ -53,62 +53,27 @@ model_path = 'output/nottingham_mono_1_2_1_vae_cnn-gru_128_1.0_512/models/_epoch
 #
 # -----------------------------------------------------------
 # Data importing
+data_variants = [args.dataset, args.score_type, args.data_binarize, args.num_classes]
+args.loaders_path = args.output_path + '/loaders_'
+for m in data_variants:
+    args.loaders_path += str(m) + '_'
+args.loaders_path = args.final_path[:-1] + '.th'
 print('[Importing dataset]')
-train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
-# Recall minimum pitch
-args.min_pitch = train_set.min_p
+if (not os.path.exists(args.loaders_path)):
+    train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
+    # Recall minimum pitch
+    args.min_pitch = train_set.min_p
+    # Compute features on all 
+    train_features = compute_symbolic_features(train_loader, args)
+    valid_features = compute_symbolic_features(valid_loader, args)
+    test_features = compute_symbolic_features(test_loader, args)
+    # Save everything as a torch object
+
+
 # Reload best performing model
 model = torch.load(model_path, map_location=args.device)
 
 #%%
-features = {
-    'nb_notes':(None, 'int'),
-    'min_duration':(jSymbolic.MinimumNoteDurationFeature, 'float'),
-    'max_duration':(jSymbolic.MaximumNoteDurationFeature, 'float'),
-    'note_density':(jSymbolic.NoteDensityFeature, 'float'),
-    'average_duration':(jSymbolic.AverageNoteDurationFeature, 'float'),
-    'quality':(jSymbolic.QualityFeature, 'binary'),
-    'melodic_fifths':(jSymbolic.MelodicFifthsFeature, 'float'),
-    'melodic_thirds':(jSymbolic.MelodicThirdsFeature, 'float'),
-    'melodic_tritones':(jSymbolic.MelodicTritonesFeature, 'float'),
-    'range':(jSymbolic.RangeFeature, 'int'),
-    'average_interval':(jSymbolic.AverageMelodicIntervalFeature, 'float'),
-    'average_attacks':(jSymbolic.AverageTimeBetweenAttacksFeature, 'float'),
-    'pitch_variety':(jSymbolic.PitchVarietyFeature, 'int'),
-    'amount_arpeggiation':(jSymbolic.AmountOfArpeggiationFeature, 'float'),
-    'chromatic_motion':(jSymbolic.ChromaticMotionFeature, 'float'),
-    'direction_motion':(jSymbolic.DirectionOfMotionFeature, 'float'),
-    'melodic_arcs':(jSymbolic.DurationOfMelodicArcsFeature, 'float'),
-    'melodic_span':(jSymbolic.SizeOfMelodicArcsFeature, 'float'),
-    }
-
-def symbolic_features(x, args):
-    batch_features = []
-    for x_cur in x:
-        # First create a MIDI version
-        midi = MidiFile(type = 1)
-        midi.tracks.append(MidiTrack(roll_to_track(x_cur, args.min_pitch)))
-        midi.save('/tmp/track.mid')
-        # Then transform to a Music21 stream
-        stream = music21.converter.parse('/tmp/track.mid')
-        feature_vals = {}
-        # Number of notes
-        nb_notes = 0
-        for n in stream.parts[0]:
-            if (n.isRest):
-                continue
-            nb_notes += 1
-        feature_vals['nb_notes'] = nb_notes
-        # Perform all desired jSymbolic extraction
-        for key, val in features.items():
-            if (val[0] is None):
-                continue
-            try:
-                feature_vals[key] = val[0](stream).extract().vector[0]
-            except:
-                feature_vals[key] = 0      
-        batch_features.append(feature_vals)
-    return batch_features
 
 def retrieve_z(model, loader, args):
     cpt = 0
