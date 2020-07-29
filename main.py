@@ -70,7 +70,7 @@ parser.add_argument('--lr',             type=float, default=0.0001,     help='le
 parser.add_argument('--seed',           type=int, default=1,            help='random seed')
 # Reconstruction parameters
 parser.add_argument('--n_steps',        type=int, default=11,           help='number of steps for interpolation')
-parser.add_argument('--nb_samples',     type=int, default=10,           help='number of samples to decode from latent space')
+parser.add_argument('--nb_samples',     type=int, default=8,            help='number of samples to decode from latent space')
 # Parse the arguments
 args = parser.parse_args()
 
@@ -128,6 +128,7 @@ if args.data_binarize and args.num_classes > 1:
 # Data importing
 print('[Importing dataset]')
 train_loader, valid_loader, test_loader, train_set, valid_set, test_set, args = import_dataset(args)
+args.min_pitch = test_set.min_p
 
 # %%
 # -----------------------------------------------------------
@@ -288,14 +289,14 @@ for epoch in range(1, args.epochs + 1, 1):
     print(10 * '*******')
 print('\nTraining Time in minutes =', (time() - time0) / 60)
 
-# -----------------------------------------------------------
+#%% -----------------------------------------------------------
 #
 # Evaluate stuffs
 #
 # -----------------------------------------------------------
 print('[Evaluation]')
 # Reload best performing model
-model = torch.load(args.model_path + '_' + 'full' + '.pth')
+model = torch.load(args.model_path + '_' + 'full' + '.pth', map_location=args.device)
 # Sample random point from latent space
 sampling(args, model)
 # Interpolation between two inputs

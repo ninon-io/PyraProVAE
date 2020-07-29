@@ -69,6 +69,8 @@ def import_dataset(args):
                 if args.data_pitch:
                     sampler.min_p = min_p
                     sampler.max_p = max_p
+                else:
+                    sampler.min_p = 0
         # Get sampler
         train_indices, valid_indices, test_indices = list(range(len(train_set))), list(range(len(valid_set))), \
                                                      list(range(len(test_set)))
