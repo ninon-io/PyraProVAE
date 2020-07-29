@@ -571,11 +571,13 @@ class DecoderCNNGRU(nn.Module):
     def __init__(self, args, k=500, channels=64, n_layers=5):
         super(DecoderCNNGRU, self).__init__()
         self.grucell_1 = nn.GRUCell(
-            args.latent_size + (args.cnn_size[1]),
+            args.latent_size + (args.input_size[0] * args.num_classes),
             args.dec_hidden_size)
         self.grucell_2 = nn.GRUCell(args.dec_hidden_size, args.dec_hidden_size)
         self.linear_init_1 = nn.Linear(args.latent_size, args.dec_hidden_size)
         self.linear_out_1 = nn.Linear(args.dec_hidden_size, args.cnn_size[1])
+        self.bnorm = nn.BatchNorm1d(args.cnn_size[1])
+        self.linear_out_2 = nn.Linear(args.cnn_size[1], (args.input_size[0] * args.num_classes))
         self.k = torch.FloatTensor([k])
         self.eps = 1
         self.iteration = 0
@@ -589,7 +591,6 @@ class DecoderCNNGRU(nn.Module):
         cnn_size = [args.cnn_size[0], args.cnn_size[1]]
         self.cnn_size = cnn_size
         size = args.cnn_size
-        self.linear_out_2 = nn.Linear(args.dec_hidden_size, args.cnn_size[0])  # TODO
         kernel = [4, 13]
         stride = [1, 1]
         out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
@@ -636,34 +637,35 @@ class DecoderCNNGRU(nn.Module):
         return x.view(x.shape[0], -1)
 
     def forward(self, z):
-        out = torch.zeros((z.size(0), self.cnn_size[1]))
+        tmp_out = torch.zeros((z.size(0), (self.input_size * self.num_classes)))
         #out[:, -1] = 1.
         x, hx = [], [None, None]
         t = torch.tanh(self.linear_init_1(z))
         hx[0] = t
-        out = out.to(z.device)
+        tmp_out = tmp_out.to(z.device)
         for i in range(self.n_step):
-            out = torch.cat([out.float(), z], 1)
+            out = torch.cat([tmp_out.float(), z], 1)
             hx[0] = self.grucell_1(out, hx[0])
             if i == 0:
                 hx[1] = hx[0]
             hx[1] = self.grucell_2(hx[0], hx[1])
             out = self.linear_out_1(hx[1])
-            #tmp_out = 
-            #if self.num_classes > 1:
-            #    out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
-            #out = self.linear_out_2(out)
+            # WARNING This is the black spot of the model (non-direct teacher forcing)
+            tmp_out = self.linear_out_2(self.bnorm(F.relu(out)))
+            if self.num_classes > 1:
+                tmp_out = F.log_softmax(tmp_out.view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
             x.append(out)
-            #if self.training:
-            #    p = torch.rand(1).item()
-            #    if p < self.eps:
-            #        out = self.sample[:, i, :]
-            #    else:
-            #        out = self._sampling(out)
-            #    self.eps = self.k / \
-            #               (self.k + torch.exp(float(self.iteration) / self.k))
-            #else:
-            #    out = self._sampling(out)
+            if self.training:
+                p = torch.rand(1).item()
+                if p < self.eps:
+                    # WARNING This is the black spot of the model (non-direct teacher forcing)
+                    tmp_out = self.sample[:, int(i * (self.sample.shape[1] / self.n_step)), :]
+                else:
+                    tmp_out = self._sampling(tmp_out)
+                self.eps = self.k / \
+                           (self.k + torch.exp(float(self.iteration) / self.k))
+            else:
+                tmp_out = self._sampling(tmp_out)
         out = torch.stack(x, 1)
         out = out.view(-1, self.cnn_size[0], self.cnn_size[1])
         out = out.unsqueeze(1).view(-1, 1, self.cnn_size[0], self.cnn_size[1])

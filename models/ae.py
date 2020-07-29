@@ -74,7 +74,7 @@ class VAE(nn.Module):
 
     # Generate bar from latent space
     def generate(self, z):
-        # Forward pass in the decoder
+        # Forward pass in the decoder s
         generated_bar = self.decoder(z.unsqueeze(0))
         return generated_bar
 
