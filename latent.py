@@ -214,6 +214,8 @@ evaluate_dimensions(model, test_loader, latent_dims = full_pca.n_features_, name
 # Evaluate some translations in the latent space
 #evaluate_translations(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/tranlation_')
 
+
+
 #%% -----------------------------------------------------------
 #
 # Classification section

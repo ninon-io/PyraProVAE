@@ -34,7 +34,7 @@ class Learn:
         self.recon_loss_mean_test = torch.zeros(1).to(args.device)
 
     def train(self, model, optimizer, criterion, args, epoch):
-        writer = SummaryWriter(args.tensorboard_path)
+        #writer = SummaryWriter(args.tensorboard_path)
         print(f"train pass on: {args.device}")
         model.train()
         self.loss_mean = torch.zeros(1).to(args.device)
@@ -66,15 +66,15 @@ class Learn:
         if self.iter_train > args.beta_delay and self.beta < args.beta:
             self.beta += (args.beta / args.epochs)
         self.iter_train += 1
-        with torch.no_grad():
-            writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
-            writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
-            writer.add_scalar('data/reconst_loss_mean', self.recon_loss_mean / self.iter_train, epoch)
-            writer.close()
+        #with torch.no_grad():
+        #    writer.add_scalar('data/loss_mean', self.loss_mean / self.iter_train, epoch)
+        #    writer.add_scalar('data/kl_div_mean', self.kl_div_mean / self.iter_train, epoch)
+        #    writer.add_scalar('data/reconst_loss_mean', self.recon_loss_mean / self.iter_train, epoch)
+        #    writer.close()
         return self.loss_mean, self.kl_div_mean, self.recon_loss_mean
 
     def validate(self, model, criterion, args, epoch):
-        writer = SummaryWriter(args.tensorboard_path)
+        #writer = SummaryWriter(args.tensorboard_path)
         print(f"validation pass on: {args.device}")
         model.eval()
         self.loss_mean_validate = torch.zeros(1).to(args.device)
@@ -95,15 +95,15 @@ class Learn:
                 self.kl_div_mean_validate += z_loss.detach()
                 loss = recon_loss + self.beta * z_loss
                 self.loss_mean_validate += loss.detach()
-        with torch.no_grad():
-            writer.add_scalar('data/loss_mean_VALID', self.loss_mean_validate, epoch)
-            writer.add_scalar('data/kl_div_mean_VALID', self.kl_div_mean_validate, epoch)
-            writer.add_scalar('data/reconst_loss_mean_VALID', self.recon_loss_mean_validate, epoch)
-            writer.close()
+        #with torch.no_grad():
+        #    writer.add_scalar('data/loss_mean_VALID', self.loss_mean_validate, epoch)
+        #    writer.add_scalar('data/kl_div_mean_VALID', self.kl_div_mean_validate, epoch)
+        #    writer.add_scalar('data/reconst_loss_mean_VALID', self.recon_loss_mean_validate, epoch)
+        #    writer.close()
         return self.loss_mean_validate, self.kl_div_mean_validate, self.recon_loss_mean_validate
 
     def test(self, model, criterion, args, epoch):
-        writer = SummaryWriter(args.tensorboard_path)
+        #writer = SummaryWriter(args.tensorboard_path)
         print(f"test pass on: {args.device}")
         model.eval()
         self.loss_mean_test = torch.zeros(1).to(args.device)
@@ -123,11 +123,11 @@ class Learn:
                 self.kl_div_mean_test += z_loss.detach()
                 loss = recon_loss + self.beta * z_loss
                 self.loss_mean_test += loss.detach()
-        with torch.no_grad():
-            writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test, epoch)
-            writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test, epoch)
-            writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test, epoch)
-            writer.close()
+        #with torch.no_grad():
+        #    writer.add_scalar('data/loss_mean_TEST', self.loss_mean_test, epoch)
+        #    writer.add_scalar('data/kl_div_mean_TEST', self.kl_div_mean_test, epoch)
+        #    writer.add_scalar('data/reconst_loss_mean_TEST', self.recon_loss_mean_test, epoch)
+        #    writer.close()
         return self.loss_mean_test, self.kl_div_mean_test, self.recon_loss_mean_test
 
     def save(self, model, args, variant):
