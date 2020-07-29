@@ -125,7 +125,7 @@ def evaluate_tranlations(model, test_loader, pca=None, latent_dims = 16, n_steps
                 ax.get_xaxis().set_visible(False)
                 ax.get_yaxis().set_visible(False)
                 fig.add_subplot(ax)
-            plt.savefig(name + str(l) + '_' + str(ex) '.pdf')
+            plt.savefig(name + str(l) + '_' + str(ex) + '.pdf')
             plt.close()    
         
 def evaluate_translations(model, test_loader, args, train=False, name=None, n_recons = 8, n_steps = 100):

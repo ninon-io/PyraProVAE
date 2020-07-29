@@ -64,7 +64,7 @@ parser.add_argument('--initialize',     type=int, default=0,            help='us
 parser.add_argument('--batch_size',     type=int, default=64,           help='input batch size')
 parser.add_argument('--subsample',      type=int, default=0,            help='train on subset')
 parser.add_argument('--epochs',         type=int, default=300,          help='number of epochs to train')
-parser.add_argument('--early_stop',     type=int, default=30,           help='')
+parser.add_argument('--early_stop',     type=int, default=42,           help='')
 parser.add_argument('--nbworkers',      type=int, default=3,            help='')
 parser.add_argument('--lr',             type=float, default=0.0001,     help='learning rate')
 parser.add_argument('--seed',           type=int, default=1,            help='random seed')
@@ -247,20 +247,21 @@ for epoch in range(1, args.epochs + 1, 1):
     # Test model
     loss_mean_test, kl_div_mean_test, recon_loss_mean_test = learn.test(model, criterion, args, epoch)
     # Compare input data and reconstruction
-    reconstruction(args, model, epoch, test_set)
+    if (epoch % 25 == 0):
+        reconstruction(args, model, epoch, test_set)
     # Gather losses
     loss_list = [loss_mean, loss_mean_validate, loss_mean_test]
     for counter, loss in enumerate(loss_list):
-        losses[epoch, counter] = loss
+        losses[epoch - 1, counter] = loss
     # Gather reconstruction losses
     recon_loss_list = [recon_loss_mean, recon_loss_mean_validate, recon_loss_mean_test]
     for counter, loss in enumerate(recon_loss_list):
-        recon_losses[epoch, counter] = loss
+        recon_losses[epoch - 1, counter] = loss
     # Save losses
     torch.save({
         'loss': losses,
         'recon_loss': recon_losses,
-    }, args.losses_path + '_epoch_' + str(epoch) + '.pth')
+    }, args.losses_path + '_losses.pth')
     # Save best weights (mean validation loss)
     if recon_loss_mean_validate < cur_best_valid_recons:
         cur_best_valid_recons = recon_loss_mean_validate

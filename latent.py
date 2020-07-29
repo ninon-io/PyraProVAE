@@ -39,12 +39,11 @@ parser.add_argument('--num_classes', type=int, default=2, help='number of veloci
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 # Model Parameters
-parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
-parser.add_argument("--encoder_type", type=str, default="gru",
-                    help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
-parser.add_argument("--beta", type=float, default=2., help='value of beta regularization')
-parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
-parser.add_argument('--latent_size', type=int, default=16, help='do not touch if you do not know')
+parser.add_argument("--model",          type=str, default="vae",        help='ae | vae | vae-flow | wae')
+parser.add_argument("--encoder_type",   type=str, default="cnn-gru",    help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
+parser.add_argument("--beta",           type=float, default=2.,         help='value of beta regularization')
+parser.add_argument('--enc_hidden_size',type=int, default=512,         help='do not touch if you do not know')
+parser.add_argument('--latent_size',    type=int, default=16,          help='do not touch if you do not know')
 # Output path
 parser.add_argument('--output_path', type=str, default='output/', help='major path for data output')
 parser.add_argument('--model_path', type=str, default='', help='path to midi folder')
@@ -213,7 +212,7 @@ for f in plot_targets:
 # Analyze latent dimensions
 #
 # -----------------------------------------------------------
-# from figures import evaluate_dimensions
+from figures import evaluate_dimensions
 # Compute combo sets
 mu_full = torch.cat([mu_train, mu_valid, mu_test], dim=0)
 var_full = torch.cat([var_train, var_valid, var_test], dim=0)
@@ -221,13 +220,15 @@ var_full = torch.cat([var_train, var_valid, var_test], dim=0)
 var_means = torch.mean(var_full, dim=0)
 print(var_means)
 # Analyze the PCA latent dimensions 
-# evaluate_dimensions(model, test_loader, full_pca, name='output/figures/dimension_pca_')
+evaluate_dimensions(model, test_loader, full_pca, name='output/figures/dimension_pca_')
 # Analyze the latent dimensions
 evaluate_dimensions(model, test_loader, latent_dims=full_pca.n_features_, name='output/figures/dimension_')
 # Evaluate some translations in the latent space
 # evaluate_translations(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/tranlation_')
 
-# %% -----------------------------------------------------------
+
+
+#%% -----------------------------------------------------------
 #
 # Classification section
 #
