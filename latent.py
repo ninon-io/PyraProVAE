@@ -200,7 +200,7 @@ for f in plot_targets:
 # Analyze latent dimensions
 #
 # -----------------------------------------------------------
-#from figures import evaluate_dimensions
+from figures import evaluate_dimensions
 # Compute combo sets
 mu_full = torch.cat([mu_train, mu_valid, mu_test], dim = 0)
 var_full = torch.cat([var_train, var_valid, var_test], dim = 0)
@@ -208,7 +208,7 @@ var_full = torch.cat([var_train, var_valid, var_test], dim = 0)
 var_means = torch.mean(var_full, dim = 0)
 print(var_means)
 # Analyze the PCA latent dimensions 
-#evaluate_dimensions(model, test_loader, full_pca, name='output/figures/dimension_pca_')
+evaluate_dimensions(model, test_loader, full_pca, name='output/figures/dimension_pca_')
 # Analyze the latent dimensions
 evaluate_dimensions(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/dimension_')
 # Evaluate some translations in the latent space
