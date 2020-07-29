@@ -42,6 +42,7 @@ def init_classic(m):
 #
 # -----------------------------------------------------------
 
+
 class LatentDataset(torch.utils.data.Dataset):
     """ Simplest dataset for latent """
     def __init__(self, latent, labels):
@@ -56,6 +57,7 @@ class LatentDataset(torch.utils.data.Dataset):
         x = self.latent[index]
         y = self.labels[index]
         return x, y
+
 
 def epoch_train(model, optimizer, criterion, loader, args):
     model.train()
@@ -77,6 +79,7 @@ def epoch_train(model, optimizer, criterion, loader, args):
         # Optimizes weights
         optimizer.step()
     return loss_mean
+
 
 def epoch_test(model, optimizer, criterion, loader, args):
     model.eval()
