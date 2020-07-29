@@ -678,6 +678,118 @@ class DecoderCNNGRU(nn.Module):
             out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
+# -----------------------------------------------------------
+#
+# CNN-GRU decoder (direct embedding version)
+#
+# -----------------------------------------------------------
+
+class DecoderCNNGRUEmbedded(nn.Module):
+
+    def __init__(self, args, k=500, channels=64, n_layers=5):
+        super(DecoderCNNGRUEmbedded, self).__init__()
+        self.grucell_1 = nn.GRUCell(
+            args.latent_size + (args.input_size[0] * args.num_classes),
+            args.dec_hidden_size)
+        self.grucell_2 = nn.GRUCell(args.dec_hidden_size, args.dec_hidden_size)
+        self.linear_init_1 = nn.Linear(args.latent_size, args.dec_hidden_size)
+        self.linear_out_1 = nn.Linear(args.dec_hidden_size, args.cnn_size[1] * 4)
+        self.k = torch.FloatTensor([k])
+        self.eps = 1
+        self.iteration = 0
+        self.n_step = args.input_size[1]
+        self.input_size = args.input_size[0]
+        self.num_classes = args.num_classes
+        self.init_parameters()
+        conv_module = (args.type_mod == 'residual') and ResConvTranspose2d or nn.ConvTranspose2d
+        # Go through a CNN after RNN
+        modules = nn.Sequential()
+        cnn_size = [args.cnn_size[0], args.cnn_size[1]]
+        self.cnn_size = cnn_size
+        size = args.cnn_size
+        kernel = [5, 13]
+        stride = [1, 1]
+        out_size = [args.num_classes, args.input_size[1], args.input_size[0]]
+        for layer in range(n_layers):
+            dil = 1
+            pad = 2
+            out_pad = 2
+            in_s = (layer == 0) and 1 or channels
+            out_s = (layer == n_layers - 1) and out_size[0] or channels
+            modules.add_module('c2%i' % layer, conv_module(in_s, out_s, kernel, stride, pad, dilation=dil))
+            if layer < n_layers - 1:
+                modules.add_module('b2%i' % layer, nn.BatchNorm2d(out_s))
+                modules.add_module('a2%i' % layer, nn.ReLU())
+                modules.add_module('d2%i' % layer, nn.Dropout2d(p=.25))
+            size[0] = int((size[0] - 1) * stride[0] - 2 * pad + dil * (kernel[0] - 1) + out_pad + 1)
+            size[1] = int((size[1] - 1) * stride[1] - 2 * pad - dil * (kernel[1] - 1) + out_pad + 1)
+        self.net = modules
+        self.out_size = out_size  # (H,W) or (C,H,W)
+
+    def init_parameters(self):
+        """ Initialize internal parameters (sub-modules) """
+        for m in self.modules():
+            if m.__class__ in [nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d, nn.ConvTranspose3d]:
+                init.xavier_normal_(m.weight.data)
+                if m.bias is not None:
+                    init.normal_(m.bias.data)
+            elif m.__class__ in [nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]:
+                init.normal_(m.weight.data, mean=1, std=0.02)
+                init.constant_(m.bias.data, 0)
+            elif m.__class__ in [nn.Linear]:
+                init.xavier_normal_(m.weight.data)
+                init.normal_(m.bias.data)
+            elif m.__class__ in [nn.LSTM, nn.LSTMCell, nn.GRU, nn.GRUCell]:
+                for param in m.parameters():
+                    if len(param.shape) >= 2:
+                        init.orthogonal_(param.data)
+                    else:
+                        init.normal_(param.data)
+
+    def _sampling(self, x):
+        if self.num_classes > 1:
+            idx = x.view(x.shape[0], self.num_classes, -1).max(1)[1]
+            x = F.one_hot(idx, num_classes=self.num_classes)
+        return x.view(x.shape[0], -1)
+
+    def forward(self, z):
+        out = torch.zeros((z.size(0), (self.input_size * self.num_classes)))
+        #out[:, -1] = 1.
+        x, hx = [], [None, None]
+        t = torch.tanh(self.linear_init_1(z))
+        hx[0] = t
+        out = out.to(z.device)
+        for i in range(self.n_step):
+            out = torch.cat([out.float(), z], 1)
+            hx[0] = self.grucell_1(out, hx[0])
+            if i == 0:
+                hx[1] = hx[0]
+            hx[1] = self.grucell_2(hx[0], hx[1])
+            out = self.linear_out_1(hx[1])
+            out = out.view(out.shape[0], 4, -1).unsqueeze(1)
+            for m in range(len(self.net)):
+                out = self.net[m](out)
+            if self.num_classes > 1:
+                out = F.log_softmax(torch.mean(out, dim=2).view(z.size(0), self.num_classes, -1), 1).view(z.size(0), -1)
+            x.append(out)
+            if self.training:
+                p = torch.rand(1).item()
+                if p < self.eps:
+                    out = self.sample[:, i, :]
+                else:
+                    out = self._sampling(out)
+                self.eps = self.k / \
+                           (self.k + torch.exp(float(self.iteration) / self.k))
+            else:
+                out = self._sampling(out)
+        out = torch.stack(x, 1)
+        out = out.view(out.shape[0], self.num_classes, self.n_step, -1)
+        if len(self.out_size) < 3 or self.num_classes < 2:
+            out = out.squeeze(1)
+        else:
+            out = F.log_softmax(out, 1)
+            out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
+        return out
 
 # -----------------------------------------------------------
 #

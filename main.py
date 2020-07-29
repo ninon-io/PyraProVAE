@@ -12,7 +12,7 @@ from data_loaders.data_loader import import_dataset
 from reconstruction import reconstruction, sampling, interpolation
 # Import encoders
 from models.encoders import EncoderMLP, DecoderMLP, EncoderCNN, DecoderCNN
-from models.encoders import EncoderGRU, DecoderGRU, EncoderCNNGRU, DecoderCNNGRU
+from models.encoders import EncoderGRU, DecoderGRU, EncoderCNNGRU, DecoderCNNGRU, DecoderCNNGRUEmbedded
 from models.encoders import EncoderHierarchical, DecoderHierarchical
 # Import model variants
 from models.ae import AE, VAE, WAE
@@ -159,6 +159,11 @@ elif args.encoder_type == 'cnn-gru':
     encoder = EncoderCNNGRU(args)
     args.cnn_size = encoder.cnn_size
     decoder = DecoderCNNGRU(args)
+elif args.encoder_type == 'cnn-gru-embed':
+    args.type_mod = 'normal'
+    encoder = EncoderCNNGRU(args)
+    args.cnn_size = encoder.cnn_size
+    decoder = DecoderCNNGRUEmbedded(args)
 elif args.encoder_type == 'hierarchical':
     encoder = EncoderHierarchical(args)
     decoder = DecoderHierarchical(args)
