@@ -39,7 +39,7 @@ parser.add_argument('--subsample',      type=int, default=0,        help='train 
 parser.add_argument('--nbworkers',      type=int, default=3,        help='')
 # Model Parameters
 parser.add_argument("--model",          type=str, default="vae",        help='ae | vae | vae-flow | wae')
-parser.add_argument("--encoder_type",   type=str, default="gru",    help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
+parser.add_argument("--encoder_type",   type=str, default="cnn-gru",    help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
 parser.add_argument("--beta",           type=float, default=2.,         help='value of beta regularization')
 parser.add_argument('--enc_hidden_size',type=int, default=512,         help='do not touch if you do not know')
 parser.add_argument('--latent_size',    type=int, default=16,          help='do not touch if you do not know')

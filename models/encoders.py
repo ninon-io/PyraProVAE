@@ -787,7 +787,7 @@ class DecoderCNNGRUEmbedded(nn.Module):
         if len(self.out_size) < 3 or self.num_classes < 2:
             out = out.squeeze(1)
         else:
-            out = F.log_softmax(out, 1)
+            #out = F.log_softmax(out, 1)
             out = out.transpose(1, 2).contiguous().view(out.shape[0], self.out_size[1], -1)
         return out
 
