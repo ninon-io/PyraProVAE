@@ -29,9 +29,9 @@ model = ['ae', 'vae', 'wae']
 # Types of sub-layers in the *AE architectures
 encoder_type = ['mlp', 'cnn', 'res-cnn', 'gru', 'cnn-gru']
 # Latent sizes
-latent_size = [256, 128, 64, 32, 16, 4]
+latent_size = [128, 64, 32, 16, 8]
 # Beta values
-beta_vals = [1.0, 2.0, 5.0, 10.0]
+beta_vals = [1.0, 2.0, 8.0]
 
 
 # Scripts folder

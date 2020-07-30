@@ -270,7 +270,7 @@ def evolution_full_track(args):
         fig = plt.figure(figsize=(16, 12))
         ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=224)
         ax.scatter(z_test_tsne[:, 0], z_test_tsne[:, 1], z_test_tsne[:, 2], c='k', cmap=plt.cm.nipy_spectral, edgecolor='k')
-        ax.scatter(latent_track[:, 0], latent_track[:, 1], latent_track[:, 2], c='r', cmap=plt.cm.nipy_spectral, edgecolor='k')
+        ax.scatter(latent_track[:, 0], latent_track[:, 1], latent_track[:, 2], c=torch.tensor(latent_track), cmap=plt.cm.nipy_spectral, edgecolor='k')
         plt.title(str(midi_files[track]) + '.mid encoding in latent space')
         plt.savefig('output/figures/' + str(midi_files[track]) + '.pdf')
         plt.close()
@@ -281,7 +281,7 @@ def evolution_full_track(args):
 #
 # -----------------------------------------------------------
 
-# TODO
+
 
 # %% -----------------------------------------------------------
 #
