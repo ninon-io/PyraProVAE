@@ -638,7 +638,6 @@ class DecoderCNNGRU(nn.Module):
 
     def forward(self, z):
         tmp_out = torch.zeros((z.size(0), (self.input_size * self.num_classes)))
-        #out[:, -1] = 1.
         x, hx = [], [None, None]
         t = torch.tanh(self.linear_init_1(z))
         hx[0] = t

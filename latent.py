@@ -242,30 +242,46 @@ evaluate_dimensions(model, test_loader, latent_dims=full_pca.n_features_, name='
 #
 # -----------------------------------------------------------
 
-def evolution_full_track(args, frame_bar=64):
+def evolution_full_track(args):
     midi_files = np.array([files_names for files_names in os.listdir(args.full_track) if
                            (files_names.endswith('.midi') or files_names.endswith('.mid'))])
-    for index in np.arange(start=0, stop=np.size(midi_files)):
-        midi_data = pretty_midi.PrettyMIDI(args.full_track+ '/' + midi_files[index])
+    for track in np.arange(start=0, stop=np.size(midi_files)):
+        midi_data = pretty_midi.PrettyMIDI(args.full_track + '/' + midi_files[track])
         downbeats = midi_data.get_downbeats()
         bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
-        fs = int(frame_bar / round(bar_time))
+        fs = int(args.frame_bar / round(bar_time))
         piano_roll = midi_data.get_piano_roll(fs=fs)
         for i in range(len(downbeats) - 1):
             # compute the piano-roll for one bar and save it
             sliced_piano_roll = np.array(piano_roll[:,
                                          math.ceil(downbeats[i] * fs):math.ceil(downbeats[i + 1] * fs)])
-            if sliced_piano_roll.shape[1] > frame_bar:
-                sliced_piano_roll = np.array(sliced_piano_roll[:, 0:frame_bar])
-            elif sliced_piano_roll.shape[1] < frame_bar:
+            if sliced_piano_roll.shape[1] > args.frame_bar:
+                sliced_piano_roll = np.array(sliced_piano_roll[:, 0:args.frame_bar])
+            elif sliced_piano_roll.shape[1] < args.frame_bar:
                 continue
-            sliced_piano_roll = torch.from_numpy(sliced_piano_roll).float()
-            # bar_dir = args.root_dir + "/piano_roll_bar_" + str(frame_bar)
-            # if not os.path.exists(bar_dir):
-            #     os.mkdir(bar_dir)
-            # torch.save(sliced_piano_roll, bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
-            print('midi', len(sliced_piano_roll))
+        sliced_piano_roll = torch.from_numpy(sliced_piano_roll).float()
+        print('midi', len(sliced_piano_roll))
+        # Encode to latent space every slice of the track
+        for slice in sliced_piano_roll:
+            latent_track = [model.encode(slice)]
+        # TSNE on track
+        latent_track = compute_projection(latent_track, projection='tsne')
+        # Plot
+        fig = plt.figure(figsize=(16, 12))
+        ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=224)
+        ax.scatter(z_test_tsne[:, 0], z_test_tsne[:, 1], z_test_tsne[:, 2], c='k', cmap=plt.cm.nipy_spectral, edgecolor='k')
+        ax.scatter(latent_track[:, 0], latent_track[:, 1], latent_track[:, 2], c='r', cmap=plt.cm.nipy_spectral, edgecolor='k')
+        plt.title(str(midi_files[track]) + '.mid encoding in latent space')
+        plt.savefig('output/figures/' + str(midi_files[track]) + '.pdf')
+        plt.close()
 
+# %% ---------------------------------------------------------
+#
+# Latent vector arithmetic
+#
+# -----------------------------------------------------------
+
+# TODO
 
 # %% -----------------------------------------------------------
 #
