@@ -27,7 +27,7 @@ args = parser.parse_args()
 # Models grid arguments
 model = ['ae', 'vae', 'wae']
 # Types of sub-layers in the *AE architectures
-encoder_type = ['mlp', 'cnn', 'res-cnn', 'gru', 'cnn-gru', 'hierarchical']
+encoder_type = ['mlp', 'cnn', 'res-cnn', 'gru', 'cnn-gru']
 # Latent sizes
 latent_size = [256, 128, 64, 32, 16, 4]
 # Beta values
@@ -40,7 +40,7 @@ if not os.path.exists('scripts/output/'):
     
 def write_basic_script(file, args, out_f="%N-%j.out"):
     file.write("#!/bin/bash\n")
-    file.write("#SBATCH --gres=gpu:1            # Request GPU generic resources\n")
+    file.write("#SBATCH --gres=gpu:v100l:1      # Request GPU generic resources\n")
     if (args.machine == 'cedar'):
         file.write("#SBATCH --cpus-per-task=6   # Cores proportional to GPUs: 6 on Cedar, 16 on Graham.\n")
         file.write("#SBATCH --mem=32000M        # Memory proportional to GPUs: 32000 Cedar, 64000 Graham.\n")

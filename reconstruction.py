@@ -41,7 +41,7 @@ def reconstruction(args, model, epoch, dataset):
     plt.savefig(args.figures_path + 'epoch_' + str(epoch))
 
 
-def sampling(args, model, nb_samples=10, fs=100, program=0):
+def sampling(args, model, nb_samples=10, fs=25, program=0):
     # Create normal distribution representing latent space
     latent = distributions.normal.Normal(torch.tensor([0], dtype=torch.float),
                                          torch.tensor([1], dtype=torch.float))
@@ -54,34 +54,37 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
     generated_bar = generated_bar.detach().cpu()
     if args.num_classes > 1:
         generated_bar = torch.argmax(generated_bar, dim=1)
-    for i in range(nb_samples):
+    for i in range(args.nb_samples):
         plt.matshow(generated_bar[i], alpha=1)
         plt.title("Sampling from latent space")
         plt.savefig(args.figures_path + 'sampling' + str(i) + '.png')
-    plt.close()
+        plt.close()
+    generated_bar = generated_bar.transpose(0,1).reshape(generated_bar.shape[1], -1)
     # Generate MIDI from sampling
     pm = pretty_midi.PrettyMIDI()
-    notes, frames = generated_bar[0].shape
+    notes, frames = generated_bar.shape
     instrument = pretty_midi.Instrument(program=program)
     # Pad 1 column of zeros to acknowledge initial and ending events
-    piano_roll = np.pad(generated_bar[0].detach(), [(0, 0), (1, 1)], 'constant')
+    piano_roll = np.pad(generated_bar.detach(), [(0, 0), (1, 1)], 'constant')
     # Use changes in velocities to find note on/note off events
     velocity_changes = np.nonzero(np.diff(piano_roll).T)
     # Keep track on velocities and note on times
     prev_velocities = np.zeros(notes, dtype=int)
     note_on_time = np.zeros(notes)
+    plt.figure()
+    plt.matshow(piano_roll)
     for time, note in zip(*velocity_changes):
         # Use time + 1 because of padding above
-        velocity = piano_roll[notes - 1, time + 1]
+        velocity = piano_roll[note, time + 1]
         time = time / fs
         if velocity > 0:
             if prev_velocities[note] == 0:
                 note_on_time[note] = time
-                prev_velocities[note] = velocity
+                prev_velocities[note] = 75
         else:
             pm_note = pretty_midi.Note(
                 velocity=prev_velocities[note],
-                pitch=note,
+                pitch=note + args.min_pitch,
                 start=note_on_time[note],
                 end=time)
             instrument.notes.append(pm_note)
@@ -91,7 +94,7 @@ def sampling(args, model, nb_samples=10, fs=100, program=0):
     pm.write(args.midi_results_path + "sampling.mid")
 
 
-def interpolation(args, model, dataset, fs=100, program=0):
+def interpolation(args, model, dataset, fs=25, program=0):
     x_a, x_b = dataset[random.randint(0, len(dataset) - 1)], dataset[random.randint(0, len(dataset) - 1)]
     x_a, x_b = x_a.to(args.device), x_b.to(args.device)
     # Encode samples to the latent space
@@ -109,13 +112,14 @@ def interpolation(args, model, dataset, fs=100, program=0):
         if args.num_classes > 1:
             step = torch.argmax(step[0], dim=0)
         stack_interp.append(step)
-        plt.matshow(step.cpu().detach(), alpha=1)
-        plt.title("Interpolation " + str(i))
-        plt.savefig(args.figures_path + "interpolation" + str(i) + ".png")
-        plt.close()
+        #plt.matshow(step.cpu().detach(), alpha=1)
+        #plt.title("Interpolation " + str(i))
+        #plt.savefig(args.figures_path + "interpolation" + str(i) + ".png")
+        #plt.close()
         i += 1
     stack_interp = torch.cat(stack_interp, dim=1)
     # Draw stacked interpolation
+    plt.figure()
     plt.matshow(stack_interp.cpu(), alpha=1)
     plt.title("Interpolation")
     plt.savefig(args.figures_path + "interpolation.png")
@@ -132,17 +136,17 @@ def interpolation(args, model, dataset, fs=100, program=0):
     prev_velocities = np.zeros(notes, dtype=int)
     note_on_time = np.zeros(notes)
     for time, note in zip(*velocity_changes):
-        # Use time + 1 because of padding above
-        velocity = piano_roll[notes - 1, time + 1]
+        # Use time + 1s because of padding above
+        velocity = piano_roll[note, time + 1]
         time = time / fs
         if velocity > 0:
             if prev_velocities[note] == 0:
                 note_on_time[note] = time
-                prev_velocities[note] = velocity
+                prev_velocities[note] = 75
         else:
             pm_note = pretty_midi.Note(
                 velocity=prev_velocities[note],
-                pitch=note,
+                pitch=note + args.min_pitch,
                 start=note_on_time[note],
                 end=time)
             instrument.notes.append(pm_note)
