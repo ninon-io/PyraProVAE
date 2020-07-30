@@ -14,13 +14,18 @@ import matplotlib.pyplot as plt
 from data_loaders.data_loader import import_dataset
 from symbolic import compute_symbolic_features, features
 from utils import LatentDataset, epoch_train, epoch_test, init_classic
+import pretty_midi
+from statistics import mean
+import math
+
 
 # %% - Argument parsing
 parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
 parser.add_argument('--device', type=str, default='cpu', help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path', type=str, default='/Users/esling/Datasets/symbolic/', help='path to midi folder')
+parser.add_argument('--midi_path', type=str, default= '/full_midi_track', help='path to midi folder')
+parser.add_argument('--full_track', type=str, default='/full_midi_track', help='path to midi folder')
 parser.add_argument("--test_size", type=float, default=0.2, help="% of data used in test set")
 parser.add_argument("--valid_size", type=float, default=0.2, help="% of data used in valid set")
 parser.add_argument("--dataset", type=str, default="nottingham",
@@ -39,11 +44,12 @@ parser.add_argument('--num_classes', type=int, default=2, help='number of veloci
 parser.add_argument('--subsample', type=int, default=0, help='train on subset')
 parser.add_argument('--nbworkers', type=int, default=3, help='')
 # Model Parameters
-parser.add_argument("--model",          type=str, default="vae",        help='ae | vae | vae-flow | wae')
-parser.add_argument("--encoder_type",   type=str, default="cnn-gru",    help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
-parser.add_argument("--beta",           type=float, default=2.,         help='value of beta regularization')
-parser.add_argument('--enc_hidden_size',type=int, default=512,         help='do not touch if you do not know')
-parser.add_argument('--latent_size',    type=int, default=16,          help='do not touch if you do not know')
+parser.add_argument("--model", type=str, default="vae", help='ae | vae | vae-flow | wae')
+parser.add_argument("--encoder_type", type=str, default="cnn-gru",
+                    help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
+parser.add_argument("--beta", type=float, default=2., help='value of beta regularization')
+parser.add_argument('--enc_hidden_size', type=int, default=512, help='do not touch if you do not know')
+parser.add_argument('--latent_size', type=int, default=16, help='do not touch if you do not know')
 # Output path
 parser.add_argument('--output_path', type=str, default='output/', help='major path for data output')
 parser.add_argument('--model_path', type=str, default='', help='path to midi folder')
@@ -213,6 +219,7 @@ for f in plot_targets:
 #
 # -----------------------------------------------------------
 from figures import evaluate_dimensions
+
 # Compute combo sets
 mu_full = torch.cat([mu_train, mu_valid, mu_test], dim=0)
 var_full = torch.cat([var_train, var_valid, var_test], dim=0)
@@ -223,12 +230,44 @@ print(var_means)
 evaluate_dimensions(model, test_loader, full_pca, name='output/figures/dimension_pca_')
 # Analyze the latent dimensions
 evaluate_dimensions(model, test_loader, latent_dims=full_pca.n_features_, name='output/figures/dimension_')
+
+
 # Evaluate some translations in the latent space
-# evaluate_translations(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/tranlation_')
+# evaluate_translations(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/translation_')
 
 
+# %% ---------------------------------------------------------
+#
+# Analyze evolution of one full track in latent space
+#
+# -----------------------------------------------------------
 
-#%% -----------------------------------------------------------
+def evolution_full_track(args, frame_bar=64):
+    midi_files = np.array([files_names for files_names in os.listdir(args.full_track) if
+                           (files_names.endswith('.midi') or files_names.endswith('.mid'))])
+    for index in np.arange(start=0, stop=np.size(midi_files)):
+        midi_data = pretty_midi.PrettyMIDI(args.full_track+ '/' + midi_files[index])
+        downbeats = midi_data.get_downbeats()
+        bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
+        fs = int(frame_bar / round(bar_time))
+        piano_roll = midi_data.get_piano_roll(fs=fs)
+        for i in range(len(downbeats) - 1):
+            # compute the piano-roll for one bar and save it
+            sliced_piano_roll = np.array(piano_roll[:,
+                                         math.ceil(downbeats[i] * fs):math.ceil(downbeats[i + 1] * fs)])
+            if sliced_piano_roll.shape[1] > frame_bar:
+                sliced_piano_roll = np.array(sliced_piano_roll[:, 0:frame_bar])
+            elif sliced_piano_roll.shape[1] < frame_bar:
+                continue
+            sliced_piano_roll = torch.from_numpy(sliced_piano_roll).float()
+            # bar_dir = args.root_dir + "/piano_roll_bar_" + str(frame_bar)
+            # if not os.path.exists(bar_dir):
+            #     os.mkdir(bar_dir)
+            # torch.save(sliced_piano_roll, bar_dir + "/per_bar" + str(i) + "_track" + str(index) + ".pt")
+            print('midi', len(sliced_piano_roll))
+
+
+# %% -----------------------------------------------------------
 #
 # Classification section
 #
@@ -299,3 +338,6 @@ for target in classification_targets:
         if loss_valid < cur_best_valid:
             cur_best_valid = loss_valid
             best_test = loss_test
+
+if __name__ == "__main__":
+    evolution_full_track(args)

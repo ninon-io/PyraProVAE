@@ -150,7 +150,7 @@ def interpolation(args, model, dataset, fs=100, program=0):
     pm.instruments.append(instrument)
     # Write out the MIDI data
     pm.write(args.midi_results_path + "interpolation.mid")
-    
+
 
 def interpolation(args, model, dataset, fs=100, program=0):
     x_a, x_b = dataset[random.randint(0, len(dataset) - 1)], dataset[random.randint(0, len(dataset) - 1)]

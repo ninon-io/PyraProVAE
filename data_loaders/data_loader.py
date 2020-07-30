@@ -171,13 +171,6 @@ class PianoRollRep(Dataset):
             output = self.transform(output)
         return output
 
-    # Find the perfect match transforms, transforms.functional.center_crop((0, 0), (128, 100, 0))
-    # def __getitem__(self, index):
-    #     transform = transforms.Compose([transforms.Normalize([0.5], [0.5])])
-    #     sample = torch.load(self.bar_dir + '/' + self.bar_files[index])
-    #     norm_sample = transform(sample.unsqueeze(0))
-    #     return norm_sample
-
     # Pre-processing of the data: loading in a sliced piano roll
     def bar_export(self):
         if self.score_sig != 'all':
@@ -260,9 +253,9 @@ def stats_dataset(loaders):
         cur_loader.training = train_val
     pitch_on = torch.unique(torch.cat(pitch_on))
     min_p, max_p = int(min(pitch_on)), int(max(pitch_on))
-    if (min_p > 5):
+    if min_p > 5:
         min_p -= 6
-    if (max_p < 122):
+    if max_p < 122:
         max_p += 6
     print('*' * 32)
     print('Dataset summary')
