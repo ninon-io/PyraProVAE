@@ -41,7 +41,7 @@ def reconstruction(args, model, epoch, dataset):
     plt.savefig(args.figures_path + 'epoch_' + str(epoch))
 
 
-def sampling(args, model, nb_samples=10, fs=25, program=0):
+def sampling(args, model, fs=25, program=0):
     # Create normal distribution representing latent space
     latent = distributions.normal.Normal(torch.tensor([0], dtype=torch.float),
                                          torch.tensor([1], dtype=torch.float))
@@ -112,10 +112,10 @@ def interpolation(args, model, dataset, fs=25, program=0):
         if args.num_classes > 1:
             step = torch.argmax(step[0], dim=0)
         stack_interp.append(step)
-        #plt.matshow(step.cpu().detach(), alpha=1)
-        #plt.title("Interpolation " + str(i))
-        #plt.savefig(args.figures_path + "interpolation" + str(i) + ".png")
-        #plt.close()
+        # plt.matshow(step.cpu().detach(), alpha=1)
+        # plt.title("Interpolation " + str(i))
+        # plt.savefig(args.figures_path + "interpolation" + str(i) + ".png")
+        # plt.close()
         i += 1
     stack_interp = torch.cat(stack_interp, dim=1)
     # Draw stacked interpolation
@@ -154,69 +154,6 @@ def interpolation(args, model, dataset, fs=25, program=0):
     pm.instruments.append(instrument)
     # Write out the MIDI data
     pm.write(args.midi_results_path + "interpolation.mid")
-
-
-def interpolation(args, model, dataset, fs=100, program=0):
-    x_a, x_b = dataset[random.randint(0, len(dataset) - 1)], dataset[random.randint(0, len(dataset) - 1)]
-    x_a, x_b = x_a.to(args.device), x_b.to(args.device)
-    # Encode samples to the latent space
-    z_a, z_b = model.encode(x_a.unsqueeze(0)), model.encode(x_b.unsqueeze(0))
-    # Run through alpha values
-    interp = []
-    alpha_values = np.linspace(0, 1, args.n_steps)
-    for alpha in alpha_values:
-        z_interp = (1 - alpha) * z_a[0] + alpha * z_b[0]
-        interp.append(model.decode(z_interp))
-    # Draw interpolation step by step
-    i = 0
-    stack_interp = []
-    for step in interp:
-        if args.num_classes > 1:
-            step = torch.argmax(step[0], dim=0)
-        stack_interp.append(step)
-        plt.matshow(step.cpu().detach(), alpha=1)
-        plt.title("Interpolation " + str(i))
-        plt.savefig(args.figures_path + "interpolation" + str(i) + ".png")
-        plt.close()
-        i += 1
-    stack_interp = torch.cat(stack_interp, dim=1)
-    # Draw stacked interpolation
-    plt.matshow(stack_interp.cpu(), alpha=1)
-    plt.title("Interpolation")
-    plt.savefig(args.figures_path + "interpolation.png")
-    plt.close()
-    # Generate MIDI from interpolation
-    pm = pretty_midi.PrettyMIDI()
-    notes, frames = stack_interp.shape
-    instrument = pretty_midi.Instrument(program=program)
-    # Pad 1 column of zeros to acknowledge initial and ending events
-    piano_roll = np.pad(stack_interp.cpu().detach(), [(0, 0), (1, 1)], 'constant')
-    # Use changes in velocities to find note on/note off events
-    velocity_changes = np.nonzero(np.diff(piano_roll).T)
-    # Keep track on velocities and note on times
-    prev_velocities = np.zeros(notes, dtype=int)
-    note_on_time = np.zeros(notes)
-    for time, note in zip(*velocity_changes):
-        # Use time + 1 because of padding above
-        velocity = piano_roll[notes - 1, time + 1]
-        time = time / fs
-        if velocity > 0:
-            if prev_velocities[note] == 0:
-                note_on_time[note] = time
-                prev_velocities[note] = velocity
-        else:
-            pm_note = pretty_midi.Note(
-                velocity=prev_velocities[note],
-                pitch=note,
-                start=note_on_time[note],
-                end=time)
-            instrument.notes.append(pm_note)
-            prev_velocities[note] = 0
-    pm.instruments.append(instrument)
-    # Write out the MIDI data
-    pm.write(args.midi_results_path + "interpolation.mid")
-
-
 
 
 if __name__ == "__main__":

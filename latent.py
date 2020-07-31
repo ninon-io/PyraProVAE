@@ -10,6 +10,7 @@ import argparse
 import torch
 import torch.nn as nn
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 from data_loaders.data_loader import import_dataset
 from symbolic import compute_symbolic_features, features
@@ -236,7 +237,7 @@ evaluate_dimensions(model, test_loader, latent_dims=full_pca.n_features_, name='
 # evaluate_translations(model, test_loader, latent_dims = full_pca.n_features_, name='output/figures/translation_')
 
 
-# %% ---------------------------------------------------------
+# %% --------------------------------------------------------
 #
 # Analyze evolution of one full track in latent space
 #
@@ -277,11 +278,88 @@ def evolution_full_track(args):
 
 # %% ---------------------------------------------------------
 #
-# Latent vector arithmetic
+# Latent vector basic arithmetic
 #
 # -----------------------------------------------------------
 
 
+def arithmetic(args, dataset, fs=25, program=0):
+    x_a, x_b, x_c, x_d = None, None, None, None
+    points = [x_a, x_b, x_c, x_d]
+    latent = []
+    for x in points:
+        x = dataset[random.randint(0, len(dataset) - 1)]
+        x = x.to(args.device)
+        # Encode samples to the latent space
+        latent = latent.append(model.encode(x))
+    [z_a, z_b, z_c, z_d] = latent
+    # Run through alpha values
+    interp_1 = []
+    interp_2 = []
+    alpha_values = np.linspace(0, 1, args.n_steps)
+    for alpha in alpha_values:
+        z_interp_1 = (1 - alpha) * z_a[0] + alpha * z_b[0]
+        z_interp_2 = (1 - alpha) * z_c[0] + alpha * z_d[0]
+        interp_1.append(model.decode(z_interp_1))
+        interp_2.append(model.decode(z_interp_2))
+    interp_1, interp_2 = torch.from_numpy(interp_1), torch.from_numpy(interp_2)
+    for step_1, step_2 in interp_1, interp_2:
+        sum_interp = torch.add(step_1, step_2)
+        dif_interp = torch.add(step_1, step_2 * (-1))
+        dot_interp = torch.dot(step_1, step_2)
+    # Draw interpolation step by step
+    stack_sum_interp, stack_dif_interp, stack_dot_interp = [], [], []
+    for i, j, k in sum_interp, dif_interp, dot_interp:
+        if args.num_classes > 1:
+            i, j, k = torch.argmax(i[0], dim=0), torch.argmax(j[0], dim=0), torch.argmax(k[0], dim=0)
+        stack_sum_interp.append(i)
+        stack_dif_interp.append(j)
+        stack_dot_interp.append(k)
+    stack_sum_interp = torch.cat(stack_sum_interp, dim=1)
+    stack_dif_interp = torch.cat(stack_dif_interp, dim=1)
+    stack_dot_interp = torch.cat(stack_dot_interp, dim=1)
+    # Draw stacked interpolation
+    plt.figure()
+    fig, axs = plt.subplots(3)
+    fig.suptitle('Arithmetic')
+    axs[0].matshow(stack_sum_interp.cpu(), alpha=1)
+    axs[0].set_title('Sum')
+    axs[1].matshow(stack_dif_interp.cpu(), alpha=1)
+    axs[1].set_title('Dif')
+    axs[2].matshow(stack_dot_interp.cpu(), alpha=1)
+    axs[2].set_title('Dot')
+    plt.savefig(args.figures_path + "arithmetic.png")
+    plt.close()
+    # # Generate MIDI from interpolation
+    # pm = pretty_midi.PrettyMIDI()
+    # notes, frames = stack_interp.shape
+    # instrument = pretty_midi.Instrument(program=program)
+    # # Pad 1 column of zeros to acknowledge initial and ending events
+    # piano_roll = np.pad(stack_interp.cpu().detach(), [(0, 0), (1, 1)], 'constant')
+    # # Use changes in velocities to find note on/note off events
+    # velocity_changes = np.nonzero(np.diff(piano_roll).T)
+    # # Keep track on velocities and note on times
+    # prev_velocities = np.zeros(notes, dtype=int)
+    # note_on_time = np.zeros(notes)
+    # for time, note in zip(*velocity_changes):
+    #     # Use time + 1s because of padding above
+    #     velocity = piano_roll[note, time + 1]
+    #     time = time / fs
+    #     if velocity > 0:
+    #         if prev_velocities[note] == 0:
+    #             note_on_time[note] = time
+    #             prev_velocities[note] = 75
+    #     else:
+    #         pm_note = pretty_midi.Note(
+    #             velocity=prev_velocities[note],
+    #             pitch=note + args.min_pitch,
+    #             start=note_on_time[note],
+    #             end=time)
+    #         instrument.notes.append(pm_note)
+    #         prev_velocities[note] = 0
+    # pm.instruments.append(instrument)
+    # # Write out the MIDI data
+    # pm.write(args.midi_results_path + "interpolation.mid")
 
 # %% -----------------------------------------------------------
 #
