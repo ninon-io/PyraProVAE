@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description='PyraProVAE')
 # Device Information
 parser.add_argument('--device',         type=str, default='cuda:2',     help='device cuda or cpu')
 # Data Parameters
-parser.add_argument('--midi_path',      type=str, default='/fast-1/mathieu/datasets', help='path to midi folder')
+parser.add_argument('--midi_path',      type=str, default='/Users/esling/datasets/symbolic/', help='path to midi folder')
 parser.add_argument("--test_size",      type=float, default=0.2,        help="% of data used in test set")
 parser.add_argument("--valid_size",     type=float, default=0.2,        help="% of data used in valid set")
 parser.add_argument("--dataset",        type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
@@ -44,15 +44,15 @@ parser.add_argument('--data_pitch',     type=int, default=1,            help='co
 parser.add_argument('--data_export',    type=int, default=0,            help='recompute the dataset (for debug purposes)')
 parser.add_argument('--data_augment',   type=int, default=1,            help='use data augmentation')
 # Model Saving and reconstruction
-parser.add_argument('--output_path',    type=str, default='/slow-2/ninon/pyrapro/', help='major path for data output')
+parser.add_argument('--output_path',    type=str, default='output/', help='major path for data output')
 # Model Parameters
 parser.add_argument("--model",          type=str, default="vae",        help='ae | vae | vae-flow | wae')
 parser.add_argument("--encoder_type",   type=str, default="cnn-gru",    help='mlp | cnn | res-cnn | gru | cnn-gru | hierarchical')
-parser.add_argument("--beta",           type=float, default=1.,         help='value of beta regularization')
+parser.add_argument("--beta",           type=float, default=2.,         help='value of beta regularization')
 parser.add_argument("--beta_delay",     type=int, default=0,            help='delay before using beta')
 # PyraPro and vae_mathieu specific parameters: dimensions of the architecture
 parser.add_argument('--enc_hidden_size', type=int, default=512,         help='do not touch if you do not know')
-parser.add_argument('--latent_size',    type=int, default=128,          help='do not touch if you do not know')
+parser.add_argument('--latent_size',    type=int, default=64,          help='do not touch if you do not know')
 parser.add_argument('--cond_hidden_size', type=int, default=1024,       help='do not touch if you do not know')
 parser.add_argument('--cond_output_dim', type=int, default=512,         help='do not touch if you do not know')
 parser.add_argument('--dec_hidden_size', type=int, default=512,         help='do not touch if you do not know')
