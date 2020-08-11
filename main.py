@@ -32,7 +32,7 @@ parser.add_argument('--device',         type=str, default='cuda:2',     help='de
 parser.add_argument('--midi_path',      type=str, default='/Users/esling/datasets/symbolic/', help='path to midi folder')
 parser.add_argument("--test_size",      type=float, default=0.2,        help="% of data used in test set")
 parser.add_argument("--valid_size",     type=float, default=0.2,        help="% of data used in valid set")
-parser.add_argument("--dataset",        type=str, default="nottingham", help="maestro | nottingham | bach_chorales | midi_folder")
+parser.add_argument("--dataset",        type=str, default="nottingham", help="maestro | nottingham | bach_chorales | combo")
 parser.add_argument("--shuffle_data_set", type=int, default=1,          help='')
 # Novel arguments
 parser.add_argument('--frame_bar',      type=int, default=64,           help='put a power of 2 here')

@@ -18,6 +18,7 @@ import argparse
 from idlelib.pyparse import trans
 import random
 import matplotlib.pyplot as plt
+import subprocess
 
 
 def maximum(train_set, valid_set, test_set):
@@ -47,10 +48,10 @@ def import_dataset(args):
     base_path = args.midi_path
     # Main transform
     # transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=2.342, std=12.476)])  # Rescale?
-    folder_str = {'maestro': 'maestro_folders', 'nottingham': 'Nottingham', 'bach': 'JSB_Chorales'}
+    folder_str = {'maestro': 'maestro_folders', 'nottingham': 'Nottingham', 'bach_chorales': 'JSB_Chorales', 'combo':'poly_combo'}
     base_path += '/' + folder_str[args.dataset]
     # Retrieve correct data loader
-    if args.dataset in ["maestro", "nottingham", "bach_chorales"]:
+    if args.dataset in ["maestro", "nottingham", "bach_chorales", "combo"]:
         train_path = base_path + "/train"
         test_path = base_path + "/test"
         valid_path = base_path + "/valid"
@@ -182,13 +183,24 @@ class PianoRollRep(Dataset):
         # load midi in a pretty midi object
         for index in np.arange(start=0, stop=np.size(self.midi_files)):
             midi_data = pretty_midi.PrettyMIDI(self.root_dir + '/' + self.midi_files[index])
-            ts_n = midi_data.time_signature_changes[0].numerator
-            ts_d = midi_data.time_signature_changes[0].denominator
-            # Eventually check for time signature
-            if self.score_sig != 'all' and (ts_n != target_sig_n or ts_d != target_sig_d):
-                print('Signature is [%d/%d] - skipped as not a 4/4 track' % (ts_n, ts_d))
-                continue
+            if (len(midi_data.time_signature_changes) > 0):
+                ts_n = midi_data.time_signature_changes[0].numerator
+                ts_d = midi_data.time_signature_changes[0].denominator
+                # Eventually check for time signature
+                if self.score_sig != 'all' and (ts_n != target_sig_n or ts_d != target_sig_d):
+                    print('Signature is [%d/%d] - skipped as not a 4/4 track' % (ts_n, ts_d))
+                    continue
             downbeats = midi_data.get_downbeats()
+            if ('maestro' in self.root_dir):
+                print(self.root_dir + '/' + self.midi_files[index])
+                beat_cmd = ["java","-cp","/Users/esling/Downloads/met-align-master/bin","metalign.Main","-g","/Users/esling/Downloads/met-align-master/grammars/all.lpcfg","-b","20", self.root_dir + '/' + self.midi_files[index]]
+                output = subprocess.Popen(beat_cmd, stdout=subprocess.PIPE ).communicate()[0]
+                print('Done.')
+                # Retrieve finer downbeats
+                vals = str(output).split('\\n')[-2]
+                vals = vals.split(':')[1]
+                vals = vals.split(',')
+                downbeats = [float(x) / 1000000 for x in vals]
             bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
             fs = int(self.frame_bar / round(bar_time))
             # Find a mono track if we only want a mono dataset
