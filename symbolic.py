@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import music21
+import pretty_midi
+import numpy as np
 from music21.stream import Voice
 import music21.features.jSymbolic as jSymbolic
-from mido import Message, MidiFile, MidiTrack
 
 # %% ---------------------------------------------------------
 #
@@ -48,9 +49,8 @@ features_simple = {
 # Function to compute features from one given piano_roll
 def symbolic_features(x_cur, feature_set=features, min_pitch=0):
     # First create a MIDI version
-    midi = MidiFile(type=1)
-    midi.tracks.append(MidiTrack(roll_to_track(x_cur, min_pitch)))
-    midi.save('/tmp/track.mid')
+    midi = roll_to_track(x_cur, min_pitch)
+    midi.write('/tmp/track.mid')
     # Then transform to a Music21 stream
     try:
         stream = music21.converter.parse('/tmp/track.mid')
@@ -63,7 +63,9 @@ def symbolic_features(x_cur, feature_set=features, min_pitch=0):
     feature_vals = {}
     # Number of notes
     nb_notes = 0
-    for n in stream.parts[0]:
+    obj_val = stream.parts[0].notes
+    #if (type(obj) == Piano):
+    for n in obj_val:
         if type(n) == Voice:
             continue
         if n.isRest:
@@ -115,31 +117,35 @@ def start_note(note, time):
 
 
 # Turn track into mido MidiFile
-def roll_to_track(roll, midi_base=0):
-    roll = roll.t()
-    delta = 0
-    # State of the notes in the roll.
-    notes = [False] * len(roll[0])
-    for row in roll:
-        for i, col in enumerate(row):
-            note = midi_base + i
-            if col == 1:
-                if notes[i]:
-                    delta += 25
-                    continue
-                yield start_note(note, delta)
-                delta = 0
-                notes[i] = True
-            elif col == 0:
-                if notes[i]:
-                    # Stop the ringing note
-                    yield stop_note(note, delta)
-                    delta = 0
-                notes[i] = False
-        if notes[i]:
-            # Stop the ringing note
-            yield stop_note(note, delta)
-            delta = 0
+def roll_to_track(roll, midi_base=0, fs=25):
+    # Generate MIDI from interpolation
+    pm = pretty_midi.PrettyMIDI()
+    notes, frames = roll.shape
+    instrument = pretty_midi.Instrument(program=0)
+    # Pad 1 column of zeros to acknowledge initial and ending events
+    piano_roll = np.pad(roll.cpu().detach(), [(0, 0), (1, 1)], 'constant')
+    # Use changes in velocities to find note on/note off events
+    velocity_changes = np.nonzero(np.diff(piano_roll).T)
+    # Keep track on velocities and note on times
+    prev_velocities = np.zeros(notes, dtype=int)
+    note_on_time = np.zeros(notes)
+    for time, note in zip(*velocity_changes):
+        # Use time + 1s because of padding above
+        velocity = piano_roll[note, time + 1]
+        time = time / fs
+        if velocity > 0:
+            if prev_velocities[note] == 0:
+                note_on_time[note] = time
+                prev_velocities[note] = 75
         else:
-            # ms per row
-            delta += 25
+            pm_note = pretty_midi.Note(
+                velocity=prev_velocities[note],
+                pitch=note + midi_base,
+                start=note_on_time[note],
+                end=time)
+            instrument.notes.append(pm_note)
+            prev_velocities[note] = 0
+    # Add current instrument to track
+    pm.instruments.append(instrument)
+    # Write out the MIDI data
+    return pm

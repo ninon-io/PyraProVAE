@@ -15,10 +15,27 @@ import matplotlib.pyplot as plt
 from data_loaders.data_loader import import_dataset
 from symbolic import compute_symbolic_features, features
 from utils import LatentDataset, epoch_train, epoch_test, init_classic
+import matplotlib.patches as patches
+import matplotlib.gridspec as gridspec
 import pretty_midi
 from statistics import mean
 import math
+import seaborn as sns
 
+#%%s
+# Beautify the plots
+large = 26; med = 18; small = 12
+params = {'axes.titlesize': large,
+          'legend.fontsize': med,
+          'figure.figsize': (8, 5),
+          'axes.labelsize': med,
+          'axes.titlesize': med,
+          'xtick.labelsize': large,
+          'ytick.labelsize': med,
+          'figure.titlesize': large}
+plt.rcParams.update(params)
+plt.style.use('seaborn-whitegrid')
+sns.set_style("white")
 
 # %% - Argument parsing
 parser = argparse.ArgumentParser(description='PyraProVAE')
@@ -94,6 +111,7 @@ else:
     train_features, valid_features, test_features = data[6], data[7], data[8]
     # Recall minimum pitch
     args.min_pitch = train_set.min_p
+    args.max_pitch = train_set.max_p
 
 # %% ---------------------------------------------------------
 #
@@ -252,6 +270,7 @@ def evolution_full_track(args):
         bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
         fs = int(args.frame_bar / round(bar_time))
         piano_roll = midi_data.get_piano_roll(fs=fs)
+        full_slices = []
         for i in range(len(downbeats) - 1):
             # compute the piano-roll for one bar and save it
             sliced_piano_roll = np.array(piano_roll[:,
@@ -260,21 +279,28 @@ def evolution_full_track(args):
                 sliced_piano_roll = np.array(sliced_piano_roll[:, 0:args.frame_bar])
             elif sliced_piano_roll.shape[1] < args.frame_bar:
                 continue
-        sliced_piano_roll = torch.from_numpy(sliced_piano_roll).float()
-        print('midi', len(sliced_piano_roll))
+            print(sliced_piano_roll.shape)
+            sliced_piano_roll = torch.from_numpy(sliced_piano_roll).float()
+            full_slices.append(sliced_piano_roll[args.min_pitch:args.max_pitch+1].unsqueeze(0))
+        full_slices = torch.cat(full_slices)    
+        print(full_slices.shape)
         # Encode to latent space every slice of the track
-        for slice in sliced_piano_roll:
-            latent_track = [model.encode(slice)]
+        latent_points, _, _ = model.encode(full_slices)
+        print(latent_points.shape)
         # TSNE on track
-        latent_track = compute_projection(latent_track, projection='tsne')
+        latent_track = pca.transform(latent_points.detach())
         # Plot
         fig = plt.figure(figsize=(16, 12))
         ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=224)
-        ax.scatter(z_test_tsne[:, 0], z_test_tsne[:, 1], z_test_tsne[:, 2], c='k', cmap=plt.cm.nipy_spectral, edgecolor='k')
-        ax.scatter(latent_track[:, 0], latent_track[:, 1], latent_track[:, 2], c=torch.tensor(latent_track), cmap=plt.cm.nipy_spectral, edgecolor='k')
+        ax.scatter(z_test_pca[:, 0], z_test_pca[:, 1], z_test_pca[:, 2], c='k', cmap=plt.cm.nipy_spectral, edgecolor='k')
+        ax.plot(latent_track[:, 0], latent_track[:, 1], latent_track[:, 2], c='r', linewidth=2)
         plt.title(str(midi_files[track]) + '.mid encoding in latent space')
-        plt.savefig('output/figures/' + str(midi_files[track]) + '.pdf')
+        plt.savefig('output/figures/tracks/' + str(midi_files[track]) + '.pdf')
         plt.close()
+        
+args.max_pitch = train_set.max_p
+args.full_track = '/Users/esling/Datasets/symbolic/Nottingham/test/'
+evolution_full_track(args)
 
 # %% ---------------------------------------------------------
 #
@@ -282,57 +308,74 @@ def evolution_full_track(args):
 #
 # -----------------------------------------------------------
 
-
 def arithmetic(args, dataset, fs=25, program=0):
-    x_a, x_b, x_c, x_d = None, None, None, None
-    points = [x_a, x_b, x_c, x_d]
-    latent = []
-    for x in points:
-        x = dataset[random.randint(0, len(dataset) - 1)]
-        x = x.to(args.device)
-        # Encode samples to the latent space
-        latent = latent.append(model.encode(x))
-    [z_a, z_b, z_c, z_d] = latent
-    # Run through alpha values
-    interp_1 = []
-    interp_2 = []
-    alpha_values = np.linspace(0, 1, args.n_steps)
-    for alpha in alpha_values:
-        z_interp_1 = (1 - alpha) * z_a[0] + alpha * z_b[0]
-        z_interp_2 = (1 - alpha) * z_c[0] + alpha * z_d[0]
-        interp_1.append(model.decode(z_interp_1))
-        interp_2.append(model.decode(z_interp_2))
-    interp_1, interp_2 = torch.from_numpy(interp_1), torch.from_numpy(interp_2)
-    for step_1, step_2 in interp_1, interp_2:
-        sum_interp = torch.add(step_1, step_2)
-        dif_interp = torch.add(step_1, step_2 * (-1))
-        dot_interp = torch.dot(step_1, step_2)
-    # Draw interpolation step by step
-    stack_sum_interp, stack_dif_interp, stack_dot_interp = [], [], []
-    for i, j, k in sum_interp, dif_interp, dot_interp:
-        if args.num_classes > 1:
-            i, j, k = torch.argmax(i[0], dim=0), torch.argmax(j[0], dim=0), torch.argmax(k[0], dim=0)
-        stack_sum_interp.append(i)
-        stack_dif_interp.append(j)
-        stack_dot_interp.append(k)
-    stack_sum_interp = torch.cat(stack_sum_interp, dim=1)
-    stack_dif_interp = torch.cat(stack_dif_interp, dim=1)
-    stack_dot_interp = torch.cat(stack_dot_interp, dim=1)
-    # Draw stacked interpolation
-    plt.figure()
-    fig, axs = plt.subplots(3)
-    fig.suptitle('Arithmetic')
-    axs[0].matshow(stack_sum_interp.cpu(), alpha=1)
-    axs[0].set_title('Sum')
-    axs[1].matshow(stack_dif_interp.cpu(), alpha=1)
-    axs[1].set_title('Dif')
-    axs[2].matshow(stack_dot_interp.cpu(), alpha=1)
-    axs[2].set_title('Dot')
-    plt.savefig(args.figures_path + "arithmetic.png")
-    plt.close()
+    for i in range(10):
+        x_a, x_b, x_c, x_d = None, None, None, None
+        points = [x_a, x_b, x_c, x_d]
+        latent = []
+        for x in points:
+            x = dataset[random.randint(0, len(dataset) - 1)]
+            x = x.to(args.device)
+            # Encode samples to the latent space
+            latent.append(model.encode(x.unsqueeze(0))[0])
+        [z_a, z_b, z_c, z_d] = latent
+        output_a = model.decode(z_a)
+        output_b = model.decode(z_b)
+        output_c = model.decode(z_c)
+        output_d = model.decode(z_d)
+        output_diff = model.decode(z_a - z_b)
+        output_add_c = model.decode(z_a - z_b + z_c)
+        output_add_d = model.decode(z_a - z_b + z_d)
+        fig = plt.figure(figsize=(8, 8))
+        ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=34, azim=224)
+        ax.scatter(z_test_pca[:, 0], z_test_pca[:, 1], z_test_pca[:, 2], c='k', cmap=plt.cm.nipy_spectral, edgecolor='k')
+        for z, name in [(z_a, 'A'), (z_b, 'B'), (z_c, 'C'), (z_d, 'D'), (z_a-z_b, 'A-B'), (z_a-z_b+z_c, 'A-B+C'), (z_a-z_b+z_d, 'A-B+D')]:
+            z_t = pca.transform(z.detach())
+            ax.text(z_t[0, 0], z_t[0, 1], z_t[0, 2], name, fontsize=18, fontweight='bold', color='r', verticalalignment='center', horizontalalignment='center')
+        plt.savefig('output/figures/arithmetics_' + str(i) + '_space.pdf')
+        plt.close()
+        fig = plt.figure(figsize=(20, 4))
+        outer = gridspec.GridSpec(1, 7, wspace=0.2, hspace=0.4)
+        for count, (cur_title, cur_val) in enumerate([('A', output_a), ('B', output_b), ('C', output_c), ('D', output_d), ('A - B', output_diff), ('A - B + C', output_add_c), ('A - B + D', output_add_d)]):
+            ax = plt.Subplot(fig, outer[count])
+            roll = torch.argmax(cur_val[0], 0)
+            notes, frames = roll.shape
+            # Pad 1 column of zeros to acknowledge initial and ending events
+            piano_roll = np.pad(roll.cpu().detach(), [(0, 0), (1, 1)], 'constant')
+            # Use changes in velocities to find note on/note off events
+            velocity_changes = np.nonzero(np.diff(piano_roll).T)
+            # Keep track on velocities and note on times
+            prev_velocities = np.zeros(notes, dtype=int)
+            note_on_time = np.zeros(notes)
+            min_pitch = np.inf
+            max_pitch = 0
+            cmap = plt.get_cmap('copper', 11)
+            for time, note in zip(*velocity_changes):
+                # Use time + 1s because of padding above
+                velocity = piano_roll[note, time + 1]
+                if velocity > 0:
+                    if prev_velocities[note] == 0:
+                        note_on_time[note] = time
+                        prev_velocities[note] = 75
+                else:
+                    prev_velocities[note] = 0
+                    rect = patches.Rectangle((note_on_time[note], note + 40 - 0.5), (time - note_on_time[note]), 1, linewidth=1.5,
+                                 edgecolor='k', facecolor=cmap(count), alpha=0.8)
+                    min_pitch = min(min_pitch, note + 40)
+                    max_pitch = max(max_pitch, note + 40)
+                    ax.add_patch(rect) 
+            ax.set_ylim([min_pitch - 5, max_pitch + 5])
+            ax.set_xticks(np.arange(0, 64, 16))
+            ax.set_xticklabels(np.arange(1, 4, 1))
+            ax.set_xlim([0, time])
+            ax.set_title(cur_title)
+            ax.get_xaxis().set_visible(False)
+            fig.add_subplot(ax)
+        plt.savefig('output/figures/arithmetics_' + str(i) + '.pdf')
+        plt.close()
     # # Generate MIDI from interpolation
     # pm = pretty_midi.PrettyMIDI()
-    # notes, frames = stack_interp.shape
+    # notes, frames = stack_interp.shape 
     # instrument = pretty_midi.Instrument(program=program)
     # # Pad 1 column of zeros to acknowledge initial and ending events
     # piano_roll = np.pad(stack_interp.cpu().detach(), [(0, 0), (1, 1)], 'constant')
@@ -360,6 +403,9 @@ def arithmetic(args, dataset, fs=25, program=0):
     # pm.instruments.append(instrument)
     # # Write out the MIDI data
     # pm.write(args.midi_results_path + "interpolation.mid")
+
+args.n_steps = 8
+arithmetic(args, test_set, fs=25, program=0)
 
 # %% -----------------------------------------------------------
 #

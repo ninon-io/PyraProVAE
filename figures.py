@@ -10,9 +10,11 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn import decomposition
 from symbolic import symbolic_features, features_simple
+
 """
 ###################
 
@@ -60,7 +62,7 @@ def evaluate_dimensions(model, test_loader, pca=None, latent_dims = 16, n_steps 
                 desc[i, f_i] = cur_feat[f]
         #desc /= torch.max(desc, dim=0)
         ax = plt.Subplot(fig, outer[0])
-        ax.plot(desc)
+        ax.plot(desc, linewidth=2)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         ax.legend(features_simple.keys())
@@ -68,9 +70,42 @@ def evaluate_dimensions(model, test_loader, pca=None, latent_dims = 16, n_steps 
         inner = gridspec.GridSpecFromSubplotSpec(1, 10, subplot_spec=outer[1], wspace=0.1, hspace=0.1)
         for i in range(10):
             ax = plt.Subplot(fig, inner[i])
-            ax.matshow(out[i * 4], aspect='auto')
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
+            roll = out[i * 4]
+            notes, frames = roll.shape
+            # Pad 1 column of zeros to acknowledge initial and ending events
+            piano_roll = np.pad(roll.cpu().detach(), [(0, 0), (1, 1)], 'constant')
+            # Use changes in velocities to find note on/note off events
+            velocity_changes = np.nonzero(np.diff(piano_roll).T)
+            # Keep track on velocities and note on times
+            prev_velocities = np.zeros(notes, dtype=int)
+            note_on_time = np.zeros(notes)
+            min_pitch = np.inf
+            max_pitch = 0
+            cmap = plt.get_cmap('inferno', 11)
+            for time, note in zip(*velocity_changes):
+                # Use time + 1s because of padding above
+                velocity = piano_roll[note, time + 1]
+                if velocity > 0:
+                    if prev_velocities[note] == 0:
+                        note_on_time[note] = time
+                        prev_velocities[note] = 75
+                else:
+                    prev_velocities[note] = 0
+                    rect = patches.Rectangle((note_on_time[note], note + 40 - 0.5), (time - note_on_time[note]), 1, linewidth=1.5,
+                                 edgecolor='k', facecolor=cmap(int(i)), alpha=0.8)
+                    min_pitch = min(min_pitch, note + 40)
+                    max_pitch = max(max_pitch, note + 40)
+                    ax.add_patch(rect) 
+            ax.set_ylim([min_pitch - 5, max_pitch + 5])
+            ax.set_xticks(np.arange(0, 64, 16))
+            ax.set_xticklabels(np.arange(1, 4, 1))
+            ax.set_xlim([0, time])
+            ax.set_xlabel('Interpolated measures')
+            ax.set_ylabel('Pitch')
+            ax.grid()
+            if (i > 0):
+                ax.get_xaxis().set_visible(False)
+                ax.get_yaxis().set_visible(False)
             fig.add_subplot(ax)
         plt.savefig(name + str(l) + '.pdf')
         plt.close()      

@@ -60,6 +60,7 @@ latent_size = [128, 64, 32, 16, 8]
 # Beta values
 beta_vals = [1.0, 2.0, 8.0]
 
+#%%
 ### TODO = REALLY USE ALL GPUs (DECIDE ON A THING THAT SHOULD BE PARALLELIZED)
 
 # Using list comprehension to compute all possible permutations
@@ -312,8 +313,8 @@ train_features, valid_features, test_features = data[6], data[7], data[8]
 args.min_pitch = train_set.min_p
 # Change args
 args.device = 'cpu'
-args.n_steps = 8
-models_compare = ['ae_cnn-gru_128_1.0', 'vae_cnn-gru_16_2.0', 'wae_cnn-gru_64_1.0']
+args.n_steps = 11
+models_compare = ['ae_cnn-gru_128_1.0', 'vae_cnn-gru_16_1.0', 'vae_cnn-gru_32_1.0', 'vae_cnn-gru_64_1.0', 'vae_cnn-gru_16_2.0', 'vae_cnn-gru_32_2.0', 'vae_cnn-gru_64_2.0', 'wae_cnn-gru_64_1.0']
 # Select two examples from the dataset
 x_a, x_b = test_set[random.randint(0, len(test_set) - 1)], test_set[random.randint(0, len(test_set) - 1)]
 for m in models_compare:
