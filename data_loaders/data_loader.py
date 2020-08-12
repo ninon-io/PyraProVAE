@@ -194,13 +194,16 @@ class PianoRollRep(Dataset):
             if ('maestro' in self.root_dir):
                 print(self.root_dir + '/' + self.midi_files[index])
                 beat_cmd = ["java","-cp","/Users/esling/Downloads/met-align-master/bin","metalign.Main","-g","/Users/esling/Downloads/met-align-master/grammars/all.lpcfg","-b","20", self.root_dir + '/' + self.midi_files[index]]
-                output = subprocess.Popen(beat_cmd, stdout=subprocess.PIPE ).communicate()[0]
-                print('Done.')
-                # Retrieve finer downbeats
-                vals = str(output).split('\\n')[-2]
-                vals = vals.split(':')[1]
-                vals = vals.split(',')
-                downbeats = [float(x) / 1000000 for x in vals]
+                try:
+                    output = subprocess.Popen(beat_cmd, stdout=subprocess.PIPE ).communicate()[0]
+                    print('Done.')
+                    # Retrieve finer downbeats
+                    vals = str(output).split('\\n')[-2]
+                    vals = vals.split(':')[1]
+                    vals = vals.split(',')
+                    downbeats = [float(x) / 1000000 for x in vals]
+                except:
+                    continue
             bar_time = mean([downbeats[i + 1] - downbeats[i] for i in range(len(downbeats) - 1)])
             fs = int(self.frame_bar / round(bar_time))
             # Find a mono track if we only want a mono dataset
